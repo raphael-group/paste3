@@ -1,10 +1,10 @@
 name: 'paste'
 
 channels:
-	- defaults
+    - defaults
 
 dependencies:
-	- python=3.8
-	- pip
-	- pip:
-		  - -r requirements.txt
+    - python=3.8
+    - pip
+    - pip:
+        - -r requirements.txt

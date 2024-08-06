@@ -12,8 +12,8 @@ data_folder = base_dir / "sample_data"
 @pytest.fixture(scope="session")
 def slices():
     # Returns ann data object relating each slices
-    slice_files = glob.glob(f"{data_folder}/slice[0-9].csv")
-    coord_files = glob.glob(f"{data_folder}/slice[0-9]_coor.csv")
+    slice_files = glob.glob(f"{data_folder}/slice[1-3].csv")
+    coord_files = glob.glob(f"{data_folder}/slice[1-3]_coor.csv")
 
     slices = []
     for slice, coord in zip(slice_files, coord_files):

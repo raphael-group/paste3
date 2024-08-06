@@ -22,7 +22,7 @@ def assert_checksum_equals(generated_file, oracle):
 
 
 def test_pairwise_alignment(slices):
-    temp_dir = tempfile.mkdtemp()
+    temp_dir = Path(tempfile.mkdtemp())
     outcome = pairwise_align(
         slices[0],
         slices[1],
@@ -35,14 +35,18 @@ def test_pairwise_alignment(slices):
     outcome_df = pd.DataFrame(
         outcome, index=slices[0].obs.index, columns=slices[1].obs.index
     )
-    outcome_df.to_csv(f"{temp_dir}/slices_1_2_pairwise_csv")
+    outcome_df.to_csv(temp_dir / "slices_1_2_pairwise.csv")
     assert_checksum_equals(
-        f"{temp_dir}/slices_1_2_pairwise_csv", f"{output_dir}/slices_1_2_pairwise.csv"
+        temp_dir / "slices_1_2_pairwise.csv", output_dir / "slices_1_2_pairwise.csv"
     )
 
+
+# TODO: possibly some randomness to the code that needs to be dealt with
 def test_center_alignment(slices):
+    temp_dir = Path(tempfile.mkdtemp())
+
     n_slices = len(slices)
-    center_align(
+    center_slice, pairwise_info = center_align(
         slices[0],
         slices,
         lmbda=n_slices * [1.0 / n_slices],
@@ -52,3 +56,22 @@ def test_center_alignment(slices):
         dissimilarity="kl",
         distributions=[slices[i].obsm["weights"] for i in range(len(slices))],
     )
+    pd.DataFrame(center_slice.uns["paste_W"], index=center_slice.obs.index).to_csv(
+        output_dir / "W_center.csv"
+    )
+    pd.DataFrame(center_slice.uns["paste_H"], columns=center_slice.var.index).to_csv(
+        output_dir / "H_center.csv"
+    )
+
+    # assert_checksum_equals(temp_dir / "W_center.csv", output_dir / "W_center.csv")
+    #
+    # assert_checksum_equals(temp_dir / "H_center.csv", output_dir / "H_center.csv")
+
+    for i, pi in enumerate(pairwise_info):
+        pd.DataFrame(
+            pi, index=center_slice.obs.index, columns=slices[i].obs.index
+        ).to_csv(temp_dir / f"center_slice{i}_pairwise.csv")
+        # assert_checksum_equals(
+        #     temp_dir / f"center_slice{i}_pairwise.csv",
+        #     output_dir / f"center_slice{i}_pairwise.csv",
+        # )

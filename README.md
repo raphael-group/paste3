@@ -44,7 +44,7 @@ notebook or the command line.
 To use PASTE we require at least two slices of spatial-omics data (both
 expression and coordinates) that are in
 anndata format (i.e. read in by scanpy/squidpy). We have included a breast
-cancer dataset from [1] in the [sample_data folder](sample_data/) of this repo 
+cancer dataset from [1] in the [sample_data folder](tests/data/input/) of this repo 
 that we will use as an example below to show how to use PASTE.
 
 ```python
@@ -55,20 +55,22 @@ import scanpy as sc
 import paste as pst
 
 # Load Slices
-data_dir = './sample_data/' # change this path to the data you wish to analyze
+data_dir = 'tests/data/input/'  # change this path to the data you wish to analyze
+
 
 # Assume that the coordinates of slices are named slice_name + "_coor.csv"
 def load_slices(data_dir, slice_names=["slice1", "slice2"]):
-    slices = []  
+    slices = []
     for slice_name in slice_names:
         slice_i = sc.read_csv(data_dir + slice_name + ".csv")
-        slice_i_coor = np.genfromtxt(data_dir + slice_name + "_coor.csv", delimiter = ',')
+        slice_i_coor = np.genfromtxt(data_dir + slice_name + "_coor.csv", delimiter=',')
         slice_i.obsm['spatial'] = slice_i_coor
         # Preprocess slices
-        sc.pp.filter_genes(slice_i, min_counts = 15)
-        sc.pp.filter_cells(slice_i, min_counts = 100)
+        sc.pp.filter_genes(slice_i, min_counts=15)
+        sc.pp.filter_cells(slice_i, min_counts=100)
         slices.append(slice_i)
     return slices
+
 
 slices = load_slices(data_dir)
 slice1, slice2 = slices
@@ -81,11 +83,11 @@ pi12 = pst.pairwise_align(slice1, slice2)
 slices, pis = [slice1, slice2], [pi12]
 new_slices = pst.stack_slices_pairwise(slices, pis)
 
-slice_colors = ['#e41a1c','#377eb8']
-plt.figure(figsize=(7,7))
+slice_colors = ['#e41a1c', '#377eb8']
+plt.figure(figsize=(7, 7))
 for i in range(len(new_slices)):
-    pst.plot_slice(new_slices[i],slice_colors[i],s=400)
-plt.legend(handles=[mpatches.Patch(color=slice_colors[0], label='1'),mpatches.Patch(color=slice_colors[1], label='2')])
+    pst.plot_slice(new_slices[i], slice_colors[i], s=400)
+plt.legend(handles=[mpatches.Patch(color=slice_colors[0], label='1'), mpatches.Patch(color=slice_colors[1], label='2')])
 plt.gca().invert_yaxis()
 plt.axis('off')
 plt.show()
@@ -99,13 +101,13 @@ slice1, slice2 = slices
 ## choose one of the slices as the coordinate reference for the center slice,
 ## i.e. the center slice will have the same number of spots as this slice and
 ## the same coordinates.
-initial_slice = slice1.copy()    
+initial_slice = slice1.copy()
 slices = [slice1, slice2]
-lmbda = len(slices)*[1/len(slices)] # set hyperparameter to be uniform
+lmbda = len(slices) * [1 / len(slices)]  # set hyperparameter to be uniform
 
 ## Possible to pass in an initial pi (as keyword argument pis_init) 
 ## to improve performance, see Tutorial.ipynb notebook for more details.
-center_slice, pis = pst.center_align(initial_slice, slices, lmbda) 
+center_slice, pis = pst.center_align(initial_slice, slices, lmbda)
 
 ## The low dimensional representation of our center slice is held 
 ## in the matrices W and H, which can be used for downstream analyses

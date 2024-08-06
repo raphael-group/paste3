@@ -1,12 +1,29 @@
+import hashlib
+from pathlib import Path
+import pandas as pd
+import tempfile
+
 from src.paste import pairwise_align, center_align
 
+test_dir = Path(__file__).parent
+input_dir = test_dir / "data/input"
+output_dir = test_dir / "data/output"
 
-# TODO: at this stage I just want to have test functions that provide start points to different functionalities of the code base
-# TODO: add more to the test cases
+
+def assert_checksum_equals(generated_file, oracle):
+    assert (
+        hashlib.md5(
+            "".join(open(generated_file, "r").readlines()).encode("utf8")
+        ).hexdigest()
+        == hashlib.md5(
+            "".join(open(oracle, "r").readlines()).encode("utf8")
+        ).hexdigest()
+    )
 
 
 def test_pairwise_alignment(slices):
-    pairwise_align(
+    temp_dir = tempfile.mkdtemp()
+    outcome = pairwise_align(
         slices[0],
         slices[1],
         alpha=0.1,
@@ -15,7 +32,13 @@ def test_pairwise_alignment(slices):
         b_distribution=slices[1].obsm["weights"],
         G_init=None,
     )
-
+    outcome_df = pd.DataFrame(
+        outcome, index=slices[0].obs.index, columns=slices[1].obs.index
+    )
+    outcome_df.to_csv(f"{temp_dir}/slices_1_2_pairwise_csv")
+    assert_checksum_equals(
+        f"{temp_dir}/slices_1_2_pairwise_csv", f"{output_dir}/slices_1_2_pairwise.csv"
+    )
 
 def test_center_alignment(slices):
     n_slices = len(slices)

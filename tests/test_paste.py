@@ -57,10 +57,10 @@ def test_center_alignment(slices):
         distributions=[slices[i].obsm["weights"] for i in range(len(slices))],
     )
     pd.DataFrame(center_slice.uns["paste_W"], index=center_slice.obs.index).to_csv(
-        output_dir / "W_center.csv"
+        temp_dir / "W_center.csv"
     )
     pd.DataFrame(center_slice.uns["paste_H"], columns=center_slice.var.index).to_csv(
-        output_dir / "H_center.csv"
+        temp_dir / "H_center.csv"
     )
 
     # assert_checksum_equals(temp_dir / "W_center.csv", output_dir / "W_center.csv")
@@ -70,7 +70,7 @@ def test_center_alignment(slices):
     for i, pi in enumerate(pairwise_info):
         pd.DataFrame(
             pi, index=center_slice.obs.index, columns=slices[i].obs.index
-        ).to_csv(temp_dir / f"center_slice{i}_pairwise.csv")
+        ).to_csv(temp_dir / f"center_slice{i+1}_pairwise.csv")
         # assert_checksum_equals(
         #     temp_dir / f"center_slice{i}_pairwise.csv",
         #     output_dir / f"center_slice{i}_pairwise.csv",

@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 import numpy as np
 import scanpy as sc
@@ -17,6 +18,7 @@ def slices():
 
     slices = []
     for slice, coord in zip(slice_files, coord_files):
+        assert re.findall(r'.*?/slice(\d+).csv', slice)[0] == re.findall(r'.*?/slice(\d+)_coor.csv', coord)[0]
         _slice = sc.read_csv(Path(slice))
         _slice.obsm["spatial"] = np.genfromtxt(coord, delimiter=",")
         _slice.obsm["weights"] = np.ones((_slice.shape[0],)) / _slice.shape[0]

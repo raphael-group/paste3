@@ -14,12 +14,13 @@ data_folder = base_dir / "sample_data"
 def slices():
     # Returns ann data object relating each slices
     slice_files = glob.glob(f"{data_folder}/slice[0-9].csv")
-    coord_files = glob.glob(f"{data_folder}/slice[0-9]_coor.csv")
 
     slices = []
-    for slice, coord in zip(slice_files, coord_files):
-        assert re.findall(r'.*?/slice(\d+).csv', slice)[0] == re.findall(r'.*?/slice(\d+)_coor.csv', coord)[0]
+    for slice in slice_files:
+        # Get coordinates for the current slice
+        coord = slice.replace(".csv", "_coor.csv")
         _slice = sc.read_csv(Path(slice))
+
         _slice.obsm["spatial"] = np.genfromtxt(coord, delimiter=",")
         _slice.obsm["weights"] = np.ones((_slice.shape[0],)) / _slice.shape[0]
         slices.append(_slice)

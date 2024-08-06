@@ -10,7 +10,10 @@ input_dir = test_dir / "data/input"
 output_dir = test_dir / "data/output"
 
 
-def assert_checksum_equals(generated_file, oracle):
+def assert_checksum_equals(temp_dir, filename):
+    generated_file = temp_dir / filename
+    oracle = output_dir / filename
+
     assert (
         hashlib.md5(
             "".join(open(generated_file, "r").readlines()).encode("utf8")
@@ -32,16 +35,12 @@ def test_pairwise_alignment(slices):
         b_distribution=slices[1].obsm["weights"],
         G_init=None,
     )
-    outcome_df = pd.DataFrame(
+    pd.DataFrame(
         outcome, index=slices[0].obs.index, columns=slices[1].obs.index
-    )
-    outcome_df.to_csv(temp_dir / "slices_1_2_pairwise.csv")
-    assert_checksum_equals(
-        temp_dir / "slices_1_2_pairwise.csv", output_dir / "slices_1_2_pairwise.csv"
-    )
+    ).to_csv(temp_dir / "slices_1_2_pairwise.csv")
+    assert_checksum_equals(temp_dir, "slices_1_2_pairwise.csv")
 
 
-# TODO: possibly some randomness to the code that needs to be dealt with
 def test_center_alignment(slices):
     temp_dir = Path(tempfile.mkdtemp())
 
@@ -52,6 +51,7 @@ def test_center_alignment(slices):
         lmbda=n_slices * [1.0 / n_slices],
         alpha=0.1,
         n_components=15,
+        random_seed=0,
         threshold=0.001,
         dissimilarity="kl",
         distributions=[slices[i].obsm["weights"] for i in range(len(slices))],
@@ -63,15 +63,11 @@ def test_center_alignment(slices):
         temp_dir / "H_center.csv"
     )
 
-    # assert_checksum_equals(temp_dir / "W_center.csv", output_dir / "W_center.csv")
-    #
-    # assert_checksum_equals(temp_dir / "H_center.csv", output_dir / "H_center.csv")
+    assert_checksum_equals(temp_dir, "W_center.csv")
+    assert_checksum_equals(temp_dir, "H_center.csv")
 
     for i, pi in enumerate(pairwise_info):
         pd.DataFrame(
             pi, index=center_slice.obs.index, columns=slices[i].obs.index
         ).to_csv(temp_dir / f"center_slice{i+1}_pairwise.csv")
-        # assert_checksum_equals(
-        #     temp_dir / f"center_slice{i}_pairwise.csv",
-        #     output_dir / f"center_slice{i}_pairwise.csv",
-        # )
+        assert_checksum_equals(temp_dir, f"center_slice{i+1}_pairwise.csv")

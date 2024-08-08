@@ -6,7 +6,7 @@ import ot.backend
 import pandas as pd
 import tempfile
 
-from src.paste import pairwise_align, center_align, center_ot, intersect, center_NMF
+from paste import pairwise_align, center_align, center_ot, intersect, center_NMF
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"

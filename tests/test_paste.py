@@ -3,10 +3,22 @@ from pathlib import Path
 
 import numpy as np
 import ot.backend
+from ot.lp import emd
 import pandas as pd
 import tempfile
 
-from src.paste import pairwise_align, center_align, center_ot, intersect, center_NMF
+from src.paste import (
+    pairwise_align,
+    center_align,
+    center_ot,
+    intersect,
+    center_NMF,
+    extract_data_matrix,
+    kl_divergence_backend,
+    to_dense_array,
+    my_fused_gromov_wasserstein,
+    solve_gromov_linesearch,
+)
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
@@ -139,3 +151,87 @@ def test_center_NMF(intersecting_slices):
     # TODO: The following computations seem to be architecture dependent (need to look into as for how)
     # assert_checksum_equals(temp_dir, "W_center_NMF.csv")
     # assert_checksum_equals(temp_dir, "H_center_NMF.csv")
+
+
+def test_fused_gromov_wasserstein(slices):
+    temp_dir = Path(tempfile.mkdtemp())
+
+    common_genes = intersect(slices[0].var.index, slices[1].var.index)
+    sliceA = slices[0][:, common_genes]
+    sliceB = slices[1][:, common_genes]
+
+    nx = ot.backend.NumpyBackend()
+    slice1_dist = ot.dist(
+        nx.from_numpy(sliceA.obsm["spatial"]),
+        nx.from_numpy(sliceA.obsm["spatial"]),
+        metric="euclidean",
+    )
+    slice2_dist = ot.dist(
+        nx.from_numpy(sliceB.obsm["spatial"]),
+        nx.from_numpy(sliceB.obsm["spatial"]),
+        metric="euclidean",
+    )
+    slice1_distr = nx.ones((sliceA.shape[0],)) / sliceA.shape[0]
+    slice2_distr = nx.ones((sliceB.shape[0],)) / sliceB.shape[0]
+
+    slice1_X = nx.from_numpy(to_dense_array(extract_data_matrix(sliceA, None)))
+    slice2_X = nx.from_numpy(to_dense_array(extract_data_matrix(sliceB, None)))
+
+    M = nx.from_numpy(kl_divergence_backend(slice1_X + 0.01, slice2_X + 0.01))
+
+    pairwise_info, log = my_fused_gromov_wasserstein(
+        M,
+        slice1_dist,
+        slice2_dist,
+        slice1_distr,
+        slice2_distr,
+        G_init=None,
+        loss_fun="square_loss",
+        alpha=0.1,
+        log=True,
+        numItermax=200,
+    )
+    pd.DataFrame(pairwise_info).to_csv(temp_dir / "fused_gromov_wasserstein.csv")
+    assert_checksum_equals(temp_dir, "fused_gromov_wasserstein.csv")
+
+
+def test_gromov_linesearch(slices):
+    common_genes = intersect(slices[1].var.index, slices[2].var.index)
+    sliceA = slices[1][:, common_genes]
+    sliceB = slices[2][:, common_genes]
+
+    nx = ot.backend.NumpyBackend()
+    slice1_dist = ot.dist(
+        nx.from_numpy(sliceA.obsm["spatial"]),
+        nx.from_numpy(sliceA.obsm["spatial"]),
+        metric="euclidean",
+    )
+    slice2_dist = ot.dist(
+        nx.from_numpy(sliceB.obsm["spatial"]),
+        nx.from_numpy(sliceB.obsm["spatial"]),
+        metric="euclidean",
+    )
+    slice1_distr = nx.ones((sliceA.shape[0],)) / sliceA.shape[0]
+    slice2_distr = nx.ones((sliceB.shape[0],)) / sliceB.shape[0]
+
+    slice1_X = nx.from_numpy(to_dense_array(extract_data_matrix(sliceA, None)))
+    slice2_X = nx.from_numpy(to_dense_array(extract_data_matrix(sliceB, None)))
+
+    M = nx.from_numpy(kl_divergence_backend(slice1_X + 0.01, slice2_X + 0.01))
+    slice1_distr, slice2_distr = ot.utils.list_to_array(slice1_distr, slice2_distr)
+
+    constC, hC1, hC2 = ot.gromov.init_matrix(
+        slice1_dist, slice2_dist, slice1_distr, slice2_distr, loss_fun="square_loss"
+    )
+
+    G = slice1_distr[:, None] * slice2_distr[None, :]
+    Mi = M + 0.1 + ot.gromov.gwggrad(constC, hC1, hC2, G)
+    Mi = Mi + nx.min(Mi)
+
+    Gc = emd(slice1_distr, slice2_distr, Mi)
+    deltaG = Gc - G
+    costG = nx.sum(M * G) + 0.1 * ot.gromov.gwloss(constC, hC1, hC2, G)
+    alpha, fc, cost_G  = solve_gromov_linesearch(
+        G, deltaG, costG, slice1_dist, slice2_dist, M=0.0, reg=1.0, nx=nx
+    )
+

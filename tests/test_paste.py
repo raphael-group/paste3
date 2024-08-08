@@ -6,7 +6,7 @@ import ot.backend
 import pandas as pd
 import tempfile
 
-from src.paste import pairwise_align, center_align, center_ot, intersect
+from src.paste import pairwise_align, center_align, center_ot, intersect, center_NMF
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
@@ -113,3 +113,28 @@ def test_center_ot(slices):
             pi, index=intersecting_slice.obs.index, columns=slices[i].obs.index
         ).to_csv(temp_dir / f"center_ot{i + 1}_pairwise.csv")
         assert_checksum_equals(temp_dir, f"center_ot{i + 1}_pairwise.csv")
+
+
+def test_center_NMF(intersecting_slices):
+    temp_dir = Path(tempfile.mkdtemp())
+    n_slices = len(intersecting_slices)
+
+    pairwise_info = [
+        np.genfromtxt(input_dir / f"center_ot{i+1}_pairwise.csv", delimiter=",")
+        for i in range(n_slices)
+    ]
+
+    _W, _H = center_NMF(
+        W=np.genfromtxt(input_dir / "W_intermediate.csv", delimiter=","),
+        H=np.genfromtxt(input_dir / "H_intermediate.csv", delimiter=","),
+        slices=intersecting_slices,
+        pis=pairwise_info,
+        lmbda=n_slices * [1.0 / n_slices],
+        n_components=15,
+        random_seed=0,
+    )
+
+    pd.DataFrame(_W).to_csv(temp_dir / "W_center_NMF.csv")
+    pd.DataFrame(_H).to_csv(temp_dir / "H_center_NMF.csv")
+    assert_checksum_equals(temp_dir, "W_center_NMF.csv")
+    assert_checksum_equals(temp_dir, "H_center_NMF.csv")

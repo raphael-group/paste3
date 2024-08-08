@@ -2,6 +2,7 @@ from pathlib import Path
 import numpy as np
 import scanpy as sc
 import pytest
+from src.paste import intersect
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
@@ -20,5 +21,17 @@ def slices():
         _slice.obsm["spatial"] = np.genfromtxt(c_fpath, delimiter=",")
         _slice.obsm["weights"] = np.ones((_slice.shape[0],)) / _slice.shape[0]
         slices.append(_slice)
+
+    return slices
+
+
+@pytest.fixture(scope="session")
+def intersecting_slices(slices):
+    common_genes = slices[0].var.index
+    for slice in slices[1:]:
+        common_genes = intersect(common_genes, slice.var.index)
+
+    for i in range(len(slices)):
+        slices[i] = slices[i][:, common_genes]
 
     return slices

@@ -97,7 +97,6 @@ def test_center_ot(slices):
         dissimilarity="kl",
         norm=False,
         G_inits=[None for _ in range(len(slices))],
-        distributions=[slices[i].obsm["weights"] for i in range(len(slices))],
     )
 
     expected_r = [

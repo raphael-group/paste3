@@ -9,6 +9,7 @@ import tempfile
 from paste import pairwise_align, center_align
 from paste.PASTE import center_ot, intersect, center_NMF
 
+
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
 output_dir = test_dir / "data/output"

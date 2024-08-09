@@ -7,9 +7,8 @@ from ot.lp import emd
 import pandas as pd
 import tempfile
 
-from src.paste import (
-    pairwise_align,
-    center_align,
+from paste import pairwise_align, center_align
+from paste.PASTE import (
     center_ot,
     intersect,
     center_NMF,
@@ -19,6 +18,7 @@ from src.paste import (
     my_fused_gromov_wasserstein,
     solve_gromov_linesearch,
 )
+from pandas.testing import assert_frame_equal
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
@@ -78,9 +78,10 @@ def test_center_alignment(slices):
         temp_dir / "H_center.csv"
     )
 
-    # TODO: The following computations seem to be architecture dependent (need to look into as for how)
-    # assert_checksum_equals(temp_dir, "W_center.csv")
-    # assert_checksum_equals(temp_dir, "H_center.csv")
+    assert_frame_equal(pd.DataFrame(center_slice.uns["paste_W"], index=center_slice.obs.index)
+                       , pd.read_csv(output_dir / "W_center.csv"))
+    assert_frame_equal(pd.DataFrame(center_slice.uns["paste_H"])
+                       , pd.read_csv(output_dir / "H_center.csv"))
 
     for i, pi in enumerate(pairwise_info):
         pd.DataFrame(
@@ -146,11 +147,8 @@ def test_center_NMF(intersecting_slices):
         random_seed=0,
     )
 
-    pd.DataFrame(_W).to_csv(temp_dir / "W_center_NMF.csv")
-    pd.DataFrame(_H).to_csv(temp_dir / "H_center_NMF.csv")
-    # TODO: The following computations seem to be architecture dependent (need to look into as for how)
-    # assert_checksum_equals(temp_dir, "W_center_NMF.csv")
-    # assert_checksum_equals(temp_dir, "H_center_NMF.csv")
+    assert_frame_equal(pd.DataFrame(_W), pd.read_csv(output_dir / "W_center_NMF.csv"))
+    assert_frame_equal(pd.DataFrame(_H), pd.read_csv(output_dir / "H_center_NMF.csv"))
 
 
 def test_fused_gromov_wasserstein(slices):
@@ -231,7 +229,9 @@ def test_gromov_linesearch(slices):
     Gc = emd(slice1_distr, slice2_distr, Mi)
     deltaG = Gc - G
     costG = nx.sum(M * G) + 0.1 * ot.gromov.gwloss(constC, hC1, hC2, G)
-    alpha, fc, cost_G  = solve_gromov_linesearch(
+    alpha, fc, cost_G = solve_gromov_linesearch(
         G, deltaG, costG, slice1_dist, slice2_dist, M=0.0, reg=1.0, nx=nx
     )
-
+    assert alpha == 1.0
+    assert fc == 1
+    assert cost_G == -11.20545449687448

@@ -56,7 +56,7 @@ def main(args):
         pis_init = [pd.read_csv(args.start[i],index_col=0).to_numpy() for i in range(len(args.start))]
 
     # create output folder
-    output_path = os.path.join(args.direc, "paste_output")
+    output_path = os.path.join(args.direc, "../../paste_output")
     if not os.path.exists(output_path):
         os.mkdir(output_path)
     
@@ -82,8 +82,8 @@ def main(args):
         center_slice, pis = center_align(initial_slice, slices, lmbda, args.alpha, args.n_components, args.threshold, dissimilarity=args.cost, distributions=[slices[i].obsm['weights'] for i in range(n_slices)], pis_init=pis_init)
         W = pd.DataFrame(center_slice.uns['paste_W'], index = center_slice.obs.index)
         H = pd.DataFrame(center_slice.uns['paste_H'], columns = center_slice.var.index)
-        W.to_csv(os.path.join(args.direc,"paste_output/W_center"))
-        H.to_csv(os.path.join(args.direc,"paste_output/H_center"))
+        W.to_csv(os.path.join(args.direc, "../../paste_output/W_center"))
+        H.to_csv(os.path.join(args.direc, "../../paste_output/H_center"))
         for i in range(len(pis)):
             output_filename = "paste_output/slice_center_slice" + str(i+1) + "_pairwise.csv"
             pi = pd.DataFrame(pis[i], index = center_slice.obs.index, columns = slices[i].obs.index)

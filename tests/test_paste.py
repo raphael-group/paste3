@@ -7,8 +7,9 @@ from ot.lp import emd
 import pandas as pd
 import tempfile
 
-from paste import pairwise_align, center_align
 from paste.PASTE import (
+    pairwise_align,
+    center_align,
     center_ot,
     intersect,
     center_NMF,
@@ -254,4 +255,4 @@ def test_gromov_linesearch(slices):
     )
     assert alpha == 1.0
     assert fc == 1
-    assert round(cost_G,6) == -11.419226
+    assert round(cost_G, 6) == -11.419226

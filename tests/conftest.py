@@ -2,7 +2,9 @@ from pathlib import Path
 import numpy as np
 import scanpy as sc
 import pytest
-from src.paste import intersect
+from paste.helper import intersect
+from pandas.testing import assert_frame_equal
+
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"

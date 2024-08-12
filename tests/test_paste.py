@@ -71,17 +71,23 @@ def test_center_alignment(slices):
         dissimilarity="kl",
         distributions=[slices[i].obsm["weights"] for i in range(len(slices))],
     )
-    pd.DataFrame(center_slice.uns["paste_W"], index=center_slice.obs.index).to_csv(
-        temp_dir / "W_center.csv"
+    assert_frame_equal(
+        pd.DataFrame(
+            center_slice.uns["paste_W"],
+            index=center_slice.obs.index,
+            columns=[str(i) for i in range(15)],
+        ),
+        pd.read_csv(output_dir / "W_center.csv", index_col=0),
+        check_names=False,
+        rtol=1e-05,
+        atol=1e-08,
     )
-    pd.DataFrame(center_slice.uns["paste_H"], columns=center_slice.var.index).to_csv(
-        temp_dir / "H_center.csv"
+    assert_frame_equal(
+        pd.DataFrame(center_slice.uns["paste_H"], columns=center_slice.var.index),
+        pd.read_csv(output_dir / "H_center.csv"),
+        rtol=1e-05,
+        atol=1e-08,
     )
-
-    assert_frame_equal(pd.DataFrame(center_slice.uns["paste_W"], index=center_slice.obs.index)
-                       , pd.read_csv(output_dir / "W_center.csv"))
-    assert_frame_equal(pd.DataFrame(center_slice.uns["paste_H"])
-                       , pd.read_csv(output_dir / "H_center.csv"))
 
     for i, pi in enumerate(pairwise_info):
         pd.DataFrame(
@@ -129,7 +135,6 @@ def test_center_ot(slices):
 
 
 def test_center_NMF(intersecting_slices):
-    temp_dir = Path(tempfile.mkdtemp())
     n_slices = len(intersecting_slices)
 
     pairwise_info = [
@@ -147,8 +152,22 @@ def test_center_NMF(intersecting_slices):
         random_seed=0,
     )
 
-    assert_frame_equal(pd.DataFrame(_W), pd.read_csv(output_dir / "W_center_NMF.csv"))
-    assert_frame_equal(pd.DataFrame(_H), pd.read_csv(output_dir / "H_center_NMF.csv"))
+    assert_frame_equal(
+        pd.DataFrame(
+            _W,
+            index=intersecting_slices[0].obs.index,
+            columns=[str(i) for i in range(15)],
+        ),
+        pd.read_csv(output_dir / "W_center_NMF.csv", index_col=0),
+        rtol=1e-05,
+        atol=1e-08,
+    )
+    assert_frame_equal(
+        pd.DataFrame(_H, columns=intersecting_slices[0].var.index),
+        pd.read_csv(output_dir / "H_center_NMF.csv"),
+        rtol=1e-05,
+        atol=1e-08,
+    )
 
 
 def test_fused_gromov_wasserstein(slices):

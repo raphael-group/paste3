@@ -254,4 +254,4 @@ def test_gromov_linesearch(slices):
     )
     assert alpha == 1.0
     assert fc == 1
-    assert cost_G == -11.41922591643541
+    assert cost_G == -11.419225

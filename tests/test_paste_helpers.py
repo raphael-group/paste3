@@ -41,5 +41,4 @@ def test_kl_divergence_backend(slices):
         check_names=False,
         check_dtype=False,
         rtol=1e-05,
-        atol=1e-08,
     )

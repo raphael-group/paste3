@@ -60,6 +60,8 @@ def test_pairwise_alignment(slices):
 def test_center_alignment(slices):
     temp_dir = Path(tempfile.mkdtemp())
 
+    # Make a copy of the list
+    slices = list(slices)
     n_slices = len(slices)
     center_slice, pairwise_info = center_align(
         slices[0],
@@ -255,4 +257,4 @@ def test_gromov_linesearch(slices):
     )
     assert alpha == 1.0
     assert fc == 1
-    assert round(cost_G, 6) == -11.419226
+    assert round(cost_G, 6) == -11.205454

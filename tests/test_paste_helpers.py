@@ -17,7 +17,6 @@ output_dir = test_dir / "data/output"
 
 def test_intersect(slices):
     common_genes = intersect(slices[1].var.index, slices[2].var.index)
-
     assert np.all(
         np.equal(
             common_genes, np.genfromtxt(output_dir / "common_genes.csv", dtype=str)
@@ -25,7 +24,7 @@ def test_intersect(slices):
     )
 
 
-def test_kl_divergence_bakcend(slices):
+def test_kl_divergence_backend(slices):
     nx = ot.backend.NumpyBackend()
 
     common_genes = intersect(slices[1].var.index, slices[2].var.index)
@@ -43,4 +42,3 @@ def test_kl_divergence_bakcend(slices):
         rtol=1e-05,
         atol=1e-08,
     )
-

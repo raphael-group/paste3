@@ -1,9 +1,13 @@
 anndata>=0.7.6
 scanpy>=1.7.2
 POT==0.9.0
-numpy
-scipy
+numpy~=1.24.4
+scipy~=1.10.1
 scikit-learn>=0.24.0
 IPython>=7.18.1
-pytest
-
+pytest~=8.3.2
+seaborn~=0.13.2
+matplotlib~=3.7.5
+pandas~=2.0.3
+statsmodels~=0.14.1
+networkx~=3.1

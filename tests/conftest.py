@@ -3,8 +3,6 @@ import numpy as np
 import scanpy as sc
 import pytest
 from paste.helper import intersect
-from pandas.testing import assert_frame_equal
-
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
@@ -29,6 +27,9 @@ def slices():
 
 @pytest.fixture(scope="session")
 def intersecting_slices(slices):
+    # Make a copy of the list
+    slices = list(slices)
+
     common_genes = slices[0].var.index
     for slice in slices[1:]:
         common_genes = intersect(common_genes, slice.var.index)

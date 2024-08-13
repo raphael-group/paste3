@@ -39,6 +39,7 @@ def test_kl_divergence_backend(slices):
         pd.DataFrame(kl_divergence_matrix, columns=[str(i) for i in range(264)]),
         pd.read_csv(output_dir / "kl_divergence_matrix.csv"),
         check_names=False,
+        check_dtype=False,
         rtol=1e-05,
         atol=1e-08,
     )

@@ -30,10 +30,10 @@ from paste2 import PASTE2, projection
 # In[3]:
 
 
-sliceA_filename = 'sample_data/151673.h5ad'
-sliceB_filename = 'sample_data/151674.h5ad'
-sliceC_filename = 'sample_data/151675.h5ad'
-sliceD_filename = 'sample_data/151676.h5ad'
+sliceA_filename = '../../tests/data/input/151673.h5ad'
+sliceB_filename = '../../tests/data/input/151674.h5ad'
+sliceC_filename = '../../tests/data/input/151675.h5ad'
+sliceD_filename = '../../tests/data/input/151676.h5ad'
 sliceA = sc.read_h5ad(sliceA_filename)
 sliceB = sc.read_h5ad(sliceB_filename)
 sliceC = sc.read_h5ad(sliceC_filename)

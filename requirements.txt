@@ -17,3 +17,4 @@ sphinx-autodoc-typehints
 nbsphinx
 sphinx-gallery
 sphinx-rtd-theme
+squidpy

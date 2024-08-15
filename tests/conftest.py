@@ -38,3 +38,15 @@ def intersecting_slices(slices):
         slices[i] = slices[i][:, common_genes]
 
     return slices
+
+
+@pytest.fixture(scope="session")
+def slices2():
+    slices = []
+    for i in range(3, 7):
+        fpath = Path(f"{input_dir}/15167{i}.h5ad")
+
+        _slice = sc.read_h5ad(fpath)
+        slices.append(_slice)
+
+    return slices

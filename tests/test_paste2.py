@@ -1,5 +1,5 @@
 from pathlib import Path
-import pandas as pd 
+import pandas as pd
 from paste2.PASTE2 import partial_pairwise_align
 
 test_dir = Path(__file__).parent

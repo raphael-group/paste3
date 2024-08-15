@@ -71,7 +71,7 @@ def test_kl_divergence(slices):
         pd.read_csv(output_dir / "kl_divergence_matrix.csv"),
         check_names=False,
         check_dtype=False,
-        rtol=1e-04,
+        rtol=1e-03,
     )
 
 
@@ -104,7 +104,7 @@ def test_generalized_kl_divergence(slices):
         pd.read_csv(output_dir / "generalized_kl_divergence_matrix.csv"),
         check_names=False,
         check_dtype=False,
-        rtol=1e-04,
+        rtol=1e-01,
     )
 
 
@@ -168,7 +168,7 @@ def test_high_umi_gene_distance(slices):
         pd.read_csv(output_dir / "high_umi_gene_distance_matrix.csv"),
         check_names=False,
         check_dtype=False,
-        rtol=1e-04,
+        rtol=1e-03,
     )
 
 

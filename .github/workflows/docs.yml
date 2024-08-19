@@ -1,0 +1,43 @@
+name: Docs
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - '*'
+
+jobs:
+
+  build_docs:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.8"]
+
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install Python dependencies
+        run: |
+          pip install sphinx myst-parser sphinx-autodoc-typehints nbsphinx sphinx-gallery sphinx-rtd-theme
+
+      - uses: actions/checkout@v2
+
+      - name: Setup Envvars
+        run: |
+            if [[ $GITHUB_REF = "refs/tags/"* ]] ; then echo "PASTE3_VERSION=${GITHUB_REF/refs\/tags\//}" ; else echo "PASTE3_VERSION=" ; fi >> $GITHUB_ENV
+
+      - name: Build docs
+        run: |
+          # Unless we add a .nojekyll to the base of the deployment folder, the underscores in foldernames
+          # like _static/ etc. pose problems on GH Pages.
+          cd docs && sphinx-apidoc -f -o src ../src/paste -H Modules && make html && touch _build/html/.nojekyll
+
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: docs/_build/html
+          branch: gh-pages

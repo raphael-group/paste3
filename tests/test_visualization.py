@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import scanpy as sc
 from pathlib import Path
 from paste.visualization import stack_slices_pairwise, stack_slices_center, plot_slice
 from pandas.testing import assert_frame_equal
@@ -23,11 +24,56 @@ def test_stack_slices_pairwise(slices):
 
     for i, slice in enumerate(new_slices, start=1):
         assert_frame_equal(
-            pd.DataFrame(slice.obsm["spatial"], columns=['0', '1']),
+            pd.DataFrame(slice.obsm["spatial"], columns=["0", "1"]),
             pd.read_csv(output_dir / f"aligned_spatial_{i}_{i + 1}.csv"),
         )
 
     expected_thetas = [-0.25086326614894794, 0.5228805289947901, 0.02478065908672744]
+    expected_translations = [
+        [16.44623228, 16.73757874],
+        [19.80709562, 15.74706375],
+        [16.32537879, 17.43314773],
+        [19.49901527, 17.35546565],
+    ]
+
+    assert np.all(
+        np.isclose(expected_thetas, thetas, rtol=1e-05, atol=1e-08, equal_nan=True)
+    )
+    assert np.all(
+        np.isclose(
+            expected_translations, translations, rtol=1e-05, atol=1e-08, equal_nan=True
+        )
+    )
+
+
+def test_stack_slices_center(slices):
+    center_slice = sc.read_h5ad(input_dir / "center_slice.h5ad")
+
+    pairwise_info = [
+        np.genfromtxt(input_dir / f"center_slice{i}_pairwise.csv", delimiter=",")
+        for i in range(1, len(slices) + 1)
+    ]
+
+    new_center, new_slices, thetas, translations = stack_slices_center(
+        center_slice, slices, pairwise_info, output_params=True
+    )
+    assert_frame_equal(
+        pd.DataFrame(new_center.obsm["spatial"], columns=["0", "1"]),
+        pd.read_csv(output_dir / f"aligned_spatial_center.csv"),
+    )
+
+    for i, slice in enumerate(new_slices):
+        assert_frame_equal(
+            pd.DataFrame(slice.obsm["spatial"], columns=["0", "1"]),
+            pd.read_csv(output_dir / f"slice{i}_stack_slices_center.csv"),
+        )
+
+    expected_thetas = [
+        0.0,
+        -0.24633847994675845,
+        0.5083563603453264,
+        0.0245843732567813,
+    ]
     expected_translations = [
         [16.44623228, 16.73757874],
         [19.80709562, 15.74706375],

@@ -141,7 +141,7 @@ def test_pca_distance(slices2):
 
     pca_distance_matrix = pca_distance(sliceA, sliceB, 2000, 20)
     # TODO: need to add file for this
-    # TODO: its too large need to introduce compression 
+    # TODO: its too large need to introduce compression
     # assert_frame_equal(
     #     pd.DataFrame(pca_distance_matrix, columns=[str(i) for i in range(2873)]),
     #     pd.read_csv(output_dir / "pca_distance_matrix.csv"),

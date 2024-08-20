@@ -37,4 +37,4 @@ jobs:
         run: pip install -e .
 
       - name: Pytest
-        run: pytest -k 'not partial_pairwise'
+        run: pytest

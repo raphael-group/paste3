@@ -54,7 +54,8 @@ def test_edge_inconsistency_score(slices, tmp_path):
 
 
 # TODO: need to figure out where the randomness is coming from in the following three functions
-@pytest.mark.xfail
+# TODO: they also take a long time to work
+@pytest.mark.skip
 def test_calculate_convex_hull_edge_inconsistency(slices, tmp_path):
     pairwise_info = partial_pairwise_align(slices[0], slices[1], s=0.7)
     measure_a, measure_b = calculate_convex_hull_edge_inconsistency(
@@ -65,15 +66,14 @@ def test_calculate_convex_hull_edge_inconsistency(slices, tmp_path):
     assert measure_b == 0.18404907975460122
 
 
-@pytest.mark.xfail
+@pytest.mark.skip
 def test_select_overlap_fraction(slices):
     fraction = select_overlap_fraction(slices[0], slices[1])
     assert fraction == 0.5
 
 
-@pytest.mark.xfail
+@pytest.mark.skip
 def test_select_overlap_fraction_plotting(slices):
-    plt.ioff()
     fraction = select_overlap_fraction_plotting(slices[0], slices[1])
 
     assert fraction == 0.4

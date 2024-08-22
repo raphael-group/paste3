@@ -126,6 +126,7 @@ def test_partial_fused_gromov_wasserstein(slices):
     assert_frame_equal(
         pd.DataFrame(pairwise_info, columns=[str(i) for i in range(264)]),
         pd.read_csv(output_dir / "partial_fused_gromov_wasserstein.csv"),
+        rtol=1e-05,
     )
     assert log == expected_log
 

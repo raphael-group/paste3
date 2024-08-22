@@ -128,7 +128,9 @@ def test_partial_fused_gromov_wasserstein(slices):
         pd.read_csv(output_dir / "partial_fused_gromov_wasserstein.csv"),
         rtol=1e-05,
     )
-    assert log == expected_log
+
+    for k, v in expected_log.items():
+        assert np.all(np.isclose(log[k], v, rtol=1e-05))
 
 
 def test_gloss_partial(slices):

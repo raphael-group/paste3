@@ -39,16 +39,16 @@ jobs:
       - name: Pytest with coverage (paste)
         run: coverage run --source=src/paste -m pytest
 
-      - name: Upload coverage to Coveralls
+      - name: Upload coverage to Coveralls (paste)
         if: matrix.os == 'ubuntu-latest'
         run: coveralls
         env:
             GITHUB_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
 
-      - name: Pytest with coverage (paste)
+      - name: Pytest with coverage (paste2)
         run: coverage run --source=src/paste2 -m pytest
 
-      - name: Upload coverage to Coveralls
+      - name: Upload coverage to Coveralls (paste2)
         if: matrix.os == 'ubuntu-latest'
         run: coveralls
         env:

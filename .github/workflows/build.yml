@@ -36,5 +36,21 @@ jobs:
       - name: Install package
         run: pip install -e .
 
-      - name: Pytest
-        run: pytest
+      - name: Pytest with coverage (paste)
+        run: coverage run --source=src/paste -m pytest
+
+      - name: Upload coverage to Coveralls
+        if: matrix.os == 'ubuntu-latest'
+        run: coveralls
+        env:
+            GITHUB_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+
+      - name: Pytest with coverage (paste)
+        run: coverage run --source=src/paste2 -m pytest
+
+      - name: Upload coverage to Coveralls
+        if: matrix.os == 'ubuntu-latest'
+        run: coveralls
+        env:
+          GITHUB_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+

@@ -41,4 +41,6 @@ addopts = "-sv"
 dev = [
     "build",
     "pytest",
+    "coverage",
+    "coveralls"
 ]

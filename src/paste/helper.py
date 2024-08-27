@@ -125,34 +125,6 @@ def norm_and_center_coordinates(X):
     """
     return (X-X.mean(axis=0))/min(scipy.spatial.distance.pdist(X))
 
-def apply_trsf(
-    M: np.ndarray,
-    translation: List[float],
-    points: np.ndarray) -> np.ndarray:
-    """
-    Apply a rotation from a 2x2 rotation matrix `M` together with
-    a translation from a translation vector of length 2 `translation` to a list of
-    `points`.
-
-    Args:
-        M (nd.array): A 2x2 rotation matrix.
-        translation (nd.array): A translation vector of length 2.
-        points (nd.array): A nx2 array of `n` points 2D positions.
-
-    Returns:
-        (nd.array) A nx2 matrix of the `n` points transformed.
-    """
-    if not isinstance(translation, np.ndarray):
-        translation = np.array(translation)
-    trsf = np.identity(3)
-    trsf[:-1, :-1] = M
-    tr = np.identity(3)
-    tr[:-1, -1] = -translation
-    trsf = trsf @ tr
-
-    flo = points.T
-    flo_pad = np.pad(flo, ((0, 1), (0, 0)), constant_values=1)
-    return ((trsf @ flo_pad)[:-1]).T
 
 ## Covert a sparse matrix into a dense np array
 to_dense_array = lambda X: X.toarray() if isinstance(X,scipy.sparse.csr.spmatrix) else np.array(X)

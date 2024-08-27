@@ -3,8 +3,10 @@ name: Build Package and Test
 on:
   push:
     branches: [ main ]
-  pull_request:
+  pull_request_target:
+    types: [ opened ]
     branches: [ main ]
+    paths: ['pyproject.toml', 'requirements.txt']
 
 jobs:
   build_wheels:

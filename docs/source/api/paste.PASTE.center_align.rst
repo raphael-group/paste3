@@ -1,6 +1,6 @@
-﻿paste.PASTE.center\_align
+﻿paste.paste.center\_align
 =========================
 
-.. currentmodule:: paste.PASTE
+.. currentmodule:: paste.paste
 
 .. autofunction:: center_align

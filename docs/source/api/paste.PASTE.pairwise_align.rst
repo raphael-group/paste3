@@ -1,6 +1,6 @@
-﻿paste.PASTE.pairwise\_align
+﻿paste.paste.pairwise\_align
 ===========================
 
-.. currentmodule:: paste.PASTE
+.. currentmodule:: paste.paste
 
 .. autofunction:: pairwise_align

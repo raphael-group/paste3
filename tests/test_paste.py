@@ -7,7 +7,7 @@ from ot.lp import emd
 import pandas as pd
 import tempfile
 
-from paste.PASTE import (
+from paste.paste import (
     pairwise_align,
     center_align,
     center_ot,

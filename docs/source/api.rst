@@ -4,7 +4,7 @@ API
 Import Paste as::
 
    from paste.visualization import plot_slice, stack_slices_pairwise, stack_slices_center
-   from paste.PASTE import pairwise_align, center_align
+   from paste.paste import pairwise_align, center_align
    from paste.helper import filter_for_common_genes, match_spots_using_spatial_heuristic, match_spots_using_spatial_heuristic, apply_trsf
 
 .. automodule:: paste

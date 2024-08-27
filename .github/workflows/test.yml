@@ -1,4 +1,4 @@
-name: Build Package and Test
+name: Install dependencies and run tests
 
 on:
   push:
@@ -25,17 +25,24 @@ jobs:
     steps:
       - uses: actions/checkout@main
 
-      - uses: actions/setup-python@v2
-        name: Install Python
+      - uses: conda-incubator/setup-miniconda@v3
+        name: Setup conda environment
         with:
+          auto-update-conda: true
           python-version: ${{ matrix.python-version }}
+          activate-environment: paste
+          environment-file: environment.yml
 
-      - name: Build Source
-        run: pip install .
+      - name: Install package
+        run: pip install -e .
 
-      - name: Install Developer Dependencies
-        run: pip install .[dev]
+      - name: Pytest with coverage
+        run: coverage run --source=src -m pytest
 
-      - name: Pytest
-        run: pytest
+      - name: Upload coverage to Coveralls
+        if: matrix.os == 'ubuntu-latest'
+        run: coveralls
+        env:
+          GITHUB_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+
 

@@ -174,6 +174,7 @@ def test_center_NMF(intersecting_slices):
 
 
 def test_fused_gromov_wasserstein(slices):
+    np.random.seed(0)
     temp_dir = Path(tempfile.mkdtemp())
 
     common_genes = intersect(slices[0].var.index, slices[1].var.index)

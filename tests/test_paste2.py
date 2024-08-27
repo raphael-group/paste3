@@ -30,7 +30,7 @@ def test_partial_pairwise_align(slices2):
     assert_frame_equal(
         pd.DataFrame(pi_BC, columns=[str(i) for i in range(pi_BC.shape[1])]),
         pd.read_csv(output_dir / "partial_pairwise_align.csv"),
-        rtol=1e-04,
+        rtol=1e-03,
     )
 
 

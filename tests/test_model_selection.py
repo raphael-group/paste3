@@ -70,6 +70,6 @@ def test_select_overlap_fraction(slices):
 
 def test_select_overlap_fraction_plotting(slices):
     np.random.seed(0)
-    fraction = select_overlap_fraction_plotting(slices[0], slices[1])
+    fraction = select_overlap_fraction_plotting(slices[0], slices[1], show_plot=False)
 
     assert fraction == 0.4

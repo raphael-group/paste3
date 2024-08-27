@@ -195,7 +195,7 @@ def plot_edge_curve(m_list, source_list, target_list):
     plt.show()
 
 
-def select_overlap_fraction_plotting(sliceA, sliceB, alpha=0.1):
+def select_overlap_fraction_plotting(sliceA, sliceB, alpha=0.1, show_plot=True):
     overlap_to_check=[0.99, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6, 0.55, 0.5, 0.45, 0.4, 0.35, 0.3, 0.25, 0.2, 0.15, 0.1, 0.05]
     # subset for common genes
     common_genes = intersect(sliceA.var.index, sliceB.var.index)
@@ -220,7 +220,8 @@ def select_overlap_fraction_plotting(sliceA, sliceB, alpha=0.1):
         m_to_edge_inconsistency_A.append(sliceA_measure)
         m_to_edge_inconsistency_B.append(sliceB_measure)
 
-    plot_edge_curve(overlap_to_check, m_to_edge_inconsistency_A, m_to_edge_inconsistency_B)
+    if show_plot:
+        plot_edge_curve(overlap_to_check, m_to_edge_inconsistency_A, m_to_edge_inconsistency_B)
 
     half_estimate_A = overlap_to_check[m_to_edge_inconsistency_A.index(max(m_to_edge_inconsistency_A))]
     half_estimate_B = overlap_to_check[m_to_edge_inconsistency_B.index(max(m_to_edge_inconsistency_B))]

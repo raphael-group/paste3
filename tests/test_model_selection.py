@@ -1,6 +1,5 @@
 import numpy as np
 from pathlib import Path
-import pytest
 from tests.test_paste import assert_checksum_equals
 from paste2.model_selection import (
     create_graph,
@@ -10,7 +9,6 @@ from paste2.model_selection import (
     select_overlap_fraction,
     select_overlap_fraction_plotting,
 )
-from matplotlib import pyplot as plt
 import scanpy as sc
 from paste2.PASTE2 import partial_pairwise_align
 
@@ -53,27 +51,25 @@ def test_edge_inconsistency_score(slices, tmp_path):
     assert measure_a == 0.0
 
 
-# TODO: need to figure out where the randomness is coming from in the following three functions
-# TODO: they also take a long time to work
-@pytest.mark.skip
 def test_calculate_convex_hull_edge_inconsistency(slices, tmp_path):
+    np.random.seed(0)
     pairwise_info = partial_pairwise_align(slices[0], slices[1], s=0.7)
     measure_a, measure_b = calculate_convex_hull_edge_inconsistency(
         slices[0], slices[1], pairwise_info
     )
 
-    assert measure_a == 0.17177914110429449
-    assert measure_b == 0.18404907975460122
+    assert measure_a == 0.18962075848303392
+    assert measure_b == 0.1971252566735113
 
 
-@pytest.mark.skip
 def test_select_overlap_fraction(slices):
+    np.random.seed(0)
     fraction = select_overlap_fraction(slices[0], slices[1])
-    assert fraction == 0.5
+    assert fraction == 0.4
 
 
-@pytest.mark.skip
 def test_select_overlap_fraction_plotting(slices):
-    fraction = select_overlap_fraction_plotting(slices[0], slices[1])
+    np.random.seed(0)
+    fraction = select_overlap_fraction_plotting(slices[0], slices[1], show_plot=False)
 
     assert fraction == 0.4

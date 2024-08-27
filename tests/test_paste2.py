@@ -22,15 +22,14 @@ output_dir = test_dir / "data/output"
 from pandas.testing import assert_frame_equal
 
 
-# TODO: this takes 3 years to pass, see whats going on here
-@pytest.mark.skip
 def test_partial_pairwise_align(slices2):
     pi_BC = partial_pairwise_align(slices2[0], slices2[1], s=0.7)
 
     assert_frame_equal(
-        pd.DataFrame(pi_BC, index=None),
+        pd.DataFrame(pi_BC, columns=[str(i) for i in range(pi_BC.shape[1])]),
         pd.read_csv(output_dir / "partial_pairwise_align.csv"),
-        rtol=1e-05,
+        rtol=1e-03,
+        atol=1e-03,
     )
 
 

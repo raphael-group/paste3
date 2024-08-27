@@ -108,30 +108,26 @@ def test_generalized_kl_divergence(slices):
     )
 
 
-def test_glmpca_distance(slices):
-    common_genes = intersect(slices[1].var.index, slices[2].var.index)
-    sliceA = slices[1][:, common_genes]
-    sliceB = slices[2][:, common_genes]
+def test_glmpca_distance():
+    np.random.seed(0)
+    sliceA_X = np.genfromtxt(input_dir / "sliceA_X.csv", delimiter=",", skip_header=1)[
+        10:, :1000
+    ]
+    sliceB_X = np.genfromtxt(input_dir / "sliceB_X.csv", delimiter=",", skip_header=1)[
+        10:, :1000
+    ]
 
-    sliceA_X, sliceB_X = to_dense_array(
-        extract_data_matrix(sliceA, None)
-    ), to_dense_array(extract_data_matrix(sliceB, None))
+    glmpca_distance_matrix = glmpca_distance(
+        sliceA_X, sliceB_X, latent_dim=10, filter=True
+    )
 
-    # TODO: this takes 3 years to pass, see how to make it shorter
-
-    # glmpca_distance_matrix = glmpca_distance(
-    #     sliceA_X, sliceB_X, latent_dim=50, filter=True
-    # )
-
-    # TODO: need to see why this isn't passing
-    # TODO: need to see if this can get faster
-    # assert_frame_equal(
-    #     pd.DataFrame(glmpca_distance_matrix, columns=[str(i) for i in range(264)]),
-    #     pd.read_csv(output_dir / "glmpca_distance_matrix.csv"),
-    #     check_names=False,
-    #     check_dtype=False,
-    #     rtol=1e-04,
-    # )
+    assert_frame_equal(
+        pd.DataFrame(glmpca_distance_matrix, columns=[str(i) for i in range(254)]),
+        pd.read_csv(output_dir / "glmpca_distance_matrix.csv"),
+        check_names=False,
+        check_dtype=False,
+        rtol=1e-04,
+    )
 
 
 def test_pca_distance(slices2):

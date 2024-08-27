@@ -80,7 +80,7 @@ def main(args):
         print("Computing center alignment.")
         initial_slice = slices[args.initial_slice - 1].copy()
         # compute center align
-        center_slice, pis = center_align(initial_slice, slices, lmbda, args.alpha, args.n_components, args.threshold, dissimilarity=args.cost, distributions=[slices[i].obsm['weights'] for i in range(n_slices)], pis_init=pis_init)
+        center_slice, pis = center_align(initial_slice, slices, lmbda, args.alpha, args.n_components, args.threshold, random_seed=args.seed, dissimilarity=args.cost, distributions=[slices[i].obsm['weights'] for i in range(n_slices)], pis_init=pis_init)
         W = pd.DataFrame(center_slice.uns['paste_W'], index = center_slice.obs.index)
         H = pd.DataFrame(center_slice.uns['paste_H'], columns = center_slice.var.index)
         W.to_csv(os.path.join(args.direc, "paste_output/W_center"))
@@ -112,5 +112,6 @@ if __name__ == "__main__":
     parser.add_argument("-x","--coordinates", help="output new coordinates", action='store_true', default = False)
     parser.add_argument("-w","--weights", help="path to files containing weights of spots in each slice. The format of the files is the same as the coordinate files used as input",type=str, default=[], nargs='+')
     parser.add_argument("-s","--start", help="path to files containing initial starting alignmnets. If not given the OT starts the search with uniform alignments. The format of the files is the same as the alignments files output by PASTE",type=str, default=[], nargs='+')
+    parser.add_argument("--seed", help="random seed for reproducibility",type=int,default=None)
     args = parser.parse_args()
     main(args)

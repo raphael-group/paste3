@@ -6,7 +6,7 @@
 
 # -- Path setup --------------------------------------------------------------
 
-from pathlib import Path
+afrom pathlib import Path
 
 
 # If extensions (or modules to document with autodoc) are in another directory,

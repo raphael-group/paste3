@@ -5,7 +5,7 @@ Import Paste as::
 
    from paste.visualization import plot_slice, stack_slices_pairwise, stack_slices_center
    from paste.paste import pairwise_align, center_align
-   from paste.helper import filter_for_common_genes, match_spots_using_spatial_heuristic, match_spots_using_spatial_heuristic, apply_trsf
+   from paste.helper import filter_for_common_genes, match_spots_using_spatial_heuristic, match_spots_using_spatial_heuristic
 
 .. automodule:: paste
 
@@ -15,8 +15,8 @@ Alignment
 .. autosummary::
    :toctree: api
 
-    PASTE.pairwise_align
-    PASTE.center_align
+    paste.paste.pairwise_align
+    paste.paste.center_align
 
 Visualization
 ~~~~~~~~~~~~~
@@ -36,6 +36,4 @@ Miscellaneous
 
    helper.filter_for_common_genes
    helper.match_spots_using_spatial_heuristic
-   helper.apply_trsf
-
 

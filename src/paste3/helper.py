@@ -1,4 +1,4 @@
-from paste2.glmpca import glmpca
+from paste3.glmpca import glmpca
 import anndata as ad
 import scanpy as sc
 from scipy.spatial import distance

@@ -3,7 +3,7 @@ import numpy as np
 import ot.backend
 import pandas as pd
 from pandas.testing import assert_frame_equal
-from helper import (
+from paste3.helper import (
     intersect,
     kl_divergence_backend,
     to_dense_array,

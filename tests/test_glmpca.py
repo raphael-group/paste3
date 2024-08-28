@@ -2,7 +2,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
-from paste2.glmpca import (
+from paste3.glmpca import (
     ortho,
     mat_binom_dev,
     remove_intercept,

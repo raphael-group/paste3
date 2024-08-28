@@ -36,7 +36,7 @@ jobs:
         run: |
           # Unless we add a .nojekyll to the base of the deployment folder, the underscores in foldernames
           # like _static/ etc. pose problems on GH Pages.
-          cd docs && sphinx-apidoc -f -o src ../src -H Modules && ma html && touch _build/html/.nojekyll
+          cd docs && sphinx-apidoc -f -o src ../src -H Modules && ma html
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4

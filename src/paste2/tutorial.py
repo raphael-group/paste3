@@ -20,7 +20,7 @@ import numpy as np
 # In[2]:
 
 
-from paste2 import PASTE2, projection
+from paste2 import paste2, projection
 
 
 # # Read in Spatial Transcriptomics slices as AnnData objects
@@ -103,28 +103,28 @@ sq.pl.spatial_scatter(
 )
 
 
-# # Compute partial pairwise alignment using PASTE2
+# # Compute partial pairwise alignment using paste2
 # 
-# Give a pair of partially overlapping slices, we can use PASTE2.partial_pairwise_align( ) to find an alignment matrix. To call the function, you need to input the AnnData objects of the two slices, as well as a parameter s, which indicates the overlap percentage of the two slices. In this tutorial, each pair of cropped subslices overlap at 70% of the areas, so we set s=0.7. For your own datasets you should visualize the slices and manually determine the approxiamte overlap percentage (this parameter does not have to be very accurate).
+# Give a pair of partially overlapping slices, we can use paste2.partial_pairwise_align( ) to find an alignment matrix. To call the function, you need to input the AnnData objects of the two slices, as well as a parameter s, which indicates the overlap percentage of the two slices. In this tutorial, each pair of cropped subslices overlap at 70% of the areas, so we set s=0.7. For your own datasets you should visualize the slices and manually determine the approxiamte overlap percentage (this parameter does not have to be very accurate).
 # 
 # Now we compute an alignment matrix between each pair of slices in our example dataset:
 
 # In[10]:
 
 
-pi_AB = PASTE2.partial_pairwise_align(sliceA, sliceB, s=0.7)
+pi_AB = paste2.partial_pairwise_align(sliceA, sliceB, s=0.7)
 
 
 # In[11]:
 
 
-pi_BC = PASTE2.partial_pairwise_align(sliceB, sliceC, s=0.7)
+pi_BC = paste2.partial_pairwise_align(sliceB, sliceC, s=0.7)
 
 
 # In[12]:
 
 
-pi_CD = PASTE2.partial_pairwise_align(sliceC, sliceD, s=0.7)
+pi_CD = paste2.partial_pairwise_align(sliceC, sliceD, s=0.7)
 
 
 # Let's check the shape of each alignment matrix. For aligning a slice with n1 spots and a slice with n2 spots, the alignment matrix should be of shape (n1 * n2)
@@ -137,7 +137,7 @@ print(pi_BC.shape)
 print(pi_CD.shape)
 
 
-# There are other optional parameters to PASTE2.partial_pairwise_align() as well. You can checkout the original function signature in the souce code with documentation.
+# There are other optional parameters to paste2.partial_pairwise_align() as well. You can checkout the original function signature in the souce code with documentation.
 # 
 # Let's visualize the alignment between sliceA and sliceB:
 
@@ -236,7 +236,7 @@ plot_slices_overlap(new_slices)
 plot_slices_overlap(new_slices[:2])
 
 
-# # Let me know if PASTE2 runs on your machine! If you run into any problem don't hesitate to reach out at xl5434@princeton.edu. I will respond as quickly as possible.
+# # Let me know if paste2 runs on your machine! If you run into any problem don't hesitate to reach out at xl5434@princeton.edu. I will respond as quickly as possible.
 
 # In[ ]:
 

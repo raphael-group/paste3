@@ -10,7 +10,7 @@ from paste2.model_selection import (
     select_overlap_fraction_plotting,
 )
 import scanpy as sc
-from paste2.PASTE2 import partial_pairwise_align
+from paste2.paste2 import partial_pairwise_align
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"

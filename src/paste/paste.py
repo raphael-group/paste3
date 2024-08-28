@@ -3,7 +3,7 @@ import numpy as np
 from anndata import AnnData
 import ot
 from sklearn.decomposition import NMF
-from paste.helper import intersect, kl_divergence_backend, to_dense_array, extract_data_matrix
+from helper import intersect, kl_divergence_backend, to_dense_array, extract_data_matrix
 
 def pairwise_align(
     sliceA: AnnData, 

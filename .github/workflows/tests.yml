@@ -37,7 +37,7 @@ jobs:
         run: pip install -e .
 
       - name: Pytest with coverage
-        run: coverage run --source=src -m pytest
+        run: coverage run --source=src/paste3 -m pytest
 
       - name: Upload coverage to Coveralls
         if: matrix.os == 'ubuntu-latest'

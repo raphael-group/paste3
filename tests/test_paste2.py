@@ -1,7 +1,7 @@
 from pathlib import Path
 import pandas as pd
 import numpy as np
-from paste2.PASTE2 import (
+from paste3.paste2 import (
     partial_pairwise_align,
     partial_pairwise_align_given_cost_matrix,
     partial_pairwise_align_histology,
@@ -9,9 +9,7 @@ from paste2.PASTE2 import (
     gwgrad_partial,
     gwloss_partial,
 )
-from paste2.helper import (
-    intersect,
-)
+from paste3.helper import intersect
 import pytest
 from scipy.spatial import distance
 

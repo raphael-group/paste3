@@ -2,7 +2,7 @@ import numpy as np
 import ot
 from scipy.spatial import distance
 
-from .helper import kl_divergence, intersect, to_dense_array, extract_data_matrix, generalized_kl_divergence, \
+from paste3.helper import kl_divergence, intersect, to_dense_array, extract_data_matrix, generalized_kl_divergence, \
     high_umi_gene_distance, pca_distance, glmpca_distance
 
 

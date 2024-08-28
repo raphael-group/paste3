@@ -2,7 +2,7 @@ import pandas as pd
 from pandas.testing import assert_frame_equal
 from pathlib import Path
 from collections import namedtuple
-from paste.paste_cmd_line import main as paste_cmd_line
+from paste3.paste_cmd_line import main as paste_cmd_line
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"

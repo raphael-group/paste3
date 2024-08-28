@@ -6,8 +6,8 @@ import networkx as nx
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from .helper import intersect, to_dense_array, extract_data_matrix, glmpca_distance
-from .PASTE2 import partial_pairwise_align_given_cost_matrix
+from paste3.helper import intersect, to_dense_array, extract_data_matrix, glmpca_distance
+from paste3.paste2 import partial_pairwise_align_given_cost_matrix
 
 
 """

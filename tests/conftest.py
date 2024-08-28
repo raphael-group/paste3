@@ -2,7 +2,7 @@ from pathlib import Path
 import numpy as np
 import scanpy as sc
 import pytest
-from paste.helper import intersect
+from paste3.helper import intersect
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"

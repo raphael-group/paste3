@@ -1,7 +1,8 @@
 from pathlib import Path
 import sys
+import os
 HERE = Path(__file__).parent
-sys.path.insert(0, str(HERE.parent.parent))
+sys.path.insert(0, os.path.abspath(HERE.parent.parent))
 
 # Configuration file for the Sphinx documentation builder.
 #

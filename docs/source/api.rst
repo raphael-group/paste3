@@ -1,7 +1,7 @@
 API
 ===
     import paste3
-.. automodule:: paste3
+.. automodule:: src.paste3
 
 PASTE Alignment
 ~~~~~~~~~~~~~~~~~~

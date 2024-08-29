@@ -28,6 +28,10 @@ jobs:
 
       - uses: actions/checkout@v2
 
+      - name: Install Package
+        run: | 
+         pip install . 
+
       - name: Setup Envvars
         run: |
             if [[ $GITHUB_REF = "refs/tags/"* ]] ; then echo "PASTE3_VERSION=${GITHUB_REF/refs\/tags\//}" ; else echo "PASTE3_VERSION=" ; fi >> $GITHUB_ENV

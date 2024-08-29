@@ -24,7 +24,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install sphinx myst-parser sphinx-autodoc-typehints nbsphinx sphinx-gallery sphinx-rtd-theme
+          pip install sphinx myst-parser sphinx-autodoc-typehints nbsphinx sphinx-gallery sphinx-rtd-theme sphinx-autodoc-annotation
 
       - uses: actions/checkout@v2
 

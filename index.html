@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to PASTE3 documentation! &mdash; paste3 1.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=d2d258e8" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=60341314"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API" href="api.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            paste3
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorials</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">paste3</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Welcome to PASTE3 documentation!</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="welcome-to-paste3-documentation">
+<h1>Welcome to PASTE3 documentation!<a class="headerlink" href="#welcome-to-paste3-documentation" title="Link to this heading"></a></h1>
+<p><strong>PASTE3 (WIP)</strong> package that provides combined functionality of PASTE and PASTE2.
+<strong>PASTE</strong> is a computational method that leverages both gene expression similarity and spatial distances between spots to align and integrate spatial transcriptomics data, and
+<strong>PASTE2</strong>, the extension of PASTE, is a method for partial alignment and 3D reconstruction of spatial transcriptomics slices when they do not fully overlap in space.
+In particular, PASTE3 combines PASTE and PASTE2 to provide five main functionalities:</p>
+<ol class="arabic simple">
+<li><p>Pairwise Alignment: align spots across pairwise slices.</p></li>
+<li><p>Center Alignment: integrate multiple slices into one center slice.</p></li>
+<li><p>Partial Pairwise Alignment: given a pair of slices and their overlap percentage, find a partial alignment matrix.</p></li>
+<li><p>Select Overlap: decide the overlap percentage between two slices</p></li>
+</ol>
+<p>5. Partial Stack Slices Pairwise: given a sequence of consecutive slices and the partial alignments between them,
+project all slices onto the same 2D coordinate system. 3D reconstruction can be done by assigning a z-value to each slice.</p>
+<a class="reference internal image-reference" href="_images/paste_overview.png"><img alt="PASTE Overview Figure" class="align-center" src="_images/paste_overview.png" style="width: 800px;" /></a>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<a class="reference internal image-reference" href="_images/paste2.png"><img alt="PASTE2 Overview Figure" class="align-center" src="_images/paste2.png" style="width: 800px;" /></a>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<section id="manuscript">
+<h2>Manuscript<a class="headerlink" href="#manuscript" title="Link to this heading"></a></h2>
+<p>You can view PASTE <a class="reference external" href="https://www.biorxiv.org/content/10.1101/2021.03.16.435604v1">preprint</a> on <strong>bioRxiv</strong>.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#paste-alignment">PASTE Alignment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#paste2-alignment">PASTE2 Alignment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#projection">Projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#model-selection">Model Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#glmpca">GLMPCA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="notebooks/paste_tutorial.html">Getting Started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="notebooks/paste2_tutorial.html">Install PASTE2 python package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="notebooks/paste2_tutorial.html#Read-in-Spatial-Transcriptomics-slices-as-AnnData-objects">Read in Spatial Transcriptomics slices as AnnData objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="notebooks/paste2_tutorial.html#Compute-partial-pairwise-alignment-using-PASTE2">Compute partial pairwise alignment using PASTE2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="notebooks/paste2_tutorial.html#Project-all-slices-onto-the-same-coordiante-system-according-to-the-alignment">Project all slices onto the same coordiante system according to the alignment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="notebooks/paste2_tutorial.html#Let-me-know-if-PASTE2-runs-on-your-machine!-If-you-run-into-any-problem-don't-hesitate-to-reach-out-at-xl5434&#64;princeton.edu.-I-will-respond-as-quickly-as-possible.">Let me know if PASTE2 runs on your machine! If you run into any problem don’t hesitate to reach out at xl5434&#64;princeton.edu. I will respond as quickly as possible.</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="api.html" class="btn btn-neutral float-right" title="API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Raphael Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

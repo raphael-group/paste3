@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>paste3.glmpca.glmpca &mdash; paste3 1.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=60341314"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="paste3.helper.filter_for_common_genes" href="paste3.helper.filter_for_common_genes.html" />
+    <link rel="prev" title="paste3.glmpca.est_nb_theta" href="paste3.glmpca.est_nb_theta.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            paste3
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html#paste-alignment">PASTE Alignment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#paste2-alignment">PASTE2 Alignment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#projection">Projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#model-selection">Model Selection</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#glmpca">GLMPCA</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="paste3.glmpca.ortho.html">paste3.glmpca.ortho</a></li>
+<li class="toctree-l3"><a class="reference internal" href="paste3.glmpca.mat_binom_dev.html">paste3.glmpca.mat_binom_dev</a></li>
+<li class="toctree-l3"><a class="reference internal" href="paste3.glmpca.glmpca_init.html">paste3.glmpca.glmpca_init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="paste3.glmpca.est_nb_theta.html">paste3.glmpca.est_nb_theta</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">paste3.glmpca.glmpca</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#paste3.glmpca.glmpca"><code class="docutils literal notranslate"><span class="pre">glmpca()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorials</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">paste3</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API</a></li>
+      <li class="breadcrumb-item active">paste3.glmpca.glmpca</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/paste3.glmpca.glmpca.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="paste3-glmpca-glmpca">
+<h1>paste3.glmpca.glmpca<a class="headerlink" href="#paste3-glmpca-glmpca" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="paste3.glmpca.glmpca">
+<span class="sig-prename descclassname"><span class="pre">paste3.glmpca.</span></span><span class="sig-name descname"><span class="pre">glmpca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'poi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'eps':</span> <span class="pre">0.0001,</span> <span class="pre">'maxIter':</span> <span class="pre">1000,</span> <span class="pre">'optimizeTheta':</span> <span class="pre">True}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penalty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'factors':</span> <span class="pre">None,</span> <span class="pre">'loadings':</span> <span class="pre">None}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_theta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/paste3/glmpca.html#glmpca"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#paste3.glmpca.glmpca" title="Link to this definition"></a></dt>
+<dd><p>GLM-PCA
+This function implements the GLM-PCA dimensionality reduction method for high-dimensional count data.
+The basic model is R = AX'+ZG'+VU', where E[Y]=M=linkinv(R). Regression coefficients are A and G, latent factors are U, and loadings are V. The objective function being optimized is the deviance between Y and M, plus an L2 (ridge) penalty on U and V. Note that glmpca uses a random initialization, so for fully reproducible results one should set the random seed.
+:type Y: 
+:param Y: columns.
+:type Y: array_like of count data with features as rows and observations as
+:type L: 
+:param L:
+:type L: the desired number of latent dimensions (integer).
+:type fam: 
+:param fam:
+:type fam: string describing the likelihood to use for the data. Possible values include:
+:param - poi:
+:type - poi: Poisson
+:param - nb:
+:type - nb: negative binomial
+:param - mult:
+:type - mult: binomial approximation to multinomial
+:param - bern:
+:type - bern: Bernoulli
+:type ctl: 
+:param ctl:
+:type ctl: a dictionary of control parameters for optimization. Valid keys:
+:param - maxIter:
+:type - maxIter: an integer, maximum number of iterations
+:param - eps:
+:type - eps: a float, maximum relative change in deviance tolerated for convergence
+:param - optimizeTheta: distribution is optimized (default), or fixed to the value provided in nb_theta.
+:type - optimizeTheta: a bool, indicating if the overdispersion parameter of the NB
+:type penalty: 
+:param penalty: Regression coefficients are not penalized.
+:type penalty: the L2 penalty for the latent factors (default = 1).
+:type verbose: 
+:param verbose: be printed after each iteration (default = False).
+:type verbose: logical value indicating whether the current deviance should
+:type init: 
+:param init: loadings (V) matrices.
+:type init: a dictionary containing initial estimates for the factors (U) and
+:type nb_theta: 
+:param nb_theta: if nb_theta goes to infinity, this is equivalent to Poisson</p>
+<blockquote>
+<div><p>Note that the alpha in the statsmodels package is 1/nb_theta.
+If ctl[&quot;optimizeTheta&quot;] is True, this is used as initial value for optimization</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array_like</em><em> of </em><em>column</em><em> (</em><em>observations</em><em>) </em><em>covariates. Any column with all</em>) -- same values (eg. 1 for intercept) will be removed. This is because we force
+the intercept and want to avoid collinearity.</p></li>
+<li><p><strong>Z</strong> (<em>array_like</em><em> of </em><em>row</em><em> (</em><em>feature</em><em>) </em><em>covariates</em><em>, </em><em>usually not needed.</em>)</p></li>
+<li><p><strong>sz</strong> (<em>numeric vector</em><em> of </em><em>size factors to use in place</em><em> of </em><em>total counts.</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>A dictionary with the following elements</em></p></li>
+<li><p><strong>- factors</strong> (<em>an array U whose rows match the columns (observations) of Y. It is analogous to the principal components in PCA. Each column of the factors array is a different latent dimension.</em>)</p></li>
+<li><p><strong>- loadings</strong> (<em>an array V whose rows match the rows (features/dimensions) of Y. It is analogous to loadings in PCA. Each column of the loadings array is a different latent dimension.</em>)</p></li>
+<li><p><strong>- coefX</strong> (<em>an array A of coefficients for the observation-specific covariates array X. Each row of coefX corresponds to a row of Y and each column corresponds to a column of X. The first column of coefX contains feature-specific intercepts which are included by default.</em>)</p></li>
+<li><p><strong>- coefZ</strong> (<em>a array G of coefficients for the feature-specific covariates array Z. Each row of coefZ corresponds to a column of Y and each column corresponds to a column of Z. By default no such covariates are included and this is returned as None.</em>)</p></li>
+<li><p><strong>- dev</strong> (<em>a vector of deviance values. The length of the vector is the number of iterations it took for GLM-PCA's optimizer to converge. The deviance should generally decrease over time. If it fluctuates wildly, this often indicates numerical instability, which can be improved by increasing the penalty parameter.</em>)</p></li>
+<li><p><strong>- glmpca_family</strong> (<em>an object of class GlmpcaFamily. This is a minor wrapper to the family object used by the statsmodels package for fitting standard GLMs. It contains various internal functions and parameters needed to optimize the GLM-PCA objective function. For the negative binomial case, it also contains the final estimated value of the dispersion parameter nb_theta.</em>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>1) create a simple dataset with two clusters and visualize the latent structure
+# &gt;&gt;&gt; from numpy import array,exp,random,repeat
+# &gt;&gt;&gt; from matplotlib.pyplot import scatter
+# &gt;&gt;&gt; from glmpca import glmpca
+# &gt;&gt;&gt; mu= exp(random.randn(20,100))
+# &gt;&gt;&gt; mu[range(10),:] <a href="#id1"><span class="problematic" id="id2">*</span></a>= exp(random.randn(100))
+# &gt;&gt;&gt; clust= repeat([&quot;red&quot;,&quot;black&quot;],10)
+# &gt;&gt;&gt; Y= random.poisson(mu)
+# &gt;&gt;&gt; res= glmpca(Y.T, 2)
+# &gt;&gt;&gt; factors= res[&quot;factors&quot;]
+# &gt;&gt;&gt; scatter(factors[:,0],factors[:,1],c=clust)</p>
+<p class="rubric">References</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id3" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>Townes FW, Hicks SC, Aryee MJ, and Irizarry RA. &quot;Feature selection and dimension reduction for single-cell RNA-seq based on a multinomial model&quot;, biorXiv, 2019. <a class="reference external" href="https://www.biorxiv.org/content/10.1101/574574v1">https://www.biorxiv.org/content/10.1101/574574v1</a></p>
+</aside>
+<aside class="footnote brackets" id="id4" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<p>Townes FW. &quot;Generalized principal component analysis&quot;, arXiv, 2019. <a class="reference external" href="https://arxiv.org/abs/1907.02647">https://arxiv.org/abs/1907.02647</a></p>
+</aside>
+</aside>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="paste3.glmpca.est_nb_theta.html" class="btn btn-neutral float-left" title="paste3.glmpca.est_nb_theta" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="paste3.helper.filter_for_common_genes.html" class="btn btn-neutral float-right" title="paste3.helper.filter_for_common_genes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Raphael Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

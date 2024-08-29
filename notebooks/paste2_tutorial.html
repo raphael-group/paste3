@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Install PASTE2 python package &mdash; paste3 1.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=60341314"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Getting Started" href="paste_tutorial.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            paste3
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../tutorial.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="paste_tutorial.html">Getting Started</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Install PASTE2 python package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Read-in-Spatial-Transcriptomics-slices-as-AnnData-objects">Read in Spatial Transcriptomics slices as AnnData objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Compute-partial-pairwise-alignment-using-PASTE2">Compute partial pairwise alignment using PASTE2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Project-all-slices-onto-the-same-coordiante-system-according-to-the-alignment">Project all slices onto the same coordiante system according to the alignment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Let-me-know-if-PASTE2-runs-on-your-machine!-If-you-run-into-any-problem-don't-hesitate-to-reach-out-at-xl5434&#64;princeton.edu.-I-will-respond-as-quickly-as-possible.">Let me know if PASTE2 runs on your machine! If you run into any problem don’t hesitate to reach out at xl5434&#64;princeton.edu. I will respond as quickly as possible.</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">paste3</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../tutorial.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">Install PASTE2 python package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/notebooks/paste2_tutorial.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scanpy</span> <span class="k">as</span> <span class="nn">sc</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib.patches</span> <span class="k">as</span> <span class="nn">mpatches</span>
+<span class="kn">import</span> <span class="nn">squidpy</span> <span class="k">as</span> <span class="nn">sq</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</pre></div>
+</div>
+</div>
+<section id="Install-PASTE2-python-package">
+<h1>Install PASTE2 python package<a class="headerlink" href="#Install-PASTE2-python-package" title="Link to this heading"></a></h1>
+<p>You can install the paste2 package at <a class="reference external" href="https://pypi.org/project/paste2/">https://pypi.org/project/paste2/</a>. We import paste2 as follows:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">paste2</span> <span class="kn">import</span> <span class="n">PASTE2</span><span class="p">,</span> <span class="n">projection</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Read-in-Spatial-Transcriptomics-slices-as-AnnData-objects">
+<h1>Read in Spatial Transcriptomics slices as AnnData objects<a class="headerlink" href="#Read-in-Spatial-Transcriptomics-slices-as-AnnData-objects" title="Link to this heading"></a></h1>
+<p>We provide four example ST slices from DLPFC patient 3, cropped to form partially overlapping subslices (See Figure 3A of our paper). Each slice is stored in an <a class="reference external" href="https://anndata.readthedocs.io/en/latest/">AnnData</a> object.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sliceA_filename</span> <span class="o">=</span> <span class="s1">&#39;../../tests/data/input/151673.h5ad&#39;</span>
+<span class="n">sliceB_filename</span> <span class="o">=</span> <span class="s1">&#39;../../tests/data/input/151674.h5ad&#39;</span>
+<span class="n">sliceC_filename</span> <span class="o">=</span> <span class="s1">&#39;../../tests/data/input/151675.h5ad&#39;</span>
+<span class="n">sliceD_filename</span> <span class="o">=</span> <span class="s1">&#39;../../tests/data/input/151676.h5ad&#39;</span>
+<span class="n">sliceA</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">read_h5ad</span><span class="p">(</span><span class="n">sliceA_filename</span><span class="p">)</span>
+<span class="n">sliceB</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">read_h5ad</span><span class="p">(</span><span class="n">sliceB_filename</span><span class="p">)</span>
+<span class="n">sliceC</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">read_h5ad</span><span class="p">(</span><span class="n">sliceC_filename</span><span class="p">)</span>
+<span class="n">sliceD</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">read_h5ad</span><span class="p">(</span><span class="n">sliceD_filename</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Each AnnData object consists of a gene expression matrx and spatial coordinate matrix. The gene expression matrix is stored in the .X field. The spatial coordiante matrix is stored in the .obsm['spatial'] field.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sliceA</span><span class="o">.</span><span class="n">X</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;2929x11381 sparse matrix of type &#39;&lt;class &#39;numpy.float32&#39;&gt;&#39;
+        with 5798687 stored elements in Compressed Sparse Row format&gt;
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sliceA</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([[ 5769,  2807],
+       [ 4068,  9505],
+       [ 3393,  7583],
+       ...,
+       [ 4631,  7831],
+       [ 5571, 11193],
+       [ 6317,  3291]])
+</pre></div></div>
+</div>
+<p>The rows of the AnnData objects are spots. The columns are genes.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sliceA</span><span class="o">.</span><span class="n">obs</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>in_tissue</th>
+      <th>array_row</th>
+      <th>array_col</th>
+      <th>imagerow</th>
+      <th>imagecol</th>
+      <th>sum_umi</th>
+      <th>sum_gene</th>
+      <th>subject</th>
+      <th>position</th>
+      <th>replicate</th>
+      <th>...</th>
+      <th>layer_guess_reordered_short</th>
+      <th>n_genes_by_counts</th>
+      <th>log1p_n_genes_by_counts</th>
+      <th>total_counts</th>
+      <th>log1p_total_counts</th>
+      <th>pct_counts_in_top_50_genes</th>
+      <th>pct_counts_in_top_100_genes</th>
+      <th>pct_counts_in_top_200_genes</th>
+      <th>pct_counts_in_top_500_genes</th>
+      <th>n_counts</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>AAACAATCTACTAGCA-1.3</th>
+      <td>1</td>
+      <td>3</td>
+      <td>43</td>
+      <td>126.327637</td>
+      <td>259.630972</td>
+      <td>1667</td>
+      <td>1150</td>
+      <td>Br8100</td>
+      <td>0</td>
+      <td>1</td>
+      <td>...</td>
+      <td>L1</td>
+      <td>1150</td>
+      <td>7.048386</td>
+      <td>1667.0</td>
+      <td>7.419381</td>
+      <td>22.975405</td>
+      <td>30.173965</td>
+      <td>42.171566</td>
+      <td>61.007798</td>
+      <td>1628.0</td>
+    </tr>
+    <tr>
+      <th>AAACACCAATAACTGC-1.8</th>
+      <td>1</td>
+      <td>59</td>
+      <td>19</td>
+      <td>427.767792</td>
+      <td>183.078314</td>
+      <td>3769</td>
+      <td>1960</td>
+      <td>Br8100</td>
+      <td>0</td>
+      <td>1</td>
+      <td>...</td>
+      <td>WM</td>
+      <td>1960</td>
+      <td>7.581210</td>
+      <td>3769.0</td>
+      <td>8.234830</td>
+      <td>25.975060</td>
+      <td>33.138764</td>
+      <td>42.531175</td>
+      <td>59.697533</td>
+      <td>3704.0</td>
+    </tr>
+    <tr>
+      <th>AAACAGCTTTCAGAAG-1.7</th>
+      <td>1</td>
+      <td>43</td>
+      <td>9</td>
+      <td>341.269139</td>
+      <td>152.700275</td>
+      <td>4278</td>
+      <td>2264</td>
+      <td>Br8100</td>
+      <td>0</td>
+      <td>1</td>
+      <td>...</td>
+      <td>L5</td>
+      <td>2264</td>
+      <td>7.725330</td>
+      <td>4278.0</td>
+      <td>8.361475</td>
+      <td>23.796166</td>
+      <td>30.201029</td>
+      <td>38.826554</td>
+      <td>54.698457</td>
+      <td>4217.0</td>
+    </tr>
+    <tr>
+      <th>AAACAGGGTCTATATT-1.8</th>
+      <td>1</td>
+      <td>47</td>
+      <td>13</td>
+      <td>362.916304</td>
+      <td>164.941500</td>
+      <td>4004</td>
+      <td>2178</td>
+      <td>Br8100</td>
+      <td>0</td>
+      <td>1</td>
+      <td>...</td>
+      <td>L6</td>
+      <td>2178</td>
+      <td>7.686621</td>
+      <td>4004.0</td>
+      <td>8.295299</td>
+      <td>24.600400</td>
+      <td>30.669331</td>
+      <td>39.185814</td>
+      <td>55.344655</td>
+      <td>3922.0</td>
+    </tr>
+    <tr>
+      <th>AAACAGTGTTCCTGGG-1.5</th>
+      <td>1</td>
+      <td>73</td>
+      <td>43</td>
+      <td>503.780395</td>
+      <td>256.930702</td>
+      <td>2376</td>
+      <td>1432</td>
+      <td>Br8100</td>
+      <td>0</td>
+      <td>1</td>
+      <td>...</td>
+      <td>WM</td>
+      <td>1432</td>
+      <td>7.267525</td>
+      <td>2376.0</td>
+      <td>7.773594</td>
+      <td>26.136364</td>
+      <td>33.501684</td>
+      <td>43.308081</td>
+      <td>60.774411</td>
+      <td>2339.0</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>TTGTTTCACATCCAGG-1.8</th>
+      <td>1</td>
+      <td>58</td>
+      <td>42</td>
+      <td>422.862301</td>
+      <td>254.410450</td>
+      <td>4324</td>
+      <td>2170</td>
+      <td>Br8100</td>
+      <td>0</td>
+      <td>1</td>
+      <td>...</td>
+      <td>WM</td>
+      <td>2170</td>
+      <td>7.682943</td>
+      <td>4324.0</td>
+      <td>8.372168</td>
+      <td>22.941721</td>
+      <td>30.388529</td>
+      <td>40.703053</td>
+      <td>57.770583</td>
+      <td>4266.0</td>
+    </tr>
+    <tr>
+      <th>TTGTTTCATTAGTCTA-1.8</th>
+      <td>1</td>
+      <td>60</td>
+      <td>30</td>
+      <td>433.393354</td>
+      <td>217.146722</td>
+      <td>2761</td>
+      <td>1560</td>
+      <td>Br8100</td>
+      <td>0</td>
+      <td>1</td>
+      <td>...</td>
+      <td>WM</td>
+      <td>1560</td>
+      <td>7.353082</td>
+      <td>2761.0</td>
+      <td>7.923710</td>
+      <td>26.439696</td>
+      <td>34.190511</td>
+      <td>43.824701</td>
+      <td>61.608113</td>
+      <td>2715.0</td>
+    </tr>
+    <tr>
+      <th>TTGTTTCCATACAACT-1.8</th>
+      <td>1</td>
+      <td>45</td>
+      <td>27</td>
+      <td>352.430255</td>
+      <td>208.415849</td>
+      <td>2322</td>
+      <td>1343</td>
+      <td>Br8100</td>
+      <td>0</td>
+      <td>1</td>
+      <td>...</td>
+      <td>L6</td>
+      <td>1343</td>
+      <td>7.203406</td>
+      <td>2322.0</td>
+      <td>7.750615</td>
+      <td>31.093885</td>
+      <td>37.941430</td>
+      <td>47.243755</td>
+      <td>63.695090</td>
+      <td>2300.0</td>
+    </tr>
+    <tr>
+      <th>TTGTTTGTATTACACG-1.4</th>
+      <td>1</td>
+      <td>73</td>
+      <td>41</td>
+      <td>503.735391</td>
+      <td>250.720081</td>
+      <td>2331</td>
+      <td>1420</td>
+      <td>Br8100</td>
+      <td>0</td>
+      <td>1</td>
+      <td>...</td>
+      <td>WM</td>
+      <td>1420</td>
+      <td>7.259116</td>
+      <td>2331.0</td>
+      <td>7.754481</td>
+      <td>25.139425</td>
+      <td>32.947233</td>
+      <td>42.728443</td>
+      <td>60.531961</td>
+      <td>2286.0</td>
+    </tr>
+    <tr>
+      <th>TTGTTTGTGTAAATTC-1.8</th>
+      <td>1</td>
+      <td>7</td>
+      <td>51</td>
+      <td>148.109816</td>
+      <td>284.293439</td>
+      <td>6281</td>
+      <td>2927</td>
+      <td>Br8100</td>
+      <td>0</td>
+      <td>1</td>
+      <td>...</td>
+      <td>L2</td>
+      <td>2927</td>
+      <td>7.982075</td>
+      <td>6281.0</td>
+      <td>8.745443</td>
+      <td>24.231810</td>
+      <td>30.154434</td>
+      <td>38.242318</td>
+      <td>53.017036</td>
+      <td>6184.0</td>
+    </tr>
+  </tbody>
+</table>
+<p>2929 rows × 24 columns</p>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sliceA</span><span class="o">.</span><span class="n">var</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>gene_ids</th>
+      <th>feature_types</th>
+      <th>genome</th>
+      <th>n_cells_by_counts</th>
+      <th>mean_counts</th>
+      <th>log1p_mean_counts</th>
+      <th>pct_dropout_by_counts</th>
+      <th>total_counts</th>
+      <th>log1p_total_counts</th>
+      <th>n_counts</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>NOC2L</th>
+      <td>ENSG00000188976</td>
+      <td>Gene Expression</td>
+      <td>GRCh38</td>
+      <td>690</td>
+      <td>0.223963</td>
+      <td>0.202094</td>
+      <td>81.038747</td>
+      <td>815.0</td>
+      <td>6.704414</td>
+      <td>815.0</td>
+    </tr>
+    <tr>
+      <th>KLHL17</th>
+      <td>ENSG00000187961</td>
+      <td>Gene Expression</td>
+      <td>GRCh38</td>
+      <td>163</td>
+      <td>0.045342</td>
+      <td>0.044344</td>
+      <td>95.520747</td>
+      <td>165.0</td>
+      <td>5.111988</td>
+      <td>165.0</td>
+    </tr>
+    <tr>
+      <th>HES4</th>
+      <td>ENSG00000188290</td>
+      <td>Gene Expression</td>
+      <td>GRCh38</td>
+      <td>875</td>
+      <td>0.303105</td>
+      <td>0.264750</td>
+      <td>75.954933</td>
+      <td>1103.0</td>
+      <td>7.006695</td>
+      <td>1103.0</td>
+    </tr>
+    <tr>
+      <th>ISG15</th>
+      <td>ENSG00000187608</td>
+      <td>Gene Expression</td>
+      <td>GRCh38</td>
+      <td>968</td>
+      <td>0.318494</td>
+      <td>0.276490</td>
+      <td>73.399286</td>
+      <td>1159.0</td>
+      <td>7.056175</td>
+      <td>1159.0</td>
+    </tr>
+    <tr>
+      <th>AGRN</th>
+      <td>ENSG00000188157</td>
+      <td>Gene Expression</td>
+      <td>GRCh38</td>
+      <td>1038</td>
+      <td>0.351470</td>
+      <td>0.301193</td>
+      <td>71.475680</td>
+      <td>1279.0</td>
+      <td>7.154615</td>
+      <td>1279.0</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>MT-ND4</th>
+      <td>ENSG00000198886</td>
+      <td>Gene Expression</td>
+      <td>GRCh38</td>
+      <td>3639</td>
+      <td>85.596596</td>
+      <td>4.461260</td>
+      <td>0.000000</td>
+      <td>311486.0</td>
+      <td>12.649113</td>
+      <td>311486.0</td>
+    </tr>
+    <tr>
+      <th>MT-ND5</th>
+      <td>ENSG00000198786</td>
+      <td>Gene Expression</td>
+      <td>GRCh38</td>
+      <td>3593</td>
+      <td>9.799670</td>
+      <td>2.379516</td>
+      <td>1.264084</td>
+      <td>35661.0</td>
+      <td>10.481841</td>
+      <td>35661.0</td>
+    </tr>
+    <tr>
+      <th>MT-ND6</th>
+      <td>ENSG00000198695</td>
+      <td>Gene Expression</td>
+      <td>GRCh38</td>
+      <td>1966</td>
+      <td>0.860126</td>
+      <td>0.620644</td>
+      <td>45.974169</td>
+      <td>3130.0</td>
+      <td>8.049108</td>
+      <td>3130.0</td>
+    </tr>
+    <tr>
+      <th>MT-CYB</th>
+      <td>ENSG00000198727</td>
+      <td>Gene Expression</td>
+      <td>GRCh38</td>
+      <td>3639</td>
+      <td>49.170376</td>
+      <td>3.915425</td>
+      <td>0.000000</td>
+      <td>178931.0</td>
+      <td>12.094761</td>
+      <td>178931.0</td>
+    </tr>
+    <tr>
+      <th>AC007325.4</th>
+      <td>ENSG00000278817</td>
+      <td>Gene Expression</td>
+      <td>GRCh38</td>
+      <td>577</td>
+      <td>0.183567</td>
+      <td>0.168533</td>
+      <td>84.143996</td>
+      <td>668.0</td>
+      <td>6.505784</td>
+      <td>668.0</td>
+    </tr>
+  </tbody>
+</table>
+<p>11381 rows × 10 columns</p>
+</div></div>
+</div>
+<p>We can visualize the slices using <a class="reference external" href="https://squidpy.readthedocs.io/en/stable/index.html">squidpy</a>. In this case, the .obs[&quot;layer_guess_reordered&quot;] field stores the layer annotation of each slice, so we use this field to color each spot.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sq</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spatial_scatter</span><span class="p">(</span>
+    <span class="n">sliceA</span><span class="p">,</span>
+    <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">,</span>
+    <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">sq</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spatial_scatter</span><span class="p">(</span>
+    <span class="n">sliceB</span><span class="p">,</span>
+    <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">,</span>
+    <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">sq</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spatial_scatter</span><span class="p">(</span>
+    <span class="n">sliceC</span><span class="p">,</span>
+    <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">,</span>
+    <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">sq</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spatial_scatter</span><span class="p">(</span>
+    <span class="n">sliceD</span><span class="p">,</span>
+    <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">color</span><span class="o">=</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">,</span>
+    <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns[&#39;spatial&#39;]`
+WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns[&#39;spatial&#39;]`
+WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns[&#39;spatial&#39;]`
+WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns[&#39;spatial&#39;]`
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/aa9078/miniconda3/envs/paste/lib/python3.8/site-packages/squidpy/pl/_spatial_utils.py:955: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
+  _cax = scatter(
+/Users/aa9078/miniconda3/envs/paste/lib/python3.8/site-packages/squidpy/pl/_spatial_utils.py:955: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
+  _cax = scatter(
+/Users/aa9078/miniconda3/envs/paste/lib/python3.8/site-packages/squidpy/pl/_spatial_utils.py:955: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
+  _cax = scatter(
+/Users/aa9078/miniconda3/envs/paste/lib/python3.8/site-packages/squidpy/pl/_spatial_utils.py:955: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
+  _cax = scatter(
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste2_tutorial_12_2.png" src="../_images/notebooks_paste2_tutorial_12_2.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste2_tutorial_12_3.png" src="../_images/notebooks_paste2_tutorial_12_3.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste2_tutorial_12_4.png" src="../_images/notebooks_paste2_tutorial_12_4.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste2_tutorial_12_5.png" src="../_images/notebooks_paste2_tutorial_12_5.png" />
+</div>
+</div>
+</section>
+<section id="Compute-partial-pairwise-alignment-using-PASTE2">
+<h1>Compute partial pairwise alignment using PASTE2<a class="headerlink" href="#Compute-partial-pairwise-alignment-using-PASTE2" title="Link to this heading"></a></h1>
+<p>Give a pair of partially overlapping slices, we can use PASTE2.partial_pairwise_align( ) to find an alignment matrix. To call the function, you need to input the AnnData objects of the two slices, as well as a parameter s, which indicates the overlap percentage of the two slices. In this tutorial, each pair of cropped subslices overlap at 70% of the areas, so we set s=0.7. For your own datasets you should visualize the slices and manually determine the approxiamte overlap percentage (this
+parameter does not have to be very accurate).</p>
+<p>Now we compute an alignment matrix between each pair of slices in our example dataset:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pi_AB</span> <span class="o">=</span> <span class="n">PASTE2</span><span class="o">.</span><span class="n">partial_pairwise_align</span><span class="p">(</span><span class="n">sliceA</span><span class="p">,</span> <span class="n">sliceB</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+PASTE2 starts...
+Starting GLM-PCA...
+Iteration: 0 | deviance=1.3992E+7
+Iteration: 1 | deviance=1.3991E+7
+Iteration: 2 | deviance=1.2322E+7
+Iteration: 3 | deviance=1.1982E+7
+Iteration: 4 | deviance=1.1835E+7
+Iteration: 5 | deviance=1.1760E+7
+Iteration: 6 | deviance=1.1717E+7
+Iteration: 7 | deviance=1.1690E+7
+Iteration: 8 | deviance=1.1671E+7
+Iteration: 9 | deviance=1.1657E+7
+Iteration: 10 | deviance=1.1647E+7
+Iteration: 11 | deviance=1.1638E+7
+Iteration: 12 | deviance=1.1631E+7
+Iteration: 13 | deviance=1.1625E+7
+Iteration: 14 | deviance=1.1620E+7
+Iteration: 15 | deviance=1.1615E+7
+Iteration: 16 | deviance=1.1612E+7
+Iteration: 17 | deviance=1.1608E+7
+Iteration: 18 | deviance=1.1605E+7
+Iteration: 19 | deviance=1.1603E+7
+Iteration: 20 | deviance=1.1600E+7
+Iteration: 21 | deviance=1.1598E+7
+Iteration: 22 | deviance=1.1596E+7
+Iteration: 23 | deviance=1.1594E+7
+Iteration: 24 | deviance=1.1593E+7
+Iteration: 25 | deviance=1.1591E+7
+Iteration: 26 | deviance=1.1590E+7
+Iteration: 27 | deviance=1.1589E+7
+GLM-PCA finished.
+It.  |Loss        |Relative loss|Absolute loss
+------------------------------------------------
+    0|6.010743e+01|0.000000e+00|0.000000e+00
+    1|1.638380e+01|2.668711e+00|4.372363e+01
+    2|1.099893e+01|4.895816e-01|5.384872e+00
+    3|1.008668e+01|9.044101e-02|9.122493e-01
+    4|1.001760e+01|6.895166e-03|6.907304e-02
+    5|9.990238e+00|2.739379e-03|2.736705e-02
+    6|9.974218e+00|1.606086e-03|1.601946e-02
+    7|9.965782e+00|8.464809e-04|8.435845e-03
+    8|9.961402e+00|4.397148e-04|4.380176e-03
+    9|9.958700e+00|2.713637e-04|2.702429e-03
+   10|9.957466e+00|1.239295e-04|1.234023e-03
+   11|9.957020e+00|4.475413e-05|4.456178e-04
+   12|9.956857e+00|1.638410e-05|1.631342e-04
+   13|9.956765e+00|9.202445e-06|9.162659e-05
+   14|9.956705e+00|6.015014e-06|5.988972e-05
+   15|9.956677e+00|2.875712e-06|2.863253e-05
+   16|9.956668e+00|8.612879e-07|8.575558e-06
+   17|9.956666e+00|2.660227e-07|2.648699e-06
+   18|9.956665e+00|7.355809e-08|7.323933e-07
+   19|9.956665e+00|1.659980e-08|1.652787e-07
+ 1000|9.956665e+00|0.000000e+00|0.000000e+00
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pi_BC</span> <span class="o">=</span> <span class="n">PASTE2</span><span class="o">.</span><span class="n">partial_pairwise_align</span><span class="p">(</span><span class="n">sliceB</span><span class="p">,</span> <span class="n">sliceC</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+PASTE2 starts...
+Starting GLM-PCA...
+Iteration: 0 | deviance=1.3224E+7
+Iteration: 1 | deviance=1.3223E+7
+Iteration: 2 | deviance=1.1760E+7
+Iteration: 3 | deviance=1.1439E+7
+Iteration: 4 | deviance=1.1303E+7
+Iteration: 5 | deviance=1.1237E+7
+Iteration: 6 | deviance=1.1200E+7
+Iteration: 7 | deviance=1.1176E+7
+Iteration: 8 | deviance=1.1159E+7
+Iteration: 9 | deviance=1.1146E+7
+Iteration: 10 | deviance=1.1137E+7
+Iteration: 11 | deviance=1.1129E+7
+Iteration: 12 | deviance=1.1122E+7
+Iteration: 13 | deviance=1.1117E+7
+Iteration: 14 | deviance=1.1112E+7
+Iteration: 15 | deviance=1.1108E+7
+Iteration: 16 | deviance=1.1105E+7
+Iteration: 17 | deviance=1.1102E+7
+Iteration: 18 | deviance=1.1099E+7
+Iteration: 19 | deviance=1.1096E+7
+Iteration: 20 | deviance=1.1094E+7
+Iteration: 21 | deviance=1.1092E+7
+Iteration: 22 | deviance=1.1091E+7
+Iteration: 23 | deviance=1.1089E+7
+Iteration: 24 | deviance=1.1088E+7
+Iteration: 25 | deviance=1.1086E+7
+Iteration: 26 | deviance=1.1085E+7
+Iteration: 27 | deviance=1.1084E+7
+GLM-PCA finished.
+It.  |Loss        |Relative loss|Absolute loss
+------------------------------------------------
+    0|7.518779e+01|0.000000e+00|0.000000e+00
+    1|2.009570e+01|2.741486e+00|5.509208e+01
+    2|1.275575e+01|5.754230e-01|7.339953e+00
+    3|1.142623e+01|1.163574e-01|1.329526e+00
+    4|1.130375e+01|1.083537e-02|1.224803e-01
+    5|1.127715e+01|2.358136e-03|2.659306e-02
+    6|1.126391e+01|1.176099e-03|1.324747e-02
+    7|1.125783e+01|5.398342e-04|6.077360e-03
+    8|1.125385e+01|3.533989e-04|3.977098e-03
+    9|1.125054e+01|2.943690e-04|3.311810e-03
+   10|1.124800e+01|2.257539e-04|2.539280e-03
+   11|1.124600e+01|1.780341e-04|2.002171e-03
+   12|1.124451e+01|1.319710e-04|1.483949e-03
+   13|1.124347e+01|9.260802e-05|1.041236e-03
+   14|1.124252e+01|8.428242e-05|9.475471e-04
+   15|1.124177e+01|6.671431e-05|7.499873e-04
+   16|1.124112e+01|5.787811e-05|6.506150e-04
+   17|1.124088e+01|2.149697e-05|2.416449e-04
+   18|1.124086e+01|2.210678e-06|2.484991e-05
+   19|1.124083e+01|2.249485e-06|2.528608e-05
+   20|1.124080e+01|2.592915e-06|2.914645e-05
+   21|1.124078e+01|2.138791e-06|2.404168e-05
+   22|1.124071e+01|6.124023e-06|6.883837e-05
+   23|1.124062e+01|8.135113e-06|9.144370e-05
+   24|1.124059e+01|2.356123e-06|2.648422e-05
+   25|1.124059e+01|5.969064e-07|6.709578e-06
+   26|1.124058e+01|4.580170e-07|5.148377e-06
+   27|1.124058e+01|1.017847e-07|1.144119e-06
+   28|1.124058e+01|2.226474e-09|2.502686e-08
+ 1000|1.124058e+01|0.000000e+00|0.000000e+00
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pi_CD</span> <span class="o">=</span> <span class="n">PASTE2</span><span class="o">.</span><span class="n">partial_pairwise_align</span><span class="p">(</span><span class="n">sliceC</span><span class="p">,</span> <span class="n">sliceD</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+PASTE2 starts...
+Starting GLM-PCA...
+Iteration: 0 | deviance=1.2106E+7
+Iteration: 1 | deviance=1.2106E+7
+Iteration: 2 | deviance=1.0952E+7
+Iteration: 3 | deviance=1.0638E+7
+Iteration: 4 | deviance=1.0501E+7
+Iteration: 5 | deviance=1.0434E+7
+Iteration: 6 | deviance=1.0400E+7
+Iteration: 7 | deviance=1.0379E+7
+Iteration: 8 | deviance=1.0364E+7
+Iteration: 9 | deviance=1.0352E+7
+Iteration: 10 | deviance=1.0343E+7
+Iteration: 11 | deviance=1.0336E+7
+Iteration: 12 | deviance=1.0330E+7
+Iteration: 13 | deviance=1.0324E+7
+Iteration: 14 | deviance=1.0320E+7
+Iteration: 15 | deviance=1.0316E+7
+Iteration: 16 | deviance=1.0313E+7
+Iteration: 17 | deviance=1.0310E+7
+Iteration: 18 | deviance=1.0307E+7
+Iteration: 19 | deviance=1.0305E+7
+Iteration: 20 | deviance=1.0303E+7
+Iteration: 21 | deviance=1.0301E+7
+Iteration: 22 | deviance=1.0299E+7
+Iteration: 23 | deviance=1.0298E+7
+Iteration: 24 | deviance=1.0296E+7
+Iteration: 25 | deviance=1.0295E+7
+Iteration: 26 | deviance=1.0294E+7
+Iteration: 27 | deviance=1.0293E+7
+GLM-PCA finished.
+It.  |Loss        |Relative loss|Absolute loss
+------------------------------------------------
+    0|6.163510e+01|0.000000e+00|0.000000e+00
+    1|1.815225e+01|2.395452e+00|4.348285e+01
+    2|1.288012e+01|4.093237e-01|5.272137e+00
+    3|1.184168e+01|8.769314e-02|1.038434e+00
+    4|1.164942e+01|1.650423e-02|1.922646e-01
+    5|1.162486e+01|2.112400e-03|2.455636e-02
+    6|1.161896e+01|5.078732e-04|5.900958e-03
+    7|1.161675e+01|1.900086e-04|2.207282e-03
+    8|1.161565e+01|9.449767e-05|1.097652e-03
+    9|1.161471e+01|8.150446e-05|9.466505e-04
+   10|1.161383e+01|7.603905e-05|8.831042e-04
+   11|1.161329e+01|4.646581e-05|5.396208e-04
+   12|1.161289e+01|3.366401e-05|3.909366e-04
+   13|1.161267e+01|1.925476e-05|2.235992e-04
+   14|1.161254e+01|1.088101e-05|1.263562e-04
+   15|1.161247e+01|6.661607e-06|7.735770e-05
+   16|1.161243e+01|3.467167e-06|4.026223e-05
+   17|1.161237e+01|4.485004e-06|5.208155e-05
+   18|1.161231e+01|5.309532e-06|6.165595e-05
+   19|1.161227e+01|3.471166e-06|4.030813e-05
+   20|1.161226e+01|1.310085e-06|1.521304e-05
+   21|1.161225e+01|5.432955e-07|6.308884e-06
+   22|1.161225e+01|4.398131e-07|5.107218e-06
+   23|1.161224e+01|6.833801e-07|7.935573e-06
+   24|1.161223e+01|9.356411e-07|1.086488e-05
+   25|1.161222e+01|9.050255e-07|1.050935e-05
+   26|1.161221e+01|8.171256e-07|9.488632e-06
+   27|1.161219e+01|1.530692e-06|1.777468e-05
+   28|1.161215e+01|3.328665e-06|3.865296e-05
+   29|1.161213e+01|1.855445e-06|2.154567e-05
+   30|1.161212e+01|5.436426e-07|6.312845e-06
+   31|1.161212e+01|2.145060e-07|2.490870e-06
+   32|1.161212e+01|5.555632e-08|6.451267e-07
+   33|1.161212e+01|1.023731e-09|1.188769e-08
+ 1000|1.161212e+01|0.000000e+00|0.000000e+00
+</pre></div></div>
+</div>
+<p>Let’s check the shape of each alignment matrix. For aligning a slice with n1 spots and a slice with n2 spots, the alignment matrix should be of shape (n1 * n2)</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">pi_AB</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">pi_BC</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">pi_CD</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(2929, 2877)
+(2877, 2873)
+(2873, 2701)
+</pre></div></div>
+</div>
+<p>There are other optional parameters to PASTE2.partial_pairwise_align() as well. You can checkout the original function signature in the souce code with documentation.</p>
+<p>Let’s visualize the alignment between sliceA and sliceB:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">largest_indices</span><span class="p">(</span><span class="n">ary</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the n largest indices from a numpy array.&quot;&quot;&quot;</span>
+    <span class="n">flat</span> <span class="o">=</span> <span class="n">ary</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argpartition</span><span class="p">(</span><span class="n">flat</span><span class="p">,</span> <span class="o">-</span><span class="n">n</span><span class="p">)[</span><span class="o">-</span><span class="n">n</span><span class="p">:]</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="n">flat</span><span class="p">[</span><span class="n">indices</span><span class="p">])]</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">ary</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">plot2D_samples_mat</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">xt</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">thr</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">weight_alpha</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;color&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;c&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;k&#39;</span>
+    <span class="n">mx</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="c1">#     idx = np.where(G/mx&gt;=thr)</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">largest_indices</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">top</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">])):</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">xs</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">l</span><span class="p">],</span> <span class="mi">0</span><span class="p">],</span> <span class="n">xt</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">l</span><span class="p">],</span> <span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="n">xs</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">l</span><span class="p">],</span> <span class="mi">1</span><span class="p">],</span> <span class="n">xt</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">l</span><span class="p">],</span> <span class="mi">1</span><span class="p">]],</span>
+                 <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">weight_alpha</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">weight_alpha</span> <span class="o">*</span> <span class="n">G</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">l</span><span class="p">],</span> <span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">l</span><span class="p">]]</span> <span class="o">/</span> <span class="n">mx</span><span class="p">),</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">plot_slice_pairwise_alignment</span><span class="p">(</span><span class="n">slice1</span><span class="p">,</span> <span class="n">slice2</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">thr</span><span class="o">=</span><span class="mi">1</span> <span class="o">-</span> <span class="mf">1e-8</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                                  <span class="n">weight_alpha</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">coordinates1</span><span class="p">,</span> <span class="n">coordinates2</span> <span class="o">=</span> <span class="n">slice1</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">],</span> <span class="n">slice2</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">]</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">coordinates1</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">coordinates2</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">*</span> <span class="mf">1.1</span>
+    <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">coordinates2</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">temp</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">offset</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+    <span class="n">plot2D_samples_mat</span><span class="p">(</span><span class="n">coordinates1</span><span class="p">,</span> <span class="n">coordinates2</span> <span class="o">+</span> <span class="n">temp</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">thr</span><span class="o">=</span><span class="n">thr</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="n">top</span><span class="p">,</span>
+                       <span class="n">weight_alpha</span><span class="o">=</span><span class="n">weight_alpha</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">coordinates1</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">coordinates1</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span>
+        <span class="n">slice1</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">slice1</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span> <span class="n">slice1</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;layer_guess_reordered_colors&#39;</span><span class="p">])))))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">coordinates2</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">offset</span><span class="p">,</span> <span class="n">coordinates2</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span>
+        <span class="n">slice2</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">slice2</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span> <span class="n">slice2</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;layer_guess_reordered_colors&#39;</span><span class="p">])))))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+
+<span class="n">plot_slice_pairwise_alignment</span><span class="p">(</span><span class="n">sliceA</span><span class="p">,</span> <span class="n">sliceB</span><span class="p">,</span> <span class="n">pi_AB</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste2_tutorial_20_0.png" src="../_images/notebooks_paste2_tutorial_20_0.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Project-all-slices-onto-the-same-coordiante-system-according-to-the-alignment">
+<h1>Project all slices onto the same coordiante system according to the alignment<a class="headerlink" href="#Project-all-slices-onto-the-same-coordiante-system-according-to-the-alignment" title="Link to this heading"></a></h1>
+<p>Once the alignment matrix between each pair of adjacent slices in a sequence of consecutive slices are computed, we can use this information to project all slices onto the same 2D coordinate system. 3D reconstruction can be done by assiging a z-coordiante to each slice after the projection.</p>
+<p>Specifically, we use projection.partial_stack_slices_pairwise( ):</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pis</span> <span class="o">=</span> <span class="p">[</span><span class="n">pi_AB</span><span class="p">,</span> <span class="n">pi_BC</span><span class="p">,</span> <span class="n">pi_CD</span><span class="p">]</span>
+<span class="n">slices</span> <span class="o">=</span> <span class="p">[</span><span class="n">sliceA</span><span class="p">,</span> <span class="n">sliceB</span><span class="p">,</span> <span class="n">sliceC</span><span class="p">,</span> <span class="n">sliceD</span><span class="p">]</span>
+
+<span class="n">new_slices</span> <span class="o">=</span> <span class="n">projection</span><span class="o">.</span><span class="n">partial_stack_slices_pairwise</span><span class="p">(</span><span class="n">slices</span><span class="p">,</span> <span class="n">pis</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Now let’s plot the coordinates of all slices after the projection:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">layer_to_color_map</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Layer</span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">sns</span><span class="o">.</span><span class="n">color_palette</span><span class="p">()[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">)}</span>
+<span class="n">layer_to_color_map</span><span class="p">[</span><span class="s1">&#39;WM&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">color_palette</span><span class="p">()[</span><span class="mi">6</span><span class="p">]</span>
+<span class="k">def</span> <span class="nf">plot_slices_overlap</span><span class="p">(</span><span class="n">slices</span><span class="p">,</span> <span class="n">layer_to_color_map</span><span class="o">=</span><span class="n">layer_to_color_map</span><span class="p">):</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)):</span>
+        <span class="n">adata</span> <span class="o">=</span> <span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;str&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">layer_to_color_map</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">][:,</span><span class="mi">0</span><span class="p">],</span><span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">][:,</span><span class="mi">1</span><span class="p">],</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="o">=</span><span class="p">[</span><span class="n">mpatches</span><span class="o">.</span><span class="n">Patch</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">layer_to_color_map</span><span class="p">[</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span> <span class="n">label</span><span class="o">=</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">))],</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;Cortex layer&#39;</span><span class="p">,</span><span class="n">title_fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span><span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="n">plot_slices_overlap</span><span class="p">(</span><span class="n">new_slices</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste2_tutorial_25_0.png" src="../_images/notebooks_paste2_tutorial_25_0.png" />
+</div>
+</div>
+<p>Or just the first two, which reproduces Figure 3C of the paper:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_slices_overlap</span><span class="p">(</span><span class="n">new_slices</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste2_tutorial_27_0.png" src="../_images/notebooks_paste2_tutorial_27_0.png" />
+</div>
+</div>
+</section>
+<section id="Let-me-know-if-PASTE2-runs-on-your-machine!-If-you-run-into-any-problem-don't-hesitate-to-reach-out-at-xl5434&#64;princeton.edu.-I-will-respond-as-quickly-as-possible.">
+<h1>Let me know if PASTE2 runs on your machine! If you run into any problem don’t hesitate to reach out at <a class="reference external" href="mailto:xl5434&#37;&#52;&#48;princeton&#46;edu">xl5434<span>&#64;</span>princeton<span>&#46;</span>edu</a>. I will respond as quickly as possible.<a class="headerlink" href="#Let-me-know-if-PASTE2-runs-on-your-machine!-If-you-run-into-any-problem-don't-hesitate-to-reach-out-at-xl5434@princeton.edu.-I-will-respond-as-quickly-as-possible." title="Link to this heading"></a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="paste_tutorial.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Raphael Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

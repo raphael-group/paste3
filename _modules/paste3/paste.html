@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>paste3.paste &mdash; paste3 1.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=60341314"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            paste3
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial.html">Tutorials</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">paste3</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">paste3.paste</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for paste3.paste</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">anndata</span> <span class="kn">import</span> <span class="n">AnnData</span>
+<span class="kn">import</span> <span class="nn">ot</span>
+<span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">NMF</span>
+<span class="kn">from</span> <span class="nn">paste3.helper</span> <span class="kn">import</span> <span class="n">intersect</span><span class="p">,</span> <span class="n">kl_divergence_backend</span><span class="p">,</span> <span class="n">to_dense_array</span><span class="p">,</span> <span class="n">extract_data_matrix</span>
+
+<div class="viewcode-block" id="pairwise_align">
+<a class="viewcode-back" href="../../api/paste3.paste.pairwise_align.html#paste3.paste.pairwise_align">[docs]</a>
+<span class="k">def</span> <span class="nf">pairwise_align</span><span class="p">(</span>
+    <span class="n">sliceA</span><span class="p">:</span> <span class="n">AnnData</span><span class="p">,</span> 
+    <span class="n">sliceB</span><span class="p">:</span> <span class="n">AnnData</span><span class="p">,</span> 
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> 
+    <span class="n">dissimilarity</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span><span class="s1">&#39;kl&#39;</span><span class="p">,</span> 
+    <span class="n">use_rep</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+    <span class="n">G_init</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+    <span class="n">a_distribution</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+    <span class="n">b_distribution</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+    <span class="n">norm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> 
+    <span class="n">numItermax</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> 
+    <span class="n">backend</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">NumpyBackend</span><span class="p">(),</span> 
+    <span class="n">use_gpu</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> 
+    <span class="n">return_obj</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> 
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> 
+    <span class="n">gpu_verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> 
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates and returns optimal alignment of two slices. </span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        sliceA: Slice A to align.</span>
+<span class="sd">        sliceB: Slice B to align.</span>
+<span class="sd">        alpha:  Alignment tuning parameter. Note: 0 &lt;= alpha &lt;= 1.</span>
+<span class="sd">        dissimilarity: Expression dissimilarity measure: ``&#39;kl&#39;`` or ``&#39;euclidean&#39;``.</span>
+<span class="sd">        use_rep: If ``None``, uses ``slice.X`` to calculate dissimilarity between spots, otherwise uses the representation given by ``slice.obsm[use_rep]``.</span>
+<span class="sd">        G_init (array-like, optional): Initial mapping to be used in FGW-OT, otherwise default is uniform mapping.</span>
+<span class="sd">        a_distribution (array-like, optional): Distribution of sliceA spots, otherwise default is uniform.</span>
+<span class="sd">        b_distribution (array-like, optional): Distribution of sliceB spots, otherwise default is uniform.</span>
+<span class="sd">        numItermax: Max number of iterations during FGW-OT.</span>
+<span class="sd">        norm: If ``True``, scales spatial distances such that neighboring spots are at distance 1. Otherwise, spatial distances remain unchanged.</span>
+<span class="sd">        backend: Type of backend to run calculations. For list of backends available on system: ``ot.backend.get_backend_list()``.</span>
+<span class="sd">        use_gpu: If ``True``, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.</span>
+<span class="sd">        return_obj: If ``True``, additionally returns objective function output of FGW-OT.</span>
+<span class="sd">        verbose: If ``True``, FGW-OT is verbose.</span>
+<span class="sd">        gpu_verbose: If ``True``, print whether gpu is being used to user.</span>
+<span class="sd">   </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        - Alignment of spots.</span>
+
+<span class="sd">        If ``return_obj = True``, additionally returns:</span>
+<span class="sd">        </span>
+<span class="sd">        - Objective function output of FGW-OT.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Determine if gpu or cpu is being used</span>
+    <span class="k">if</span> <span class="n">use_gpu</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">torch</span>
+        <span class="k">except</span><span class="p">:</span>
+             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;We currently only have gpu support for Pytorch. Please install torch.&quot;</span><span class="p">)</span>
+                
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span><span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">gpu_verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;gpu is available, using gpu.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">gpu_verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;gpu is not available, resorting to torch cpu.&quot;</span><span class="p">)</span>
+                <span class="n">use_gpu</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;We currently only have gpu support for Pytorch, please set backend = ot.backend.TorchBackend(). Reverting to selected backend cpu.&quot;</span><span class="p">)</span>
+            <span class="n">use_gpu</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">gpu_verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Using selected backend cpu. If you want to use gpu, set use_gpu = True.&quot;</span><span class="p">)</span>
+            
+    <span class="c1"># subset for common genes</span>
+    <span class="n">common_genes</span> <span class="o">=</span> <span class="n">intersect</span><span class="p">(</span><span class="n">sliceA</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">sliceB</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">sliceA</span> <span class="o">=</span> <span class="n">sliceA</span><span class="p">[:,</span> <span class="n">common_genes</span><span class="p">]</span>
+    <span class="n">sliceB</span> <span class="o">=</span> <span class="n">sliceB</span><span class="p">[:,</span> <span class="n">common_genes</span><span class="p">]</span>
+
+    <span class="c1"># check if slices are valid</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">[</span><span class="n">sliceA</span><span class="p">,</span> <span class="n">sliceB</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found empty `AnnData`:</span><span class="se">\n</span><span class="si">{</span><span class="n">sliceA</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    
+    <span class="c1"># Backend</span>
+    <span class="n">nx</span> <span class="o">=</span> <span class="n">backend</span>    
+    
+    <span class="c1"># Calculate spatial distances</span>
+    <span class="n">coordinatesA</span> <span class="o">=</span> <span class="n">sliceA</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">coordinatesA</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">coordinatesA</span><span class="p">)</span>
+    <span class="n">coordinatesB</span> <span class="o">=</span> <span class="n">sliceB</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">coordinatesB</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">coordinatesB</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span><span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">):</span>
+        <span class="n">coordinatesA</span> <span class="o">=</span> <span class="n">coordinatesA</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="n">coordinatesB</span> <span class="o">=</span> <span class="n">coordinatesB</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+    <span class="n">D_A</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">coordinatesA</span><span class="p">,</span><span class="n">coordinatesA</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;euclidean&#39;</span><span class="p">)</span>
+    <span class="n">D_B</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">coordinatesB</span><span class="p">,</span><span class="n">coordinatesB</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;euclidean&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span><span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">)</span> <span class="ow">and</span> <span class="n">use_gpu</span><span class="p">:</span>
+        <span class="n">D_A</span> <span class="o">=</span> <span class="n">D_A</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+        <span class="n">D_B</span> <span class="o">=</span> <span class="n">D_B</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+    
+    <span class="c1"># Calculate expression dissimilarity</span>
+    <span class="n">A_X</span><span class="p">,</span> <span class="n">B_X</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">to_dense_array</span><span class="p">(</span><span class="n">extract_data_matrix</span><span class="p">(</span><span class="n">sliceA</span><span class="p">,</span><span class="n">use_rep</span><span class="p">))),</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">to_dense_array</span><span class="p">(</span><span class="n">extract_data_matrix</span><span class="p">(</span><span class="n">sliceB</span><span class="p">,</span><span class="n">use_rep</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span><span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">)</span> <span class="ow">and</span> <span class="n">use_gpu</span><span class="p">:</span>
+        <span class="n">A_X</span> <span class="o">=</span> <span class="n">A_X</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+        <span class="n">B_X</span> <span class="o">=</span> <span class="n">B_X</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">dissimilarity</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">==</span><span class="s1">&#39;euclidean&#39;</span> <span class="ow">or</span> <span class="n">dissimilarity</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">==</span><span class="s1">&#39;euc&#39;</span><span class="p">:</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">A_X</span><span class="p">,</span><span class="n">B_X</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">s_A</span> <span class="o">=</span> <span class="n">A_X</span> <span class="o">+</span> <span class="mf">0.01</span>
+        <span class="n">s_B</span> <span class="o">=</span> <span class="n">B_X</span> <span class="o">+</span> <span class="mf">0.01</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">kl_divergence_backend</span><span class="p">(</span><span class="n">s_A</span><span class="p">,</span> <span class="n">s_B</span><span class="p">)</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span><span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">)</span> <span class="ow">and</span> <span class="n">use_gpu</span><span class="p">:</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+    
+    <span class="c1"># init distributions</span>
+    <span class="k">if</span> <span class="n">a_distribution</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">sliceA</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],))</span><span class="o">/</span><span class="n">sliceA</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">a_distribution</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="n">b_distribution</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">sliceB</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],))</span><span class="o">/</span><span class="n">sliceB</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">b_distribution</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span><span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">)</span> <span class="ow">and</span> <span class="n">use_gpu</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="n">norm</span><span class="p">:</span>
+        <span class="n">D_A</span> <span class="o">/=</span> <span class="n">nx</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">D_A</span><span class="p">[</span><span class="n">D_A</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">D_B</span> <span class="o">/=</span> <span class="n">nx</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">D_B</span><span class="p">[</span><span class="n">D_B</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">])</span>
+    
+    <span class="c1"># Run OT</span>
+    <span class="k">if</span> <span class="n">G_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">G_init</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">G_init</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span><span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">):</span>
+            <span class="n">G_init</span> <span class="o">=</span> <span class="n">G_init</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">use_gpu</span><span class="p">:</span>
+                <span class="n">G_init</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+    <span class="n">pi</span><span class="p">,</span> <span class="n">logw</span> <span class="o">=</span> <span class="n">my_fused_gromov_wasserstein</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">D_A</span><span class="p">,</span> <span class="n">D_B</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">G_init</span> <span class="o">=</span> <span class="n">G_init</span><span class="p">,</span> <span class="n">loss_fun</span><span class="o">=</span><span class="s1">&#39;square_loss&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">numItermax</span><span class="o">=</span><span class="n">numItermax</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">use_gpu</span> <span class="o">=</span> <span class="n">use_gpu</span><span class="p">)</span>
+    <span class="n">pi</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">logw</span><span class="p">[</span><span class="s1">&#39;fgw_dist&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span><span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">)</span> <span class="ow">and</span> <span class="n">use_gpu</span><span class="p">:</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">empty_cache</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">return_obj</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pi</span><span class="p">,</span> <span class="n">obj</span>
+    <span class="k">return</span> <span class="n">pi</span></div>
+
+
+
+<div class="viewcode-block" id="center_align">
+<a class="viewcode-back" href="../../api/paste3.paste.center_align.html#paste3.paste.center_align">[docs]</a>
+<span class="k">def</span> <span class="nf">center_align</span><span class="p">(</span>
+    <span class="n">A</span><span class="p">:</span> <span class="n">AnnData</span><span class="p">,</span> 
+    <span class="n">slices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">AnnData</span><span class="p">],</span> 
+    <span class="n">lmbda</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> 
+    <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">15</span><span class="p">,</span> 
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">,</span> 
+    <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> 
+    <span class="n">dissimilarity</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span><span class="s1">&#39;kl&#39;</span><span class="p">,</span> 
+    <span class="n">norm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> 
+    <span class="n">random_seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+    <span class="n">pis_init</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+    <span class="n">distributions</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+    <span class="n">backend</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">NumpyBackend</span><span class="p">(),</span> 
+    <span class="n">use_gpu</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> 
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> 
+    <span class="n">gpu_verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">AnnData</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes center alignment of slices.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        A: Slice to use as the initialization for center alignment; Make sure to include gene expression and spatial information.</span>
+<span class="sd">        slices: List of slices to use in the center alignment.</span>
+<span class="sd">        lmbda (array-like, optional): List of probability weights assigned to each slice; If ``None``, use uniform weights.</span>
+<span class="sd">        alpha:  Alignment tuning parameter. Note: 0 &lt;= alpha &lt;= 1.</span>
+<span class="sd">        n_components: Number of components in NMF decomposition.</span>
+<span class="sd">        threshold: Threshold for convergence of W and H during NMF decomposition.</span>
+<span class="sd">        max_iter: Maximum number of iterations for our center alignment algorithm.</span>
+<span class="sd">        dissimilarity: Expression dissimilarity measure: ``&#39;kl&#39;`` or ``&#39;euclidean&#39;``.</span>
+<span class="sd">        norm:  If ``True``, scales spatial distances such that neighboring spots are at distance 1. Otherwise, spatial distances remain unchanged.</span>
+<span class="sd">        random_seed: Set random seed for reproducibility.</span>
+<span class="sd">        pis_init: Initial list of mappings between &#39;A&#39; and &#39;slices&#39; to solver. Otherwise, default will automatically calculate mappings.</span>
+<span class="sd">        distributions (List[array-like], optional): Distributions of spots for each slice. Otherwise, default is uniform.</span>
+<span class="sd">        backend: Type of backend to run calculations. For list of backends available on system: ``ot.backend.get_backend_list()``.</span>
+<span class="sd">        use_gpu: If ``True``, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.</span>
+<span class="sd">        verbose: If ``True``, FGW-OT is verbose.</span>
+<span class="sd">        gpu_verbose: If ``True``, print whether gpu is being used to user.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - Inferred center slice with full and low dimensional representations (W, H) of the gene expression matrix.</span>
+<span class="sd">        - List of pairwise alignment mappings of the center slice (rows) to each input slice (columns).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Determine if gpu or cpu is being used</span>
+    <span class="k">if</span> <span class="n">use_gpu</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">torch</span>
+        <span class="k">except</span><span class="p">:</span>
+             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;We currently only have gpu support for Pytorch. Please install torch.&quot;</span><span class="p">)</span>
+                
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span><span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">gpu_verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;gpu is available, using gpu.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">gpu_verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;gpu is not available, resorting to torch cpu.&quot;</span><span class="p">)</span>
+                <span class="n">use_gpu</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;We currently only have gpu support for Pytorch, please set backend = ot.backend.TorchBackend(). Reverting to selected backend cpu.&quot;</span><span class="p">)</span>
+            <span class="n">use_gpu</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">gpu_verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Using selected backend cpu. If you want to use gpu, set use_gpu = True.&quot;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">lmbda</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">lmbda</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="mi">1</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)]</span>
+    
+    <span class="k">if</span> <span class="n">distributions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">distributions</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+    
+    <span class="c1"># get common genes</span>
+    <span class="n">common_genes</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">slices</span><span class="p">:</span>
+        <span class="n">common_genes</span> <span class="o">=</span> <span class="n">intersect</span><span class="p">(</span><span class="n">common_genes</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="c1"># subset common genes</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">A</span><span class="p">[:,</span> <span class="n">common_genes</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)):</span>
+        <span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">][:,</span> <span class="n">common_genes</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Filtered all slices for common genes. There are &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">common_genes</span><span class="p">))</span> <span class="o">+</span> <span class="s1">&#39; common genes.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Run initial NMF</span>
+    <span class="k">if</span> <span class="n">dissimilarity</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">==</span><span class="s1">&#39;euclidean&#39;</span> <span class="ow">or</span> <span class="n">dissimilarity</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">==</span><span class="s1">&#39;euc&#39;</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">NMF</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">,</span> <span class="n">random_state</span> <span class="o">=</span> <span class="n">random_seed</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">NMF</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">,</span> <span class="n">solver</span> <span class="o">=</span> <span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="n">beta_loss</span> <span class="o">=</span> <span class="s1">&#39;kullback-leibler&#39;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">,</span> <span class="n">random_state</span> <span class="o">=</span> <span class="n">random_seed</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">pis_init</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">pis</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">))]</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pis</span> <span class="o">=</span> <span class="n">pis_init</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">sum</span><span class="p">([</span><span class="n">lmbda</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_dense_array</span><span class="p">(</span><span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">X</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">))]))</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">components_</span>
+    <span class="n">center_coordinates</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">center_coordinates</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: A.obsm[&#39;spatial&#39;] is not of type numpy array.&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Initialize center_slice</span>
+    <span class="n">center_slice</span> <span class="o">=</span> <span class="n">AnnData</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span><span class="n">H</span><span class="p">))</span>
+    <span class="n">center_slice</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">common_genes</span>
+    <span class="n">center_slice</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span>
+    <span class="n">center_slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">center_coordinates</span>
+    
+    <span class="c1"># Minimize R</span>
+    <span class="n">iteration_count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">R_diff</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="k">while</span> <span class="n">R_diff</span> <span class="o">&gt;</span> <span class="n">threshold</span> <span class="ow">and</span> <span class="n">iteration_count</span> <span class="o">&lt;</span> <span class="n">max_iter</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Iteration: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">iteration_count</span><span class="p">))</span>
+        <span class="n">pis</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">center_ot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">slices</span><span class="p">,</span> <span class="n">center_coordinates</span><span class="p">,</span> <span class="n">common_genes</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">backend</span><span class="p">,</span> <span class="n">use_gpu</span><span class="p">,</span> <span class="n">dissimilarity</span> <span class="o">=</span> <span class="n">dissimilarity</span><span class="p">,</span> <span class="n">norm</span> <span class="o">=</span> <span class="n">norm</span><span class="p">,</span> <span class="n">G_inits</span> <span class="o">=</span> <span class="n">pis</span><span class="p">,</span> <span class="n">distributions</span><span class="o">=</span><span class="n">distributions</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span><span class="p">)</span>
+        <span class="n">W</span><span class="p">,</span> <span class="n">H</span> <span class="o">=</span> <span class="n">center_NMF</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">slices</span><span class="p">,</span> <span class="n">pis</span><span class="p">,</span> <span class="n">lmbda</span><span class="p">,</span> <span class="n">n_components</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">,</span> <span class="n">dissimilarity</span> <span class="o">=</span> <span class="n">dissimilarity</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span><span class="p">)</span>
+        <span class="n">R_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="n">lmbda</span><span class="p">)</span>
+        <span class="n">iteration_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">R_diff</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">R</span> <span class="o">-</span> <span class="n">R_new</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Objective &quot;</span><span class="p">,</span><span class="n">R_new</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Difference: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">R_diff</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="n">R_new</span>
+    <span class="n">center_slice</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">center_slice</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span>
+    <span class="n">center_slice</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;paste_W&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">W</span>
+    <span class="n">center_slice</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;paste_H&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">H</span>
+    <span class="n">center_slice</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;full_rank&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">center_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">sum</span><span class="p">([</span><span class="n">lmbda</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_dense_array</span><span class="p">(</span><span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">X</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">))])</span>
+    <span class="n">center_slice</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;obj&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">R</span>
+    <span class="k">return</span> <span class="n">center_slice</span><span class="p">,</span> <span class="n">pis</span></div>
+
+
+<span class="c1">#--------------------------- HELPER METHODS -----------------------------------</span>
+
+<span class="k">def</span> <span class="nf">center_ot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">slices</span><span class="p">,</span> <span class="n">center_coordinates</span><span class="p">,</span> <span class="n">common_genes</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">backend</span><span class="p">,</span> <span class="n">use_gpu</span><span class="p">,</span> <span class="n">dissimilarity</span> <span class="o">=</span> <span class="s1">&#39;kl&#39;</span><span class="p">,</span> <span class="n">norm</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">G_inits</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">distributions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="n">center_slice</span> <span class="o">=</span> <span class="n">AnnData</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span><span class="n">H</span><span class="p">))</span>
+    <span class="n">center_slice</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">common_genes</span>
+    <span class="n">center_slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">center_coordinates</span>
+
+    <span class="k">if</span> <span class="n">distributions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">distributions</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+
+    <span class="n">pis</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Solving Pairwise Slice Alignment Problem.&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)):</span>
+        <span class="n">p</span><span class="p">,</span> <span class="n">r_q</span> <span class="o">=</span> <span class="n">pairwise_align</span><span class="p">(</span><span class="n">center_slice</span><span class="p">,</span> <span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">dissimilarity</span> <span class="o">=</span> <span class="n">dissimilarity</span><span class="p">,</span> <span class="n">norm</span> <span class="o">=</span> <span class="n">norm</span><span class="p">,</span> <span class="n">return_obj</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">G_init</span> <span class="o">=</span> <span class="n">G_inits</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">b_distribution</span><span class="o">=</span><span class="n">distributions</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">backend</span> <span class="o">=</span> <span class="n">backend</span><span class="p">,</span> <span class="n">use_gpu</span> <span class="o">=</span> <span class="n">use_gpu</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span><span class="p">,</span> <span class="n">gpu_verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">pis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r_q</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">center_NMF</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">slices</span><span class="p">,</span> <span class="n">pis</span><span class="p">,</span> <span class="n">lmbda</span><span class="p">,</span> <span class="n">n_components</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">,</span> <span class="n">dissimilarity</span> <span class="o">=</span> <span class="s1">&#39;kl&#39;</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Solving Center Mapping NMF Problem.&#39;</span><span class="p">)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">n</span><span class="o">*</span><span class="nb">sum</span><span class="p">([</span><span class="n">lmbda</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_dense_array</span><span class="p">(</span><span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">X</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">))])</span>
+    <span class="k">if</span> <span class="n">dissimilarity</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">==</span><span class="s1">&#39;euclidean&#39;</span> <span class="ow">or</span> <span class="n">dissimilarity</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">==</span><span class="s1">&#39;euc&#39;</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">NMF</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">,</span> <span class="n">random_state</span> <span class="o">=</span> <span class="n">random_seed</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">NMF</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">,</span> <span class="n">solver</span> <span class="o">=</span> <span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="n">beta_loss</span> <span class="o">=</span> <span class="s1">&#39;kullback-leibler&#39;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">,</span> <span class="n">random_state</span> <span class="o">=</span> <span class="n">random_seed</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span><span class="p">)</span>
+    <span class="n">W_new</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+    <span class="n">H_new</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">components_</span>
+    <span class="k">return</span> <span class="n">W_new</span><span class="p">,</span> <span class="n">H_new</span>
+
+<span class="k">def</span> <span class="nf">my_fused_gromov_wasserstein</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">C1</span><span class="p">,</span> <span class="n">C2</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">G_init</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">loss_fun</span><span class="o">=</span><span class="s1">&#39;square_loss&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">armijo</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">numItermax</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">tol_rel</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span> <span class="n">tol_abs</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span> <span class="n">use_gpu</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adapted fused_gromov_wasserstein with the added capability of defining a G_init (inital mapping).</span>
+<span class="sd">    Also added capability of utilizing different POT backends to speed up computation.</span>
+<span class="sd">    </span>
+<span class="sd">    For more info, see: https://pythonot.github.io/gen_modules/ot.gromov.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">list_to_array</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>
+
+    <span class="n">p0</span><span class="p">,</span> <span class="n">q0</span><span class="p">,</span> <span class="n">C10</span><span class="p">,</span> <span class="n">C20</span><span class="p">,</span> <span class="n">M0</span> <span class="o">=</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">C1</span><span class="p">,</span> <span class="n">C2</span><span class="p">,</span> <span class="n">M</span>
+    <span class="n">nx</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="n">p0</span><span class="p">,</span> <span class="n">q0</span><span class="p">,</span> <span class="n">C10</span><span class="p">,</span> <span class="n">C20</span><span class="p">,</span> <span class="n">M0</span><span class="p">)</span>
+
+    <span class="n">constC</span><span class="p">,</span> <span class="n">hC1</span><span class="p">,</span> <span class="n">hC2</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">init_matrix</span><span class="p">(</span><span class="n">C1</span><span class="p">,</span> <span class="n">C2</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">loss_fun</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">G_init</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">G0</span> <span class="o">=</span> <span class="n">p</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">q</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">G0</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">G_init</span><span class="p">))</span> <span class="o">*</span> <span class="n">G_init</span>
+        <span class="k">if</span> <span class="n">use_gpu</span><span class="p">:</span>
+            <span class="n">G0</span> <span class="o">=</span> <span class="n">G0</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">gwloss</span><span class="p">(</span><span class="n">constC</span><span class="p">,</span> <span class="n">hC1</span><span class="p">,</span> <span class="n">hC2</span><span class="p">,</span> <span class="n">G</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">df</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">gwggrad</span><span class="p">(</span><span class="n">constC</span><span class="p">,</span> <span class="n">hC1</span><span class="p">,</span> <span class="n">hC2</span><span class="p">,</span> <span class="n">G</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">loss_fun</span> <span class="o">==</span> <span class="s1">&#39;kl_loss&#39;</span><span class="p">:</span>
+        <span class="n">armijo</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># there is no closed form line-search with KL</span>
+
+    <span class="k">if</span> <span class="n">armijo</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">line_search</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">deltaG</span><span class="p">,</span> <span class="n">Mi</span><span class="p">,</span> <span class="n">cost_G</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ot</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">line_search_armijo</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">deltaG</span><span class="p">,</span> <span class="n">Mi</span><span class="p">,</span> <span class="n">cost_G</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="n">nx</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">line_search</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">deltaG</span><span class="p">,</span> <span class="n">Mi</span><span class="p">,</span> <span class="n">cost_G</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">solve_gromov_linesearch</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">deltaG</span><span class="p">,</span> <span class="n">cost_G</span><span class="p">,</span> <span class="n">C1</span><span class="p">,</span> <span class="n">C2</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">reg</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="n">nx</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">log</span><span class="p">:</span>
+        <span class="n">res</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">cg</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">M</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">G0</span><span class="p">,</span> <span class="n">line_search</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">numItermax</span><span class="o">=</span><span class="n">numItermax</span><span class="p">,</span> <span class="n">stopThr</span><span class="o">=</span><span class="n">tol_rel</span><span class="p">,</span> <span class="n">stopThr2</span><span class="o">=</span><span class="n">tol_abs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">fgw_dist</span> <span class="o">=</span> <span class="n">log</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">log</span><span class="p">[</span><span class="s1">&#39;fgw_dist&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fgw_dist</span>
+        <span class="n">log</span><span class="p">[</span><span class="s1">&#39;u&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">log</span><span class="p">[</span><span class="s1">&#39;u&#39;</span><span class="p">]</span>
+        <span class="n">log</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">log</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">log</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ot</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">cg</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">M</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">G0</span><span class="p">,</span> <span class="n">line_search</span><span class="p">,</span> <span class="n">numItermax</span><span class="o">=</span><span class="n">numItermax</span><span class="p">,</span> <span class="n">stopThr</span><span class="o">=</span><span class="n">tol_rel</span><span class="p">,</span> <span class="n">stopThr2</span><span class="o">=</span><span class="n">tol_abs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">solve_gromov_linesearch</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">deltaG</span><span class="p">,</span> <span class="n">cost_G</span><span class="p">,</span> <span class="n">C1</span><span class="p">,</span> <span class="n">C2</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">reg</span><span class="p">,</span>
+                            <span class="n">alpha_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alpha_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solve the linesearch in the FW iterations</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    G : array-like, shape(ns,nt)</span>
+<span class="sd">        The transport map at a given iteration of the FW</span>
+<span class="sd">    deltaG : array-like (ns,nt)</span>
+<span class="sd">        Difference between the optimal map found by linearization in the FW algorithm and the value at a given iteration</span>
+<span class="sd">    cost_G : float</span>
+<span class="sd">        Value of the cost at `G`</span>
+<span class="sd">    C1 : array-like (ns,ns), optional</span>
+<span class="sd">        Structure matrix in the source domain.</span>
+<span class="sd">    C2 : array-like (nt,nt), optional</span>
+<span class="sd">        Structure matrix in the target domain.</span>
+<span class="sd">    M : array-like (ns,nt)</span>
+<span class="sd">        Cost matrix between the features.</span>
+<span class="sd">    reg : float</span>
+<span class="sd">        Regularization parameter.</span>
+<span class="sd">    alpha_min : float, optional</span>
+<span class="sd">        Minimum value for alpha</span>
+<span class="sd">    alpha_max : float, optional</span>
+<span class="sd">        Maximum value for alpha</span>
+<span class="sd">    nx : backend, optional</span>
+<span class="sd">        If let to its default value None, a backend test will be conducted.</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    alpha : float</span>
+<span class="sd">        The optimal step size of the FW</span>
+<span class="sd">    fc : int</span>
+<span class="sd">        nb of function call. Useless here</span>
+<span class="sd">    cost_G : float</span>
+<span class="sd">        The value of the cost for the next iteration</span>
+
+
+<span class="sd">    .. _references-solve-linesearch:</span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [24] Vayer Titouan, Chapel Laetitia, Flamary Rémi, Tavenard Romain and Courty Nicolas</span>
+<span class="sd">        &quot;Optimal Transport for structured data with application on graphs&quot;</span>
+<span class="sd">        International Conference on Machine Learning (ICML). 2019.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nx</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">G</span><span class="p">,</span> <span class="n">deltaG</span><span class="p">,</span> <span class="n">C1</span><span class="p">,</span> <span class="n">C2</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">list_to_array</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">deltaG</span><span class="p">,</span> <span class="n">C1</span><span class="p">,</span> <span class="n">C2</span><span class="p">,</span> <span class="n">M</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="n">nx</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">deltaG</span><span class="p">,</span> <span class="n">C1</span><span class="p">,</span> <span class="n">C2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nx</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">deltaG</span><span class="p">,</span> <span class="n">C1</span><span class="p">,</span> <span class="n">C2</span><span class="p">,</span> <span class="n">M</span><span class="p">)</span>
+
+    <span class="n">dot</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">C1</span><span class="p">,</span> <span class="n">deltaG</span><span class="p">),</span> <span class="n">C2</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">reg</span> <span class="o">*</span> <span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dot</span> <span class="o">*</span> <span class="n">deltaG</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">M</span> <span class="o">*</span> <span class="n">deltaG</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">reg</span> <span class="o">*</span> <span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dot</span> <span class="o">*</span> <span class="n">G</span><span class="p">)</span> <span class="o">+</span> <span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">C1</span><span class="p">,</span> <span class="n">G</span><span class="p">),</span> <span class="n">C2</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">*</span> <span class="n">deltaG</span><span class="p">))</span>
+
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">solve_1d_linesearch_quad</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">alpha_min</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">alpha_max</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">alpha_min</span><span class="p">,</span> <span class="n">alpha_max</span><span class="p">)</span>
+
+    <span class="c1"># the new cost is deduced from the line search quadratic function</span>
+    <span class="n">cost_G</span> <span class="o">=</span> <span class="n">cost_G</span> <span class="o">+</span> <span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">alpha</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span> <span class="n">alpha</span>
+
+    <span class="k">return</span> <span class="n">alpha</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">cost_G</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Raphael Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

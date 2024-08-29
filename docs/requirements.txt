@@ -1,8 +1,0 @@
--r ../requirements.txt
-sphinx>=2.0.1
-myst-parser
-nbsphinx
-sphinx-autodoc-typehints
-sphinx-autodoc-annotation
-sphinx_rtd_theme
-sphinx_gallery

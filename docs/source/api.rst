@@ -1,15 +1,6 @@
 API
 ===
 
-Import Paste as::
-    from paste3.glmpca import ortho, mat_binom_dev, glmpca_init, est_nb_theta, glmpca
-    from paste3.model_selection import create_graph, generate_graph_from_labels, edge_inconsistency_score, calculate_convex_hull_edge_inconsistency, select_overlap_function, plot_edge_curve, select_overlap_fraction_plotting
-    from paste3.visualization import plot_slice, stack_slices_pairwise, stack_slices_center
-    from paste3.projection import partial_stack_slices_pairwise, partial_procrustes_analysis
-    from paste3.paste import pairwise_align, center_align
-    from paste3.helper import filter_for_common_genes, match_spots_using_spatial_heuristic
-    from paste3.paste2 import partial_pairwise_align_given_cost_matrix, partial_pairwise_align_histology, partial_pairwise_align, partial_fused_gromov_wasserstein, gwgrad_partial
-
 .. automodule:: paste3
 
 PASTE Alignment

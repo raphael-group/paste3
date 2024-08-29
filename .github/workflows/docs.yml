@@ -32,6 +32,9 @@ jobs:
         run: | 
          pip install . 
 
+      - name: Install Pandoc
+        run: sudo apt-get install -y pandoc
+
       - name: Setup Envvars
         run: |
             if [[ $GITHUB_REF = "refs/tags/"* ]] ; then echo "PASTE3_VERSION=${GITHUB_REF/refs\/tags\//}" ; else echo "PASTE3_VERSION=" ; fi >> $GITHUB_ENV

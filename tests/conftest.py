@@ -3,6 +3,7 @@ import numpy as np
 import scanpy as sc
 import pytest
 from paste.helper import intersect
+import ot
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
@@ -24,6 +25,22 @@ def slices():
 
     return slices
 
+
+@pytest.fixture(scope="session")
+def spot_distance_matrix(slices):
+    nx = ot.backend.NumpyBackend()
+
+    spot_distances = []
+    for slice in slices:
+        spot_distances.append(
+            ot.dist(
+                nx.from_numpy(slice.obsm["spatial"]),
+                nx.from_numpy(slice.obsm["spatial"]),
+                metric="euclidean",
+            )
+        )
+
+    return spot_distances
 
 @pytest.fixture(scope="session")
 def intersecting_slices(slices):

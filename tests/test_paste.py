@@ -173,7 +173,7 @@ def test_center_NMF(intersecting_slices):
     )
 
 
-def test_fused_gromov_wasserstein(slices):
+def test_fused_gromov_wasserstein(slices, spot_distance_matrix):
     np.random.seed(0)
     temp_dir = Path(tempfile.mkdtemp())
 
@@ -182,16 +182,6 @@ def test_fused_gromov_wasserstein(slices):
     sliceB = slices[1][:, common_genes]
 
     nx = ot.backend.NumpyBackend()
-    slice1_dist = ot.dist(
-        nx.from_numpy(sliceA.obsm["spatial"]),
-        nx.from_numpy(sliceA.obsm["spatial"]),
-        metric="euclidean",
-    )
-    slice2_dist = ot.dist(
-        nx.from_numpy(sliceB.obsm["spatial"]),
-        nx.from_numpy(sliceB.obsm["spatial"]),
-        metric="euclidean",
-    )
     slice1_distr = nx.ones((sliceA.shape[0],)) / sliceA.shape[0]
     slice2_distr = nx.ones((sliceB.shape[0],)) / sliceB.shape[0]
 
@@ -202,8 +192,8 @@ def test_fused_gromov_wasserstein(slices):
 
     pairwise_info, log = my_fused_gromov_wasserstein(
         M,
-        slice1_dist,
-        slice2_dist,
+        spot_distance_matrix[0],
+        spot_distance_matrix[1],
         slice1_distr,
         slice2_distr,
         G_init=None,
@@ -217,22 +207,13 @@ def test_fused_gromov_wasserstein(slices):
     # assert_checksum_equals(temp_dir, "fused_gromov_wasserstein.csv")
 
 
-def test_gromov_linesearch(slices):
+def test_gromov_linesearch(slices, spot_distance_matrix):
     common_genes = intersect(slices[1].var.index, slices[2].var.index)
     sliceA = slices[1][:, common_genes]
     sliceB = slices[2][:, common_genes]
 
     nx = ot.backend.NumpyBackend()
-    slice1_dist = ot.dist(
-        nx.from_numpy(sliceA.obsm["spatial"]),
-        nx.from_numpy(sliceA.obsm["spatial"]),
-        metric="euclidean",
-    )
-    slice2_dist = ot.dist(
-        nx.from_numpy(sliceB.obsm["spatial"]),
-        nx.from_numpy(sliceB.obsm["spatial"]),
-        metric="euclidean",
-    )
+
     slice1_distr = nx.ones((sliceA.shape[0],)) / sliceA.shape[0]
     slice2_distr = nx.ones((sliceB.shape[0],)) / sliceB.shape[0]
 
@@ -243,7 +224,7 @@ def test_gromov_linesearch(slices):
     slice1_distr, slice2_distr = ot.utils.list_to_array(slice1_distr, slice2_distr)
 
     constC, hC1, hC2 = ot.gromov.init_matrix(
-        slice1_dist, slice2_dist, slice1_distr, slice2_distr, loss_fun="square_loss"
+        spot_distance_matrix[1], spot_distance_matrix[2], slice1_distr, slice2_distr, loss_fun="square_loss"
     )
 
     G = slice1_distr[:, None] * slice2_distr[None, :]
@@ -254,7 +235,7 @@ def test_gromov_linesearch(slices):
     deltaG = Gc - G
     costG = nx.sum(M * G) + 0.1 * ot.gromov.gwloss(constC, hC1, hC2, G)
     alpha, fc, cost_G = solve_gromov_linesearch(
-        G, deltaG, costG, slice1_dist, slice2_dist, M=0.0, reg=1.0, nx=nx
+        G, deltaG, costG, spot_distance_matrix[1], spot_distance_matrix[2], M=0.0, reg=1.0, nx=nx
     )
     assert alpha == 1.0
     assert fc == 1

@@ -37,24 +37,24 @@ def test_intersect(slices):
 
 
 def test_kl_divergence_backend(slices):
-    nx = ot.backend.NumpyBackend()
+    X = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    Y = np.array([[2, 4, 6], [8, 10, 12], [14, 16, 28]])
 
-    common_genes = intersect(slices[1].var.index, slices[2].var.index)
-    sliceA = slices[1][:, common_genes]
-    sliceB = slices[2][:, common_genes]
-
-    slice1_X = nx.from_numpy(to_dense_array(extract_data_matrix(sliceA, None)))
-    slice2_X = nx.from_numpy(to_dense_array(extract_data_matrix(sliceB, None)))
-
-    kl_divergence_matrix = kl_divergence_backend(slice1_X + 0.01, slice2_X + 0.01)
-    assert_frame_equal(
-        pd.DataFrame(kl_divergence_matrix, columns=[str(i) for i in range(264)]),
-        pd.read_csv(output_dir / "kl_divergence_backend_matrix.csv"),
-        check_names=False,
-        check_dtype=False,
-        rtol=1e-04,
+    kl_divergence_matrix = kl_divergence_backend(X, Y)
+    expected_kl_divergence_matrix = np.array(
+        [
+            [0.0, 0.03323784, 0.01889736],
+            [0.03607688, 0.0, 0.01442773],
+            [0.05534049, 0.00193493, 0.02355472],
+        ]
     )
-
+    assert np.all(
+        np.isclose(
+            kl_divergence_matrix,
+            expected_kl_divergence_matrix,
+            rtol=1e-04,
+        )
+    )
 
 def test_kl_divergence(slices):
     common_genes = intersect(slices[1].var.index, slices[2].var.index)

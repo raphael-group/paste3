@@ -3,6 +3,7 @@ import numpy as np
 import scanpy as sc
 import pytest
 from paste3.helper import intersect
+import ot.backend
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"

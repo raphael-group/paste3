@@ -71,6 +71,7 @@ def test_center_alignment(slices):
         n_components=15,
         random_seed=0,
         threshold=0.001,
+        max_iter=2,
         dissimilarity="kl",
         distributions=[slices[i].obsm["weights"] for i in range(len(slices))],
     )
@@ -87,7 +88,7 @@ def test_center_alignment(slices):
     )
     assert_frame_equal(
         pd.DataFrame(center_slice.uns["paste_H"], columns=center_slice.var.index),
-        pd.read_csv(output_dir / "H_center.csv"),
+        pd.read_csv(output_dir / "H_center.csv", index_col=0),
         rtol=1e-05,
         atol=1e-08,
     )

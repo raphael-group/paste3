@@ -1,6 +1,5 @@
 from pathlib import Path
 import numpy as np
-import ot.backend
 import pandas as pd
 from pandas.testing import assert_frame_equal
 from paste.helper import (

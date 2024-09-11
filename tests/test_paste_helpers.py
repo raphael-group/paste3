@@ -2,7 +2,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
-from paste.helper import (
+from paste3.helper import (
     intersect,
     kl_divergence_backend,
     to_dense_array,
@@ -10,9 +10,6 @@ from paste.helper import (
     kl_divergence,
     filter_for_common_genes,
     match_spots_using_spatial_heuristic,
-)
-
-from paste2.helper import (
     generalized_kl_divergence,
     glmpca_distance,
     pca_distance,
@@ -128,7 +125,6 @@ def test_glmpca_distance():
         check_dtype=False,
         rtol=1e-04,
     )
-
 
 def test_pca_distance(slices2):
     common_genes = intersect(slices2[1].var.index, slices2[2].var.index)

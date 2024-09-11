@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ["3.8"]
+        python: ["3.12"]
 
     steps:
       - name: Setup Python
@@ -22,9 +22,16 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install sphinx myst-parser sphinx-autodoc-typehints nbsphinx sphinx-gallery sphinx-rtd-theme
+          pip install sphinx myst-parser sphinx-autodoc-typehints nbsphinx sphinx-gallery sphinx-rtd-theme sphinx-autodoc-annotation
 
       - uses: actions/checkout@v2
+
+      - name: Install Package
+        run: | 
+         pip install . 
+
+      - name: Install Pandoc
+        run: sudo apt-get install -y pandoc
 
       - name: Setup Envvars
         run: |
@@ -34,10 +41,10 @@ jobs:
         run: |
           # Unless we add a .nojekyll to the base of the deployment folder, the underscores in foldernames
           # like _static/ etc. pose problems on GH Pages.
-          cd docs && sphinx-apidoc -f -o src ../src/paste -H Modules && make html && touch _build/html/.nojekyll
+          cd docs && sphinx-apidoc -f -o src ../src/paste3 -H Modules && make html && touch build/html/.nojekyll
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: docs/_build/html
+          folder: docs/build/html
           branch: gh-pages

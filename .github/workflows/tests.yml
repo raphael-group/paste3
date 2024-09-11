@@ -1,0 +1,48 @@
+name: Install dependencies and run tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build_wheels:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+        python-version: ["3.12"]
+
+    name: Build wheel on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        # Required when using an activated conda environment in steps
+        # See https://github.com/conda-incubator/setup-miniconda#IMPORTANT
+        shell: bash -l {0}
+
+    steps:
+      - uses: actions/checkout@main
+
+      - uses: conda-incubator/setup-miniconda@v3
+        name: Setup conda environment
+        with:
+          auto-update-conda: true
+          python-version: ${{ matrix.python-version }}
+          activate-environment: paste
+          environment-file: environment.yml
+
+      - name: Install package
+        run: pip install -e .
+
+      - name: Pytest with coverage
+        run: coverage run --source=src/paste3 -m pytest
+
+      - name: Upload coverage to Coveralls
+        if: matrix.os == 'ubuntu-latest'
+        run: coveralls
+        env:
+          GITHUB_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+
+

@@ -1,5 +1,6 @@
 [![Tests](https://github.com/raphael-group/paste3/actions/workflows/build.yml/badge.svg)](https://github.com/raphael-group/paste3/actions/workflows/build.yml)
-
+[![Coverage Status](https://coveralls.io/repos/github/raphael-group/paste3/badge.svg?branch=main)](https://coveralls.io/github/raphael-group/paste3?branch=main)
+[![Docs](https://github.com/raphael-group/paste3/actions/workflows/docs.yml/badge.svg)](https://github.com/raphael-group/paste3/actions/workflows/docs.yml)
 
 (Integrating Paste and Paste 2 here: Sill a work in progress) 
 # PASTE

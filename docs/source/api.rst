@@ -1,22 +1,28 @@
 API
 ===
+    import paste3
+.. automodule:: paste3
 
-Import Paste as::
-
-   from paste.visualization import plot_slice, stack_slices_pairwise, stack_slices_center
-   from paste.PASTE import pairwise_align, center_align
-   from paste.helper import filter_for_common_genes, match_spots_using_spatial_heuristic, match_spots_using_spatial_heuristic, apply_trsf
-
-.. automodule:: paste
-
-Alignment
-~~~~~~~~~
+PASTE Alignment
+~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
    :toctree: api
 
-    PASTE.pairwise_align
-    PASTE.center_align
+    paste.pairwise_align
+    paste.center_align
+
+PASTE2 Alignment
+~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: api
+
+    paste2.partial_pairwise_align_given_cost_matrix
+    paste2.partial_pairwise_align_histology
+    paste2.partial_pairwise_align
+    paste2.partial_fused_gromov_wasserstein
+    paste2.gwgrad_partial
 
 Visualization
 ~~~~~~~~~~~~~
@@ -28,6 +34,42 @@ Visualization
     visualization.stack_slices_center
     visualization.plot_slice
 
+Projection
+~~~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: api
+
+    projection.partial_stack_slices_pairwise
+    projection.partial_procrustes_analysis
+
+Model Selection
+~~~~~~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: api
+
+    model_selection.create_graph
+    model_selection.generate_graph_from_labels
+    model_selection.edge_inconsistency_score
+    model_selection.calculate_convex_hull_edge_inconsistency
+    model_selection.plot_edge_curve
+    model_selection.select_overlap_fraction_plotting
+
+
+GLMPCA
+~~~~~~~
+
+.. autosummary::
+   :toctree: api
+
+    glmpca.ortho
+    glmpca.mat_binom_dev
+    glmpca.glmpca_init
+    glmpca.est_nb_theta
+    glmpca.glmpca
+
+
 Miscellaneous
 ~~~~~~~~~~~~~
 
@@ -36,6 +78,4 @@ Miscellaneous
 
    helper.filter_for_common_genes
    helper.match_spots_using_spatial_heuristic
-   helper.apply_trsf
-
 

@@ -1,7 +1,7 @@
 import numpy as np
 from pathlib import Path
 from tests.test_paste import assert_checksum_equals
-from paste2.model_selection import (
+from paste3.model_selection import (
     create_graph,
     generate_graph_from_labels,
     edge_inconsistency_score,
@@ -10,7 +10,7 @@ from paste2.model_selection import (
     select_overlap_fraction_plotting,
 )
 import scanpy as sc
-from paste2.PASTE2 import partial_pairwise_align
+from paste3.paste2 import partial_pairwise_align
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"

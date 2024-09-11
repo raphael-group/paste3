@@ -7,7 +7,7 @@ from ot.lp import emd
 import pandas as pd
 import tempfile
 
-from paste.PASTE import (
+from paste3.paste import (
     pairwise_align,
     center_align,
     center_ot,
@@ -171,7 +171,6 @@ def test_center_NMF(intersecting_slices):
         rtol=1e-05,
         atol=1e-08,
     )
-
 
 def test_fused_gromov_wasserstein(slices, spot_distance_matrix):
     np.random.seed(0)

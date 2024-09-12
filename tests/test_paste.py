@@ -202,9 +202,8 @@ def test_fused_gromov_wasserstein(slices, spot_distance_matrix):
         log=True,
         numItermax=200,
     )
-    pd.DataFrame(pairwise_info).to_csv(temp_dir / "fused_gromov_wasserstein.csv")
-    # TODO: Need to figure out where the randomness is coming from
-    # assert_checksum_equals(temp_dir, "fused_gromov_wasserstein.csv")
+    pd.DataFrame(pairwise_info).to_csv(temp_dir / "fused_gromov_wasserstein.csv", index=False)
+    assert_checksum_equals(temp_dir, "fused_gromov_wasserstein.csv")
 
 
 def test_gromov_linesearch(slices, spot_distance_matrix):

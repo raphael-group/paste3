@@ -1,8 +1,8 @@
 [![Tests](https://github.com/raphael-group/paste3/actions/workflows/build.yml/badge.svg)](https://github.com/raphael-group/paste3/actions/workflows/build.yml)
 [![Coverage Status](https://coveralls.io/repos/github/raphael-group/paste3/badge.svg?branch=main)](https://coveralls.io/github/raphael-group/paste3?branch=main)
-[![Docs](https://github.com/raphael-group/paste3/actions/workflows/docs.yml/badge.svg)](https://github.com/raphael-group/paste3/actions/workflows/docs.yml)
+[![Docs](https://github.com/raphael-group/paste3/actions/workflows/docs.yml/badge.svg)](https://raphael-group.github.io/paste3/)
 
-(Integrating Paste and Paste 2 here: Sill a work in progress) 
+(Note: This repository integrates Paste and Paste 2, and is a work in progress) 
 # PASTE
 
 ![PASTE Overview](https://github.com/raphael-group/paste/blob/main/docs/source/_static/images/paste_overview.png)
@@ -11,7 +11,9 @@ PASTE is a computational method that leverages both gene expression similarity a
 1. `pairwise_align`: align spots across pairwise slices.
 2. `center_align`: integrate multiple slices into one center slice.
 
-You can read full paper [here](https://www.nature.com/articles/s41592-022-01459-6). 
+You can read full paper [here](https://www.nature.com/articles/s41592-022-01459-6).
+
+Auto-generated documentation for this package is available [here](https://raphael-group.github.io/paste3/).
 
 Additional examples and the code to reproduce the paper's analyses can be found [here](https://github.com/raphael-group/paste_reproducibility). Preprocessed datasets used in the paper can be found on [zenodo](https://doi.org/10.5281/zenodo.6334774).
 

@@ -1,24 +1,24 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="python" data-content_root="../">
+<html class="writer-html5" lang="python">
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>paste3.paste.center_align &mdash; paste3 1.2.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css" />
 
   
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=60341314"></script>
-        <script src="../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -94,34 +94,34 @@
            <div itemprop="articleBody">
              
   <section id="paste3-paste-center-align">
-<h1>paste3.paste.center_align<a class="headerlink" href="#paste3-paste-center-align" title="Link to this heading"></a></h1>
+<h1>paste3.paste.center_align<a class="headerlink" href="#paste3-paste-center-align" title="Permalink to this heading"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="paste3.paste.center_align">
-<span class="sig-prename descclassname"><span class="pre">paste3.paste.</span></span><span class="sig-name descname"><span class="pre">center_align</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lmbda=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha=0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_components=15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold=0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter=10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dissimilarity='kl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pis_init=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributions=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend=&lt;ot.backend.NumpyBackend</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpu=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu_verbose=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/paste3/paste.html#center_align"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#paste3.paste.center_align" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">paste3.paste.</span></span><span class="sig-name descname"><span class="pre">center_align</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lmbda=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha=0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_components=15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold=0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter=10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dissimilarity='kl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pis_init=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributions=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend=&lt;ot.backend.NumpyBackend</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpu=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu_verbose=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/paste3/paste.html#center_align"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#paste3.paste.center_align" title="Permalink to this definition"></a></dt>
 <dd><p>Computes center alignment of slices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>A</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code></span>) -- Slice to use as the initialization for center alignment; Make sure to include gene expression and spatial information.</p></li>
-<li><p><strong>slices</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code>]</span>) -- List of slices to use in the center alignment.</p></li>
+<li><p><strong>A</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code>) -- Slice to use as the initialization for center alignment; Make sure to include gene expression and spatial information.</p></li>
+<li><p><strong>slices</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code>]) -- List of slices to use in the center alignment.</p></li>
 <li><p><strong>lmbda</strong> (<em>array-like</em><em>, </em><em>optional</em>) -- List of probability weights assigned to each slice; If <code class="docutils literal notranslate"><span class="pre">None</span></code>, use uniform weights.</p></li>
-<li><p><strong>alpha</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) -- Alignment tuning parameter. Note: 0 &lt;= alpha &lt;= 1.</p></li>
-<li><p><strong>n_components</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) -- Number of components in NMF decomposition.</p></li>
-<li><p><strong>threshold</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) -- Threshold for convergence of W and H during NMF decomposition.</p></li>
-<li><p><strong>max_iter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) -- Maximum number of iterations for our center alignment algorithm.</p></li>
-<li><p><strong>dissimilarity</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) -- Expression dissimilarity measure: <code class="docutils literal notranslate"><span class="pre">'kl'</span></code> or <code class="docutils literal notranslate"><span class="pre">'euclidean'</span></code>.</p></li>
-<li><p><strong>norm</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) -- If <code class="docutils literal notranslate"><span class="pre">True</span></code>, scales spatial distances such that neighboring spots are at distance 1. Otherwise, spatial distances remain unchanged.</p></li>
-<li><p><strong>random_seed</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) -- Set random seed for reproducibility.</p></li>
-<li><p><strong>pis_init</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]]</span>) -- Initial list of mappings between 'A' and 'slices' to solver. Otherwise, default will automatically calculate mappings.</p></li>
+<li><p><strong>alpha</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) -- Alignment tuning parameter. Note: 0 &lt;= alpha &lt;= 1.</p></li>
+<li><p><strong>n_components</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) -- Number of components in NMF decomposition.</p></li>
+<li><p><strong>threshold</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) -- Threshold for convergence of W and H during NMF decomposition.</p></li>
+<li><p><strong>max_iter</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) -- Maximum number of iterations for our center alignment algorithm.</p></li>
+<li><p><strong>dissimilarity</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) -- Expression dissimilarity measure: <code class="docutils literal notranslate"><span class="pre">'kl'</span></code> or <code class="docutils literal notranslate"><span class="pre">'euclidean'</span></code>.</p></li>
+<li><p><strong>norm</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) -- If <code class="docutils literal notranslate"><span class="pre">True</span></code>, scales spatial distances such that neighboring spots are at distance 1. Otherwise, spatial distances remain unchanged.</p></li>
+<li><p><strong>random_seed</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) -- Set random seed for reproducibility.</p></li>
+<li><p><strong>pis_init</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]]) -- Initial list of mappings between 'A' and 'slices' to solver. Otherwise, default will automatically calculate mappings.</p></li>
 <li><p><strong>distributions</strong> (<em>List</em><em>[</em><em>array-like</em><em>]</em><em>, </em><em>optional</em>) -- Distributions of spots for each slice. Otherwise, default is uniform.</p></li>
 <li><p><strong>backend</strong> -- Type of backend to run calculations. For list of backends available on system: <code class="docutils literal notranslate"><span class="pre">ot.backend.get_backend_list()</span></code>.</p></li>
-<li><p><strong>use_gpu</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) -- If <code class="docutils literal notranslate"><span class="pre">True</span></code>, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.</p></li>
-<li><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) -- If <code class="docutils literal notranslate"><span class="pre">True</span></code>, FGW-OT is verbose.</p></li>
-<li><p><strong>gpu_verbose</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) -- If <code class="docutils literal notranslate"><span class="pre">True</span></code>, print whether gpu is being used to user.</p></li>
+<li><p><strong>use_gpu</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) -- If <code class="docutils literal notranslate"><span class="pre">True</span></code>, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.</p></li>
+<li><p><strong>verbose</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) -- If <code class="docutils literal notranslate"><span class="pre">True</span></code>, FGW-OT is verbose.</p></li>
+<li><p><strong>gpu_verbose</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) -- If <code class="docutils literal notranslate"><span class="pre">True</span></code>, print whether gpu is being used to user.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]]</span></p>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]]</p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><ul class="simple">

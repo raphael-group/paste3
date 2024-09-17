@@ -33,15 +33,8 @@ Visualization
     visualization.stack_slices_pairwise
     visualization.stack_slices_center
     visualization.plot_slice
-
-Projection
-~~~~~~~~~~~~~
-
-.. autosummary::
-   :toctree: api
-
-    projection.partial_stack_slices_pairwise
-    projection.partial_procrustes_analysis
+    visualization.partial_stack_slices_pairwise
+    visualization.partial_procrustes_analysis
 
 Model Selection
 ~~~~~~~~~~~~~~~~
@@ -55,7 +48,6 @@ Model Selection
     model_selection.calculate_convex_hull_edge_inconsistency
     model_selection.plot_edge_curve
     model_selection.select_overlap_fraction_plotting
-
 
 GLMPCA
 ~~~~~~~

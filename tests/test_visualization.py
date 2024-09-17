@@ -6,8 +6,9 @@ from paste3.visualization import (
     stack_slices_pairwise,
     stack_slices_center,
     generalized_procrustes_analysis,
+    partial_stack_slices_pairwise,
+    partial_procrustes_analysis
 )
-from paste3.projection import partial_stack_slices_pairwise, partial_procrustes_analysis
 from pandas.testing import assert_frame_equal
 
 test_dir = Path(__file__).parent

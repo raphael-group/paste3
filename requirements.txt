@@ -3,7 +3,7 @@ scanpy>=1.7.2
 POT
 numpy
 scipy
-scikit-learn>=0.24.0
+scikit-learn==1.5.1
 IPython>=7.18.1
 pytest
 seaborn

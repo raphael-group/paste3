@@ -9,7 +9,7 @@ pytest
 seaborn
 matplotlib
 pandas
-statsmodels
+statsmodels==0.14.2
 networkx
 sphinx
 myst-parser

@@ -1,5 +1,5 @@
-anndata>=0.7.6
-scanpy>=1.7.2
+anndata==0.10.8
+scanpy==1.10.2
 POT
 numpy
 scipy

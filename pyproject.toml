@@ -17,12 +17,12 @@ classifiers = [
 ]
 
 dependencies = [
-    "anndata>=0.7.6",
-    "scanpy>=1.7.2",
+    "anndata==0.10.8",
+    "scanpy==1.10.2",
     "POT",
     "numpy",
     "scipy",
-    "scikit-learn>=0.24.0",
+    "scikit-learn==1.5.1",
     "IPython>=7.18.1",
 ]
 dynamic = ["version"]

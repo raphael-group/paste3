@@ -88,7 +88,7 @@
            <div itemprop="articleBody">
              
   <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scanpy</span> <span class="k">as</span> <span class="nn">sc</span>
@@ -105,10 +105,10 @@
 <h1>Install PASTE2 python package<a class="headerlink" href="#Install-PASTE2-python-package" title="Permalink to this heading"></a></h1>
 <p>You can install the paste2 package at <a class="reference external" href="https://pypi.org/project/paste2/">https://pypi.org/project/paste2/</a>. We import paste2 as follows:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">paste3</span> <span class="kn">import</span> <span class="n">paste2</span><span class="p">,</span> <span class="n">projection</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">paste3</span> <span class="kn">import</span> <span class="n">paste2</span><span class="p">,</span> <span class="n">visualization</span>
 </pre></div>
 </div>
 </div>
@@ -117,7 +117,7 @@
 <h1>Read in Spatial Transcriptomics slices as AnnData objects<a class="headerlink" href="#Read-in-Spatial-Transcriptomics-slices-as-AnnData-objects" title="Permalink to this heading"></a></h1>
 <p>We provide four example ST slices from DLPFC patient 3, cropped to form partially overlapping subslices (See Figure 3A of our paper). Each slice is stored in an <a class="reference external" href="https://anndata.readthedocs.io/en/latest/">AnnData</a> object.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sliceA_filename</span> <span class="o">=</span> <span class="s1">&#39;../../../tests/data/input/151673.h5ad&#39;</span>
@@ -133,7 +133,7 @@
 </div>
 <p>Each AnnData object consists of a gene expression matrx and spatial coordinate matrix. The gene expression matrix is stored in the .X field. The spatial coordiante matrix is stored in the .obsm['spatial'] field.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sliceA</span><span class="o">.</span><span class="n">X</span>
@@ -141,7 +141,7 @@
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -151,7 +151,7 @@
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sliceA</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">]</span>
@@ -159,7 +159,7 @@
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -175,7 +175,7 @@ array([[ 5769,  2807],
 </div>
 <p>The rows of the AnnData objects are spots. The columns are genes.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sliceA</span><span class="o">.</span><span class="n">obs</span>
@@ -183,7 +183,7 @@ array([[ 5769,  2807],
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -499,7 +499,7 @@ array([[ 5769,  2807],
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sliceA</span><span class="o">.</span><span class="n">var</span>
@@ -507,7 +507,7 @@ array([[ 5769,  2807],
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -692,7 +692,7 @@ array([[ 5769,  2807],
 </div>
 <p>We can visualize the slices using <a class="reference external" href="https://squidpy.readthedocs.io/en/stable/index.html">squidpy</a>. In this case, the .obs[&quot;layer_guess_reordered&quot;] field stores the layer annotation of each slice, so we use this field to color each spot.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sq</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spatial_scatter</span><span class="p">(</span>
@@ -787,7 +787,7 @@ WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns
 parameter does not have to be very accurate).</p>
 <p>Now we compute an alignment matrix between each pair of slices in our example dataset:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pi_AB</span> <span class="o">=</span> <span class="n">paste2</span><span class="o">.</span><span class="n">partial_pairwise_align</span><span class="p">(</span><span class="n">sliceA</span><span class="p">,</span> <span class="n">sliceB</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
@@ -803,65 +803,63 @@ PASTE2 starts...
 Starting GLM-PCA...
 Iteration: 0 | deviance=1.3992E+7
 Iteration: 1 | deviance=1.3991E+7
-Iteration: 2 | deviance=1.2336E+7
-Iteration: 3 | deviance=1.1994E+7
-Iteration: 4 | deviance=1.1860E+7
-Iteration: 5 | deviance=1.1786E+7
-Iteration: 6 | deviance=1.1738E+7
-Iteration: 7 | deviance=1.1706E+7
-Iteration: 8 | deviance=1.1684E+7
-Iteration: 9 | deviance=1.1667E+7
-Iteration: 10 | deviance=1.1654E+7
-Iteration: 11 | deviance=1.1644E+7
-Iteration: 12 | deviance=1.1636E+7
-Iteration: 13 | deviance=1.1629E+7
-Iteration: 14 | deviance=1.1623E+7
-Iteration: 15 | deviance=1.1618E+7
-Iteration: 16 | deviance=1.1614E+7
-Iteration: 17 | deviance=1.1610E+7
-Iteration: 18 | deviance=1.1607E+7
-Iteration: 19 | deviance=1.1604E+7
-Iteration: 20 | deviance=1.1601E+7
-Iteration: 21 | deviance=1.1599E+7
-Iteration: 22 | deviance=1.1597E+7
-Iteration: 23 | deviance=1.1595E+7
-Iteration: 24 | deviance=1.1593E+7
-Iteration: 25 | deviance=1.1591E+7
-Iteration: 26 | deviance=1.1590E+7
-Iteration: 27 | deviance=1.1588E+7
-Iteration: 28 | deviance=1.1587E+7
-Iteration: 29 | deviance=1.1586E+7
+Iteration: 2 | deviance=1.2327E+7
+Iteration: 3 | deviance=1.1982E+7
+Iteration: 4 | deviance=1.1832E+7
+Iteration: 5 | deviance=1.1752E+7
+Iteration: 6 | deviance=1.1707E+7
+Iteration: 7 | deviance=1.1679E+7
+Iteration: 8 | deviance=1.1660E+7
+Iteration: 9 | deviance=1.1646E+7
+Iteration: 10 | deviance=1.1636E+7
+Iteration: 11 | deviance=1.1628E+7
+Iteration: 12 | deviance=1.1621E+7
+Iteration: 13 | deviance=1.1615E+7
+Iteration: 14 | deviance=1.1611E+7
+Iteration: 15 | deviance=1.1607E+7
+Iteration: 16 | deviance=1.1603E+7
+Iteration: 17 | deviance=1.1601E+7
+Iteration: 18 | deviance=1.1598E+7
+Iteration: 19 | deviance=1.1596E+7
+Iteration: 20 | deviance=1.1594E+7
+Iteration: 21 | deviance=1.1592E+7
+Iteration: 22 | deviance=1.1590E+7
+Iteration: 23 | deviance=1.1589E+7
+Iteration: 24 | deviance=1.1588E+7
+Iteration: 25 | deviance=1.1587E+7
 GLM-PCA finished.
 It.  |Loss        |Relative loss|Absolute loss
 ------------------------------------------------
-    0|5.453122e+01|0.000000e+00|0.000000e+00
-    1|1.555077e+01|2.506657e+00|3.898045e+01
-    2|1.087263e+01|4.302681e-01|4.678144e+00
-    3|1.016697e+01|6.940716e-02|7.056602e-01
-    4|1.011980e+01|4.660283e-03|4.716116e-02
-    5|1.010386e+01|1.577793e-03|1.594180e-02
-    6|1.009681e+01|6.983722e-04|7.051332e-03
-    7|1.009409e+01|2.695391e-04|2.720752e-03
-    8|1.009223e+01|1.841117e-04|1.858098e-03
-    9|1.009122e+01|1.007326e-04|1.016515e-03
-   10|1.009043e+01|7.743027e-05|7.813051e-04
-   11|1.009006e+01|3.667498e-05|3.700529e-04
-   12|1.008982e+01|2.378838e-05|2.400206e-04
-   13|1.008966e+01|1.606885e-05|1.621293e-04
-   14|1.008953e+01|1.285516e-05|1.297025e-04
-   15|1.008949e+01|4.197223e-06|4.234784e-05
-   16|1.008946e+01|2.586782e-06|2.609925e-05
-   17|1.008945e+01|1.252575e-06|1.263779e-05
-   18|1.008945e+01|3.965339e-07|4.000809e-06
-   19|1.008945e+01|8.485171e-08|8.561068e-07
-   20|1.008945e+01|1.419441e-08|1.432137e-07
-   21|1.008945e+01|8.842568e-09|8.921662e-08
-   22|1.008945e+01|1.290826e-09|1.302372e-08
- 1000|1.008945e+01|0.000000e+00|0.000000e+00
+    0|6.066630e+01|0.000000e+00|0.000000e+00
+    1|1.634618e+01|2.711343e+00|4.432012e+01
+    2|1.092875e+01|4.957044e-01|5.417431e+00
+    3|1.015943e+01|7.572514e-02|7.693242e-01
+    4|1.009742e+01|6.141026e-03|6.200853e-02
+    5|1.007097e+01|2.626185e-03|2.644823e-02
+    6|1.005727e+01|1.361993e-03|1.369794e-02
+    7|1.005085e+01|6.387416e-04|6.419899e-03
+    8|1.004732e+01|3.522432e-04|3.539099e-03
+    9|1.004542e+01|1.889910e-04|1.898494e-03
+   10|1.004433e+01|1.087252e-04|1.092071e-03
+   11|1.004360e+01|7.247221e-05|7.278817e-04
+   12|1.004306e+01|5.370646e-05|5.393771e-04
+   13|1.004290e+01|1.528681e-05|1.535240e-04
+   14|1.004286e+01|4.187448e-06|4.205397e-05
+   15|1.004285e+01|1.327654e-06|1.333343e-05
+   16|1.004284e+01|1.137233e-06|1.142105e-05
+   17|1.004283e+01|7.145480e-07|7.176085e-06
+   18|1.004282e+01|6.624142e-07|6.652509e-06
+   19|1.004282e+01|4.826952e-07|4.847621e-06
+   20|1.004282e+01|1.341576e-07|1.347320e-06
+   21|1.004282e+01|1.084818e-08|1.089462e-07
+   22|1.004282e+01|4.938728e-08|4.959874e-07
+   23|1.004282e+01|6.570004e-08|6.598134e-07
+   24|1.004282e+01|5.763893e-09|5.788572e-08
+ 1000|1.004282e+01|0.000000e+00|0.000000e+00
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pi_BC</span> <span class="o">=</span> <span class="n">paste2</span><span class="o">.</span><span class="n">partial_pairwise_align</span><span class="p">(</span><span class="n">sliceB</span><span class="p">,</span> <span class="n">sliceC</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
@@ -877,21 +875,21 @@ PASTE2 starts...
 Starting GLM-PCA...
 Iteration: 0 | deviance=1.3224E+7
 Iteration: 1 | deviance=1.3222E+7
-Iteration: 2 | deviance=1.1798E+7
-Iteration: 3 | deviance=1.1471E+7
-Iteration: 4 | deviance=1.1327E+7
-Iteration: 5 | deviance=1.1254E+7
-Iteration: 6 | deviance=1.1212E+7
-Iteration: 7 | deviance=1.1186E+7
-Iteration: 8 | deviance=1.1168E+7
-Iteration: 9 | deviance=1.1154E+7
-Iteration: 10 | deviance=1.1144E+7
-Iteration: 11 | deviance=1.1135E+7
-Iteration: 12 | deviance=1.1128E+7
-Iteration: 13 | deviance=1.1122E+7
+Iteration: 2 | deviance=1.1774E+7
+Iteration: 3 | deviance=1.1466E+7
+Iteration: 4 | deviance=1.1326E+7
+Iteration: 5 | deviance=1.1256E+7
+Iteration: 6 | deviance=1.1217E+7
+Iteration: 7 | deviance=1.1191E+7
+Iteration: 8 | deviance=1.1172E+7
+Iteration: 9 | deviance=1.1158E+7
+Iteration: 10 | deviance=1.1146E+7
+Iteration: 11 | deviance=1.1137E+7
+Iteration: 12 | deviance=1.1129E+7
+Iteration: 13 | deviance=1.1123E+7
 Iteration: 14 | deviance=1.1117E+7
-Iteration: 15 | deviance=1.1112E+7
-Iteration: 16 | deviance=1.1108E+7
+Iteration: 15 | deviance=1.1113E+7
+Iteration: 16 | deviance=1.1109E+7
 Iteration: 17 | deviance=1.1105E+7
 Iteration: 18 | deviance=1.1102E+7
 Iteration: 19 | deviance=1.1099E+7
@@ -907,38 +905,32 @@ Iteration: 28 | deviance=1.1084E+7
 GLM-PCA finished.
 It.  |Loss        |Relative loss|Absolute loss
 ------------------------------------------------
-    0|6.330277e+01|0.000000e+00|0.000000e+00
-    1|1.783282e+01|2.549790e+00|4.546995e+01
-    2|1.210454e+01|4.732346e-01|5.728286e+00
-    3|1.115362e+01|8.525583e-02|9.509115e-01
-    4|1.108541e+01|6.153114e-03|6.820982e-02
-    5|1.106669e+01|1.691960e-03|1.872439e-02
-    6|1.105529e+01|1.031526e-03|1.140382e-02
-    7|1.104903e+01|5.663442e-04|6.257554e-03
-    8|1.104547e+01|3.222955e-04|3.559905e-03
-    9|1.104311e+01|2.135000e-04|2.357705e-03
-   10|1.104118e+01|1.747571e-04|1.929525e-03
-   11|1.103948e+01|1.537260e-04|1.697056e-03
-   12|1.103848e+01|9.093322e-05|1.003765e-03
-   13|1.103779e+01|6.225198e-05|6.871245e-04
-   14|1.103736e+01|3.913452e-05|4.319419e-04
-   15|1.103718e+01|1.627664e-05|1.796483e-04
-   16|1.103708e+01|8.887606e-06|9.809326e-05
-   17|1.103700e+01|7.953731e-06|8.778530e-05
-   18|1.103695e+01|4.074814e-06|4.497353e-05
-   19|1.103692e+01|2.947959e-06|3.253639e-05
-   20|1.103686e+01|5.163612e-06|5.699008e-05
-   21|1.103683e+01|2.840249e-06|3.134735e-05
-   22|1.103680e+01|2.648079e-06|2.922632e-05
-   23|1.103674e+01|5.793707e-06|6.394362e-05
-   24|1.103667e+01|6.366392e-06|7.026374e-05
-   25|1.103666e+01|9.884807e-07|1.090952e-05
-   26|1.103665e+01|1.070034e-07|1.180960e-06
- 1000|1.103665e+01|1.141308e-10|1.259622e-09
+    0|6.843662e+01|0.000000e+00|0.000000e+00
+    1|1.873568e+01|2.652743e+00|4.970094e+01
+    2|1.228927e+01|5.245556e-01|6.446406e+00
+    3|1.125729e+01|9.167219e-02|1.031981e+00
+    4|1.117734e+01|7.152866e-03|7.995003e-02
+    5|1.115479e+01|2.022073e-03|2.255579e-02
+    6|1.114182e+01|1.163538e-03|1.296394e-02
+    7|1.113429e+01|6.764847e-04|7.532177e-03
+    8|1.113082e+01|3.118754e-04|3.471428e-03
+    9|1.112899e+01|1.640241e-04|1.825423e-03
+   10|1.112771e+01|1.149130e-04|1.278719e-03
+   11|1.112694e+01|6.974498e-05|7.760481e-04
+   12|1.112645e+01|4.381334e-05|4.874870e-04
+   13|1.112624e+01|1.922370e-05|2.138874e-04
+   14|1.112589e+01|3.121654e-05|3.473118e-04
+   15|1.112557e+01|2.848668e-05|3.169306e-04
+   16|1.112534e+01|2.075129e-05|2.308651e-04
+   17|1.112517e+01|1.573354e-05|1.750382e-04
+   18|1.112501e+01|1.392700e-05|1.549380e-04
+   19|1.112500e+01|1.204542e-06|1.340052e-05
+   20|1.112500e+01|1.489809e-08|1.657412e-07
+ 1000|1.112500e+01|2.016928e-10|2.243832e-09
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pi_CD</span> <span class="o">=</span> <span class="n">paste2</span><span class="o">.</span><span class="n">partial_pairwise_align</span><span class="p">(</span><span class="n">sliceC</span><span class="p">,</span> <span class="n">sliceD</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
@@ -953,69 +945,60 @@ It.  |Loss        |Relative loss|Absolute loss
 PASTE2 starts...
 Starting GLM-PCA...
 Iteration: 0 | deviance=1.2106E+7
-Iteration: 1 | deviance=1.2106E+7
-Iteration: 2 | deviance=1.0979E+7
-Iteration: 3 | deviance=1.0665E+7
-Iteration: 4 | deviance=1.0528E+7
-Iteration: 5 | deviance=1.0461E+7
-Iteration: 6 | deviance=1.0424E+7
+Iteration: 1 | deviance=1.2105E+7
+Iteration: 2 | deviance=1.0959E+7
+Iteration: 3 | deviance=1.0659E+7
+Iteration: 4 | deviance=1.0525E+7
+Iteration: 5 | deviance=1.0460E+7
+Iteration: 6 | deviance=1.0423E+7
 Iteration: 7 | deviance=1.0399E+7
-Iteration: 8 | deviance=1.0381E+7
-Iteration: 9 | deviance=1.0368E+7
-Iteration: 10 | deviance=1.0357E+7
-Iteration: 11 | deviance=1.0349E+7
-Iteration: 12 | deviance=1.0342E+7
-Iteration: 13 | deviance=1.0336E+7
-Iteration: 14 | deviance=1.0331E+7
-Iteration: 15 | deviance=1.0326E+7
-Iteration: 16 | deviance=1.0323E+7
-Iteration: 17 | deviance=1.0319E+7
-Iteration: 18 | deviance=1.0316E+7
-Iteration: 19 | deviance=1.0314E+7
-Iteration: 20 | deviance=1.0311E+7
-Iteration: 21 | deviance=1.0309E+7
-Iteration: 22 | deviance=1.0307E+7
-Iteration: 23 | deviance=1.0305E+7
-Iteration: 24 | deviance=1.0304E+7
-Iteration: 25 | deviance=1.0302E+7
-Iteration: 26 | deviance=1.0301E+7
-Iteration: 27 | deviance=1.0300E+7
-Iteration: 28 | deviance=1.0298E+7
-Iteration: 29 | deviance=1.0297E+7
+Iteration: 8 | deviance=1.0382E+7
+Iteration: 9 | deviance=1.0370E+7
+Iteration: 10 | deviance=1.0360E+7
+Iteration: 11 | deviance=1.0351E+7
+Iteration: 12 | deviance=1.0344E+7
+Iteration: 13 | deviance=1.0338E+7
+Iteration: 14 | deviance=1.0333E+7
+Iteration: 15 | deviance=1.0329E+7
+Iteration: 16 | deviance=1.0325E+7
+Iteration: 17 | deviance=1.0322E+7
+Iteration: 18 | deviance=1.0319E+7
+Iteration: 19 | deviance=1.0316E+7
+Iteration: 20 | deviance=1.0313E+7
+Iteration: 21 | deviance=1.0311E+7
+Iteration: 22 | deviance=1.0309E+7
+Iteration: 23 | deviance=1.0307E+7
+Iteration: 24 | deviance=1.0306E+7
+Iteration: 25 | deviance=1.0304E+7
+Iteration: 26 | deviance=1.0303E+7
+Iteration: 27 | deviance=1.0301E+7
+Iteration: 28 | deviance=1.0300E+7
+Iteration: 29 | deviance=1.0299E+7
+Iteration: 30 | deviance=1.0298E+7
 GLM-PCA finished.
 It.  |Loss        |Relative loss|Absolute loss
 ------------------------------------------------
-    0|5.991419e+01|0.000000e+00|0.000000e+00
-    1|1.761840e+01|2.400661e+00|4.229579e+01
-    2|1.277891e+01|3.787093e-01|4.839491e+00
-    3|1.200987e+01|6.403374e-02|7.690369e-01
-    4|1.157468e+01|3.759844e-02|4.351899e-01
-    5|1.146547e+01|9.525209e-03|1.092110e-01
-    6|1.145739e+01|7.048243e-04|8.075449e-03
-    7|1.145482e+01|2.250207e-04|2.577571e-03
-    8|1.145258e+01|1.952573e-04|2.236200e-03
-    9|1.145075e+01|1.601888e-04|1.834281e-03
-   10|1.144927e+01|1.285841e-04|1.472194e-03
-   11|1.144844e+01|7.266047e-05|8.318492e-04
-   12|1.144786e+01|5.123397e-05|5.865191e-04
-   13|1.144736e+01|4.294593e-05|4.916177e-04
-   14|1.144708e+01|2.465661e-05|2.822462e-04
-   15|1.144696e+01|1.066459e-05|1.220771e-04
-   16|1.144688e+01|6.797915e-06|7.781493e-05
-   17|1.144684e+01|3.292900e-06|3.769331e-05
-   18|1.144683e+01|1.034857e-06|1.184583e-05
-   19|1.144683e+01|5.710464e-07|6.536668e-06
-   20|1.144682e+01|1.611943e-07|1.845163e-06
-   21|1.144682e+01|4.778971e-08|5.470403e-07
-   22|1.144682e+01|2.629628e-08|3.010088e-07
-   23|1.144682e+01|3.846676e-07|4.403220e-06
-   24|1.144681e+01|5.724174e-07|6.552354e-06
-   25|1.144680e+01|7.464448e-07|8.544407e-06
-   26|1.144680e+01|2.711197e-07|3.103453e-06
-   27|1.144680e+01|5.423714e-08|6.208417e-07
-   28|1.144680e+01|3.159487e-08|3.616601e-07
-   29|1.144680e+01|1.127354e-08|1.290459e-07
- 1000|1.144680e+01|0.000000e+00|0.000000e+00
+    0|5.628949e+01|0.000000e+00|0.000000e+00
+    1|1.695953e+01|2.319049e+00|3.932996e+01
+    2|1.268093e+01|3.374044e-01|4.278600e+00
+    3|1.188740e+01|6.675373e-02|7.935281e-01
+    4|1.154612e+01|2.955746e-02|3.412740e-01
+    5|1.148011e+01|5.750659e-03|6.601817e-02
+    6|1.147491e+01|4.526631e-04|5.194269e-03
+    7|1.147347e+01|1.252328e-04|1.436855e-03
+    8|1.147305e+01|3.691361e-05|4.235118e-04
+    9|1.147288e+01|1.457938e-05|1.672675e-04
+   10|1.147275e+01|1.156879e-05|1.327259e-04
+   11|1.147256e+01|1.656129e-05|1.900004e-04
+   12|1.147239e+01|1.509654e-05|1.731934e-04
+   13|1.147227e+01|1.004455e-05|1.152339e-04
+   14|1.147223e+01|4.099528e-06|4.703071e-05
+   15|1.147221e+01|1.723324e-06|1.977033e-05
+   16|1.147218e+01|1.829488e-06|2.098822e-05
+   17|1.147218e+01|6.622783e-07|7.597774e-06
+   18|1.147217e+01|1.913344e-07|2.195022e-06
+   19|1.147217e+01|3.442322e-08|3.949092e-07
+   20|1.147217e+01|7.420791e-09|8.513261e-08
 </pre></div></div>
 </div>
 <p>Let’s check the shape of each alignment matrix. For aligning a slice with n1 spots and a slice with n2 spots, the alignment matrix should be of shape (n1 * n2)</p>

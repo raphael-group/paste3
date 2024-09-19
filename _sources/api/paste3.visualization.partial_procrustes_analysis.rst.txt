@@ -1,0 +1,6 @@
+﻿paste3.visualization.partial\_procrustes\_analysis
+==================================================
+
+.. currentmodule:: paste3.visualization
+
+.. autofunction:: partial_procrustes_analysis

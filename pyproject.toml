@@ -24,6 +24,7 @@ dependencies = [
     "scipy",
     "scikit-learn==1.5.1",
     "IPython>=7.18.1",
+    "statsmodels==0.14.2"
 ]
 dynamic = ["version"]
 

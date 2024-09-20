@@ -43,5 +43,7 @@ dev = [
     "build",
     "pytest",
     "coverage",
-    "coveralls"
+    "coveralls",
+    "ruff",
+    "pre-commit",
 ]

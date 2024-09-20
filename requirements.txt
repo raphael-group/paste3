@@ -19,3 +19,5 @@ sphinx-gallery==0.17.1
 sphinx-rtd-theme==2.0.0
 coverage==7.6.1
 coveralls==4.0.1
+ruff==0.6.6
+pre-commit==3.8.0

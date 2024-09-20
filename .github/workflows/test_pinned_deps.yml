@@ -36,6 +36,9 @@ jobs:
       - name: Install package
         run: pip install -e .
 
+      - name: Pre-commit checks
+        run: pre-commit run --all-files
+
       - name: Check Versions of Dependencies
         run: pip freeze
 

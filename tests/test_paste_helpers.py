@@ -132,7 +132,7 @@ def test_pca_distance(slices2):
     sliceA = slices2[1][:, common_genes]
     sliceB = slices2[2][:, common_genes]
 
-    pca_distance_matrix = pca_distance(sliceA, sliceB, 2000, 20)
+    _ = pca_distance(sliceA, sliceB, 2000, 20)
     # TODO: need to add file for this
     # TODO: its too large need to introduce compression
     # assert_frame_equal(

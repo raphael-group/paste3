@@ -69,6 +69,7 @@ def test_center_alignment(slices):
         threshold=0.001,
         max_iter=2,
         dissimilarity="kl",
+        use_gpu=True,
         distributions=[slices[i].obsm["weights"] for i in range(len(slices))],
     )
     assert_frame_equal(

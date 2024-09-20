@@ -12,12 +12,13 @@ from paste3.paste2 import (
 from paste3.helper import intersect
 import pytest
 from scipy.spatial import distance
+from pandas.testing import assert_frame_equal
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
 output_dir = test_dir / "data/output"
 
-from pandas.testing import assert_frame_equal
+
 
 
 def test_partial_pairwise_align(slices2):

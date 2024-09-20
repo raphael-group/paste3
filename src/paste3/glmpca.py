@@ -230,10 +230,10 @@ def glmpca_init(Y, fam, sz=None, nb_theta=None):
         if sz is None:
             sz = colMeans(Y)  # size factors
         offsets = gf.family.link(sz)
-        rfunc = lambda U, V: offsets + tcrossprod(V, U)  # linear predictor
+        def rfunc(U,V): return offsets + tcrossprod(V, U)# linear predictor
         a1 = gf.family.link(rowSums(Y) / np.sum(sz))
     else:
-        rfunc = lambda U, V: tcrossprod(V, U)
+        def rfunc(U,V): return tcrossprod(V, U)
         if fam == "mult":  # offsets incorporated via family object
             a1 = gf.family.link(rowSums(Y) / np.sum(mult_n))
         else:  # no offsets (eg, bernoulli)

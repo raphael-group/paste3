@@ -61,7 +61,7 @@ def pairwise_align(
     if use_gpu:
         try:
             import torch
-        except:
+        except ModuleNotFoundError:
             print(
                 "We currently only have gpu support for Pytorch. Please install torch."
             )
@@ -233,7 +233,7 @@ def center_align(
     if use_gpu:
         try:
             import torch
-        except:
+        except ModuleNotFoundError:
             print(
                 "We currently only have gpu support for Pytorch. Please install torch."
             )

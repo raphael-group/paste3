@@ -82,7 +82,12 @@
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
-<span class="kn">from</span> <span class="nn">paste3.helper</span> <span class="kn">import</span> <span class="n">intersect</span><span class="p">,</span> <span class="n">to_dense_array</span><span class="p">,</span> <span class="n">extract_data_matrix</span><span class="p">,</span> <span class="n">glmpca_distance</span>
+<span class="kn">from</span> <span class="nn">paste3.helper</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">intersect</span><span class="p">,</span>
+    <span class="n">to_dense_array</span><span class="p">,</span>
+    <span class="n">extract_data_matrix</span><span class="p">,</span>
+    <span class="n">glmpca_distance</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">paste3.paste2</span> <span class="kn">import</span> <span class="n">partial_pairwise_align_given_cost_matrix</span>
 
 
@@ -101,9 +106,9 @@
 <span class="sd">    return: 1) G - networkx graph</span>
 <span class="sd">            2) node_dict - dictionary mapping nodes to spots</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">D</span> <span class="o">=</span> <span class="n">cdist</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">],</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">])</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">cdist</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">],</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">])</span>
     <span class="c1"># Get column indexes of the degree+1 lowest values per row</span>
-    <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">:</span><span class="n">degree</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[:,</span> <span class="mi">0</span> <span class="p">:</span> <span class="n">degree</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
     <span class="c1"># Remove first column since it results in self loops</span>
     <span class="n">idx</span> <span class="o">=</span> <span class="n">idx</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span>
 
@@ -126,14 +131,16 @@
     <span class="c1"># remove any nodes that are not mapped to a cluster</span>
     <span class="n">removed_nodes</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">node_to_spot</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">node_to_spot</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">spot_to_cluster</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="n">node_to_spot</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">spot_to_cluster</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">removed_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">removed_nodes</span><span class="p">:</span>
         <span class="k">del</span> <span class="n">node_to_spot</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
         <span class="n">g</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 
-    <span class="n">labels</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">nodes</span><span class="p">(),</span> <span class="p">[</span><span class="n">spot_to_cluster</span><span class="p">[</span><span class="n">node_to_spot</span><span class="p">[</span><span class="n">node</span><span class="p">]]</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">nodes</span><span class="p">()]))</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="nb">zip</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">nodes</span><span class="p">(),</span> <span class="p">[</span><span class="n">spot_to_cluster</span><span class="p">[</span><span class="n">node_to_spot</span><span class="p">[</span><span class="n">node</span><span class="p">]]</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">nodes</span><span class="p">()])</span>
+    <span class="p">)</span>
     <span class="k">return</span> <span class="n">g</span><span class="p">,</span> <span class="n">labels</span></div>
 
 
@@ -169,15 +176,18 @@
     <span class="n">source_mass</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">source_mass</span><span class="p">)):</span>
         <span class="k">if</span> <span class="n">source_mass</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">source_mapped_points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sliceA</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">source_mapped_points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sliceA</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
     <span class="n">source_mapped_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">source_mapped_points</span><span class="p">)</span>
     <span class="n">source_hull</span> <span class="o">=</span> <span class="n">ConvexHull</span><span class="p">(</span><span class="n">source_mapped_points</span><span class="p">)</span>
     <span class="n">source_hull_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">source_mapped_points</span><span class="p">[</span><span class="n">source_hull</span><span class="o">.</span><span class="n">vertices</span><span class="p">])</span>
-    <span class="n">source_hull_adata</span> <span class="o">=</span> <span class="n">sliceA</span><span class="p">[</span><span class="n">sliceA</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">source_hull_path</span><span class="o">.</span><span class="n">contains_points</span><span class="p">(</span><span class="n">sliceA</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">])]]</span>
+    <span class="n">source_hull_adata</span> <span class="o">=</span> <span class="n">sliceA</span><span class="p">[</span>
+        <span class="n">sliceA</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">source_hull_path</span><span class="o">.</span><span class="n">contains_points</span><span class="p">(</span><span class="n">sliceA</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">])]</span>
+    <span class="p">]</span>
 
-    <span class="n">g_A</span><span class="p">,</span> <span class="n">l_A</span> <span class="o">=</span> <span class="n">generate_graph_from_labels</span><span class="p">(</span><span class="n">source_hull_adata</span><span class="p">,</span> <span class="n">source_hull_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;aligned&#39;</span><span class="p">])</span>
+    <span class="n">g_A</span><span class="p">,</span> <span class="n">l_A</span> <span class="o">=</span> <span class="n">generate_graph_from_labels</span><span class="p">(</span>
+        <span class="n">source_hull_adata</span><span class="p">,</span> <span class="n">source_hull_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;aligned&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
     <span class="n">measure_A</span> <span class="o">=</span> <span class="n">edge_inconsistency_score</span><span class="p">(</span><span class="n">g_A</span><span class="p">,</span> <span class="n">l_A</span><span class="p">)</span>
-
 
     <span class="n">sliceB</span> <span class="o">=</span> <span class="n">sliceB</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
@@ -194,13 +204,17 @@
     <span class="n">target_mass</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">target_mass</span><span class="p">)):</span>
         <span class="k">if</span> <span class="n">target_mass</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">target_mapped_points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sliceB</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">target_mapped_points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sliceB</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
     <span class="n">target_mapped_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">target_mapped_points</span><span class="p">)</span>
     <span class="n">target_hull</span> <span class="o">=</span> <span class="n">ConvexHull</span><span class="p">(</span><span class="n">target_mapped_points</span><span class="p">)</span>
     <span class="n">target_hull_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">target_mapped_points</span><span class="p">[</span><span class="n">target_hull</span><span class="o">.</span><span class="n">vertices</span><span class="p">])</span>
-    <span class="n">target_hull_adata</span> <span class="o">=</span> <span class="n">sliceB</span><span class="p">[</span><span class="n">sliceB</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">target_hull_path</span><span class="o">.</span><span class="n">contains_points</span><span class="p">(</span><span class="n">sliceB</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">])]]</span>
+    <span class="n">target_hull_adata</span> <span class="o">=</span> <span class="n">sliceB</span><span class="p">[</span>
+        <span class="n">sliceB</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">target_hull_path</span><span class="o">.</span><span class="n">contains_points</span><span class="p">(</span><span class="n">sliceB</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">])]</span>
+    <span class="p">]</span>
 
-    <span class="n">g_B</span><span class="p">,</span> <span class="n">l_B</span> <span class="o">=</span> <span class="n">generate_graph_from_labels</span><span class="p">(</span><span class="n">target_hull_adata</span><span class="p">,</span> <span class="n">target_hull_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;aligned&#39;</span><span class="p">])</span>
+    <span class="n">g_B</span><span class="p">,</span> <span class="n">l_B</span> <span class="o">=</span> <span class="n">generate_graph_from_labels</span><span class="p">(</span>
+        <span class="n">target_hull_adata</span><span class="p">,</span> <span class="n">target_hull_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;aligned&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
     <span class="n">measure_B</span> <span class="o">=</span> <span class="n">edge_inconsistency_score</span><span class="p">(</span><span class="n">g_B</span><span class="p">,</span> <span class="n">l_B</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">measure_A</span><span class="p">,</span> <span class="n">measure_B</span></div>
@@ -209,6 +223,8 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Main function.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+
+
 <span class="k">def</span> <span class="nf">select_overlap_fraction</span><span class="p">(</span><span class="n">sliceA</span><span class="p">,</span> <span class="n">sliceB</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Estimates the overlap percentage of two ST slices.</span>
@@ -216,40 +232,81 @@
 <span class="sd">    param: sliceA - AnnData object</span>
 <span class="sd">    param: sliceB - AnnData object</span>
 <span class="sd">    param: alpha - Alignment tuning parameter. Note: 0 ≤ alpha ≤ 1</span>
-<span class="sd">    </span>
+
 <span class="sd">    return: estimation of the overlap percentage between sliceA and sliceB</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;PASTE2 model selection procedure.&quot;</span><span class="p">)</span>
-    <span class="n">overlap_to_check</span><span class="o">=</span><span class="p">[</span><span class="mf">0.99</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.85</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.65</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.55</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.45</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.35</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">]</span>
+    <span class="n">overlap_to_check</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="mf">0.99</span><span class="p">,</span>
+        <span class="mf">0.95</span><span class="p">,</span>
+        <span class="mf">0.9</span><span class="p">,</span>
+        <span class="mf">0.85</span><span class="p">,</span>
+        <span class="mf">0.8</span><span class="p">,</span>
+        <span class="mf">0.75</span><span class="p">,</span>
+        <span class="mf">0.7</span><span class="p">,</span>
+        <span class="mf">0.65</span><span class="p">,</span>
+        <span class="mf">0.6</span><span class="p">,</span>
+        <span class="mf">0.55</span><span class="p">,</span>
+        <span class="mf">0.5</span><span class="p">,</span>
+        <span class="mf">0.45</span><span class="p">,</span>
+        <span class="mf">0.4</span><span class="p">,</span>
+        <span class="mf">0.35</span><span class="p">,</span>
+        <span class="mf">0.3</span><span class="p">,</span>
+        <span class="mf">0.25</span><span class="p">,</span>
+        <span class="mf">0.2</span><span class="p">,</span>
+        <span class="mf">0.15</span><span class="p">,</span>
+        <span class="mf">0.1</span><span class="p">,</span>
+        <span class="mf">0.05</span><span class="p">,</span>
+    <span class="p">]</span>
     <span class="c1"># subset for common genes</span>
     <span class="n">common_genes</span> <span class="o">=</span> <span class="n">intersect</span><span class="p">(</span><span class="n">sliceA</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">sliceB</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
     <span class="n">sliceA</span> <span class="o">=</span> <span class="n">sliceA</span><span class="p">[:,</span> <span class="n">common_genes</span><span class="p">]</span>
     <span class="n">sliceB</span> <span class="o">=</span> <span class="n">sliceB</span><span class="p">[:,</span> <span class="n">common_genes</span><span class="p">]</span>
     <span class="c1"># Get transport cost matrix</span>
-    <span class="n">A_X</span><span class="p">,</span> <span class="n">B_X</span> <span class="o">=</span> <span class="n">to_dense_array</span><span class="p">(</span><span class="n">extract_data_matrix</span><span class="p">(</span><span class="n">sliceA</span><span class="p">,</span> <span class="kc">None</span><span class="p">)),</span> <span class="n">to_dense_array</span><span class="p">(</span><span class="n">extract_data_matrix</span><span class="p">(</span><span class="n">sliceB</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+    <span class="n">A_X</span><span class="p">,</span> <span class="n">B_X</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">to_dense_array</span><span class="p">(</span><span class="n">extract_data_matrix</span><span class="p">(</span><span class="n">sliceA</span><span class="p">,</span> <span class="kc">None</span><span class="p">)),</span>
+        <span class="n">to_dense_array</span><span class="p">(</span><span class="n">extract_data_matrix</span><span class="p">(</span><span class="n">sliceB</span><span class="p">,</span> <span class="kc">None</span><span class="p">)),</span>
+    <span class="p">)</span>
     <span class="n">M</span> <span class="o">=</span> <span class="n">glmpca_distance</span><span class="p">(</span><span class="n">A_X</span><span class="p">,</span> <span class="n">B_X</span><span class="p">,</span> <span class="n">latent_dim</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="c1"># Get an alignment for each overlap percentage</span>
     <span class="n">m_to_pi</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">overlap_to_check</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running PASTE2 with s = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;...&quot;</span><span class="p">)</span>
-        <span class="n">pi</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="n">partial_pairwise_align_given_cost_matrix</span><span class="p">(</span><span class="n">sliceA</span><span class="p">,</span> <span class="n">sliceB</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">m</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">armijo</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                                                        <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_obj</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">pi</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="n">partial_pairwise_align_given_cost_matrix</span><span class="p">(</span>
+            <span class="n">sliceA</span><span class="p">,</span>
+            <span class="n">sliceB</span><span class="p">,</span>
+            <span class="n">s</span><span class="o">=</span><span class="n">m</span><span class="p">,</span>
+            <span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+            <span class="n">armijo</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">return_obj</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="n">m_to_pi</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">pi</span>
     <span class="c1"># Model selection based on edge inconsistency score</span>
     <span class="n">m_to_edge_inconsistency_A</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">m_to_edge_inconsistency_B</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">overlap_to_check</span><span class="p">:</span>
         <span class="n">pi</span> <span class="o">=</span> <span class="n">m_to_pi</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
-        <span class="n">sliceA_measure</span><span class="p">,</span> <span class="n">sliceB_measure</span> <span class="o">=</span> <span class="n">calculate_convex_hull_edge_inconsistency</span><span class="p">(</span><span class="n">sliceA</span><span class="p">,</span> <span class="n">sliceB</span><span class="p">,</span> <span class="n">pi</span><span class="p">)</span>
+        <span class="n">sliceA_measure</span><span class="p">,</span> <span class="n">sliceB_measure</span> <span class="o">=</span> <span class="n">calculate_convex_hull_edge_inconsistency</span><span class="p">(</span>
+            <span class="n">sliceA</span><span class="p">,</span> <span class="n">sliceB</span><span class="p">,</span> <span class="n">pi</span>
+        <span class="p">)</span>
         <span class="n">m_to_edge_inconsistency_A</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sliceA_measure</span><span class="p">)</span>
         <span class="n">m_to_edge_inconsistency_B</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sliceB_measure</span><span class="p">)</span>
 
-    <span class="n">half_estimate_A</span> <span class="o">=</span> <span class="n">overlap_to_check</span><span class="p">[</span><span class="n">m_to_edge_inconsistency_A</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">m_to_edge_inconsistency_A</span><span class="p">))]</span>
-    <span class="n">half_estimate_B</span> <span class="o">=</span> <span class="n">overlap_to_check</span><span class="p">[</span><span class="n">m_to_edge_inconsistency_B</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">m_to_edge_inconsistency_B</span><span class="p">))]</span>
+    <span class="n">half_estimate_A</span> <span class="o">=</span> <span class="n">overlap_to_check</span><span class="p">[</span>
+        <span class="n">m_to_edge_inconsistency_A</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">m_to_edge_inconsistency_A</span><span class="p">))</span>
+    <span class="p">]</span>
+    <span class="n">half_estimate_B</span> <span class="o">=</span> <span class="n">overlap_to_check</span><span class="p">[</span>
+        <span class="n">m_to_edge_inconsistency_B</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">m_to_edge_inconsistency_B</span><span class="p">))</span>
+    <span class="p">]</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Estimation of overlap percentage is &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="nb">min</span><span class="p">(</span><span class="n">half_estimate_A</span><span class="p">,</span> <span class="n">half_estimate_B</span><span class="p">),</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="s2">&quot;Estimation of overlap percentage is &quot;</span>
+        <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="nb">min</span><span class="p">(</span><span class="n">half_estimate_A</span><span class="p">,</span> <span class="n">half_estimate_B</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="p">)</span>
     <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="nb">min</span><span class="p">(</span><span class="n">half_estimate_A</span><span class="p">,</span> <span class="n">half_estimate_B</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
-
 
 
 <div class="viewcode-block" id="plot_edge_curve"><a class="viewcode-back" href="../../api/paste3.model_selection.plot_edge_curve.html#paste3.model_selection.plot_edge_curve">[docs]</a><span class="k">def</span> <span class="nf">plot_edge_curve</span><span class="p">(</span><span class="n">m_list</span><span class="p">,</span> <span class="n">source_list</span><span class="p">,</span> <span class="n">target_list</span><span class="p">):</span>
@@ -257,57 +314,97 @@
     <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">m_list</span><span class="p">,</span> <span class="n">source_list</span><span class="p">)</span>
     <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="n">ax1</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([</span><span class="mf">0.99</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">])</span>
-    <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;m&#39;</span><span class="p">)</span>
-    <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Edge inconsistency score&#39;</span><span class="p">)</span>
-    <span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Source slice&#39;</span><span class="p">)</span>
-    
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Edge inconsistency score&quot;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Source slice&quot;</span><span class="p">)</span>
+
     <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">m_list</span><span class="p">,</span> <span class="n">target_list</span><span class="p">)</span>
     <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="n">ax2</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([</span><span class="mf">0.99</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">])</span>
-    <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;m&#39;</span><span class="p">)</span>
-    <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Edge inconsistency score&#39;</span><span class="p">)</span>
-    <span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Target slice&#39;</span><span class="p">)</span>
-    
+    <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Edge inconsistency score&quot;</span><span class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Target slice&quot;</span><span class="p">)</span>
+
     <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="select_overlap_fraction_plotting"><a class="viewcode-back" href="../../api/paste3.model_selection.select_overlap_fraction_plotting.html#paste3.model_selection.select_overlap_fraction_plotting">[docs]</a><span class="k">def</span> <span class="nf">select_overlap_fraction_plotting</span><span class="p">(</span><span class="n">sliceA</span><span class="p">,</span> <span class="n">sliceB</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">show_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="n">overlap_to_check</span><span class="o">=</span><span class="p">[</span><span class="mf">0.99</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.85</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.65</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.55</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.45</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.35</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">]</span>
+    <span class="n">overlap_to_check</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="mf">0.99</span><span class="p">,</span>
+        <span class="mf">0.95</span><span class="p">,</span>
+        <span class="mf">0.9</span><span class="p">,</span>
+        <span class="mf">0.85</span><span class="p">,</span>
+        <span class="mf">0.8</span><span class="p">,</span>
+        <span class="mf">0.75</span><span class="p">,</span>
+        <span class="mf">0.7</span><span class="p">,</span>
+        <span class="mf">0.65</span><span class="p">,</span>
+        <span class="mf">0.6</span><span class="p">,</span>
+        <span class="mf">0.55</span><span class="p">,</span>
+        <span class="mf">0.5</span><span class="p">,</span>
+        <span class="mf">0.45</span><span class="p">,</span>
+        <span class="mf">0.4</span><span class="p">,</span>
+        <span class="mf">0.35</span><span class="p">,</span>
+        <span class="mf">0.3</span><span class="p">,</span>
+        <span class="mf">0.25</span><span class="p">,</span>
+        <span class="mf">0.2</span><span class="p">,</span>
+        <span class="mf">0.15</span><span class="p">,</span>
+        <span class="mf">0.1</span><span class="p">,</span>
+        <span class="mf">0.05</span><span class="p">,</span>
+    <span class="p">]</span>
     <span class="c1"># subset for common genes</span>
     <span class="n">common_genes</span> <span class="o">=</span> <span class="n">intersect</span><span class="p">(</span><span class="n">sliceA</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">sliceB</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
     <span class="n">sliceA</span> <span class="o">=</span> <span class="n">sliceA</span><span class="p">[:,</span> <span class="n">common_genes</span><span class="p">]</span>
     <span class="n">sliceB</span> <span class="o">=</span> <span class="n">sliceB</span><span class="p">[:,</span> <span class="n">common_genes</span><span class="p">]</span>
     <span class="c1"># Get transport cost matrix</span>
-    <span class="n">A_X</span><span class="p">,</span> <span class="n">B_X</span> <span class="o">=</span> <span class="n">to_dense_array</span><span class="p">(</span><span class="n">extract_data_matrix</span><span class="p">(</span><span class="n">sliceA</span><span class="p">,</span> <span class="kc">None</span><span class="p">)),</span> <span class="n">to_dense_array</span><span class="p">(</span><span class="n">extract_data_matrix</span><span class="p">(</span><span class="n">sliceB</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+    <span class="n">A_X</span><span class="p">,</span> <span class="n">B_X</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">to_dense_array</span><span class="p">(</span><span class="n">extract_data_matrix</span><span class="p">(</span><span class="n">sliceA</span><span class="p">,</span> <span class="kc">None</span><span class="p">)),</span>
+        <span class="n">to_dense_array</span><span class="p">(</span><span class="n">extract_data_matrix</span><span class="p">(</span><span class="n">sliceB</span><span class="p">,</span> <span class="kc">None</span><span class="p">)),</span>
+    <span class="p">)</span>
     <span class="n">M</span> <span class="o">=</span> <span class="n">glmpca_distance</span><span class="p">(</span><span class="n">A_X</span><span class="p">,</span> <span class="n">B_X</span><span class="p">,</span> <span class="n">latent_dim</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">m_to_pi</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">overlap_to_check</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running PASTE2 with s = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;...&quot;</span><span class="p">)</span>
-        <span class="n">pi</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="n">partial_pairwise_align_given_cost_matrix</span><span class="p">(</span><span class="n">sliceA</span><span class="p">,</span> <span class="n">sliceB</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">m</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">armijo</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                                                        <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_obj</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">pi</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="n">partial_pairwise_align_given_cost_matrix</span><span class="p">(</span>
+            <span class="n">sliceA</span><span class="p">,</span>
+            <span class="n">sliceB</span><span class="p">,</span>
+            <span class="n">s</span><span class="o">=</span><span class="n">m</span><span class="p">,</span>
+            <span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+            <span class="n">armijo</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">return_obj</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="n">m_to_pi</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">pi</span>
 
     <span class="n">m_to_edge_inconsistency_A</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">m_to_edge_inconsistency_B</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">overlap_to_check</span><span class="p">:</span>
         <span class="n">pi</span> <span class="o">=</span> <span class="n">m_to_pi</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
-        <span class="n">sliceA_measure</span><span class="p">,</span> <span class="n">sliceB_measure</span> <span class="o">=</span> <span class="n">calculate_convex_hull_edge_inconsistency</span><span class="p">(</span><span class="n">sliceA</span><span class="p">,</span> <span class="n">sliceB</span><span class="p">,</span> <span class="n">pi</span><span class="p">)</span>
+        <span class="n">sliceA_measure</span><span class="p">,</span> <span class="n">sliceB_measure</span> <span class="o">=</span> <span class="n">calculate_convex_hull_edge_inconsistency</span><span class="p">(</span>
+            <span class="n">sliceA</span><span class="p">,</span> <span class="n">sliceB</span><span class="p">,</span> <span class="n">pi</span>
+        <span class="p">)</span>
         <span class="n">m_to_edge_inconsistency_A</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sliceA_measure</span><span class="p">)</span>
         <span class="n">m_to_edge_inconsistency_B</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sliceB_measure</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">show_plot</span><span class="p">:</span>
-        <span class="n">plot_edge_curve</span><span class="p">(</span><span class="n">overlap_to_check</span><span class="p">,</span> <span class="n">m_to_edge_inconsistency_A</span><span class="p">,</span> <span class="n">m_to_edge_inconsistency_B</span><span class="p">)</span>
+        <span class="n">plot_edge_curve</span><span class="p">(</span>
+            <span class="n">overlap_to_check</span><span class="p">,</span> <span class="n">m_to_edge_inconsistency_A</span><span class="p">,</span> <span class="n">m_to_edge_inconsistency_B</span>
+        <span class="p">)</span>
 
-    <span class="n">half_estimate_A</span> <span class="o">=</span> <span class="n">overlap_to_check</span><span class="p">[</span><span class="n">m_to_edge_inconsistency_A</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">m_to_edge_inconsistency_A</span><span class="p">))]</span>
-    <span class="n">half_estimate_B</span> <span class="o">=</span> <span class="n">overlap_to_check</span><span class="p">[</span><span class="n">m_to_edge_inconsistency_B</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">m_to_edge_inconsistency_B</span><span class="p">))]</span>
+    <span class="n">half_estimate_A</span> <span class="o">=</span> <span class="n">overlap_to_check</span><span class="p">[</span>
+        <span class="n">m_to_edge_inconsistency_A</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">m_to_edge_inconsistency_A</span><span class="p">))</span>
+    <span class="p">]</span>
+    <span class="n">half_estimate_B</span> <span class="o">=</span> <span class="n">overlap_to_check</span><span class="p">[</span>
+        <span class="n">m_to_edge_inconsistency_B</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">m_to_edge_inconsistency_B</span><span class="p">))</span>
+    <span class="p">]</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Estimation of overlap percentage is &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="nb">min</span><span class="p">(</span><span class="n">half_estimate_A</span><span class="p">,</span> <span class="n">half_estimate_B</span><span class="p">),</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="s2">&quot;Estimation of overlap percentage is &quot;</span>
+        <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="nb">min</span><span class="p">(</span><span class="n">half_estimate_A</span><span class="p">,</span> <span class="n">half_estimate_B</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="p">)</span>
     <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="nb">min</span><span class="p">(</span><span class="n">half_estimate_A</span><span class="p">,</span> <span class="n">half_estimate_B</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span></div>
-
-
-
-
 </pre></div>
 
            </div>

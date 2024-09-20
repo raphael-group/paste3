@@ -77,6 +77,7 @@
 <span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Python implementation of the generalized PCA for dimension reduction of non-normally distributed data. The original R implementation is at https://github.com/willtownes/glmpca</span>
 <span class="sd">&quot;&quot;&quot;</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">log</span>
 <span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">digamma</span><span class="p">,</span> <span class="n">polygamma</span>
@@ -106,9 +107,9 @@
 
 <span class="k">def</span> <span class="nf">colNorms</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">  compute the L2 norms of columns of an array</span>
-<span class="sd">  &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">colSums</span><span class="p">(</span><span class="n">x</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+<span class="sd">    compute the L2 norms of columns of an array</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">colSums</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
 
 
 <span class="k">def</span> <span class="nf">ncol</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
@@ -134,18 +135,21 @@
 
 <div class="viewcode-block" id="ortho"><a class="viewcode-back" href="../../api/paste3.glmpca.ortho.html#paste3.glmpca.ortho">[docs]</a><span class="k">def</span> <span class="nf">ortho</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">G</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">  U is NxL array of cell factors</span>
-<span class="sd">  V is JxL array of loadings onto genes</span>
-<span class="sd">  X is NxKo array of cell specific covariates</span>
-<span class="sd">  A is JxKo array of coefficients of X</span>
-<span class="sd">  Z is JxKf array of gene specific covariates</span>
-<span class="sd">  G is NxKf array of coefficients of Z</span>
-<span class="sd">  assume the data Y is of dimension JxN</span>
-<span class="sd">  imputed expression: E[Y] = g^{-1}(R) where R = VU&#39;+AX&#39;+ZG&#39;</span>
-<span class="sd">  &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">X</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span> <span class="n">X</span> <span class="o">=</span> <span class="n">cvec1</span><span class="p">(</span><span class="n">nrow</span><span class="p">(</span><span class="n">U</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">Z</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span> <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nrow</span><span class="p">(</span><span class="n">V</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">G</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span> <span class="n">G</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="sd">    U is NxL array of cell factors</span>
+<span class="sd">    V is JxL array of loadings onto genes</span>
+<span class="sd">    X is NxKo array of cell specific covariates</span>
+<span class="sd">    A is JxKo array of coefficients of X</span>
+<span class="sd">    Z is JxKf array of gene specific covariates</span>
+<span class="sd">    G is NxKf array of coefficients of Z</span>
+<span class="sd">    assume the data Y is of dimension JxN</span>
+<span class="sd">    imputed expression: E[Y] = g^{-1}(R) where R = VU&#39;+AX&#39;+ZG&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">X</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">cvec1</span><span class="p">(</span><span class="n">nrow</span><span class="p">(</span><span class="n">U</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">Z</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nrow</span><span class="p">(</span><span class="n">V</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">G</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="c1"># we assume A is not null or zero</span>
     <span class="c1"># remove correlation between U and A</span>
     <span class="c1"># at minimum, this will cause factors to have mean zero</span>
@@ -171,16 +175,16 @@
 
 <div class="viewcode-block" id="mat_binom_dev"><a class="viewcode-back" href="../../api/paste3.glmpca.mat_binom_dev.html#paste3.glmpca.mat_binom_dev">[docs]</a><span class="k">def</span> <span class="nf">mat_binom_dev</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">  binomial deviance for two arrays</span>
-<span class="sd">  X,P are JxN arrays</span>
-<span class="sd">  n is vector of length N (same as cols of X,P)</span>
-<span class="sd">  &quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
+<span class="sd">    binomial deviance for two arrays</span>
+<span class="sd">    X,P are JxN arrays</span>
+<span class="sd">    n is vector of length N (same as cols of X,P)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">):</span>
         <span class="n">term1</span> <span class="o">=</span> <span class="n">X</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">X</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="n">P</span><span class="p">))</span>
     <span class="n">term1</span> <span class="o">=</span> <span class="n">term1</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">term1</span><span class="p">)]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
     <span class="c1"># nn= x&lt;n</span>
     <span class="n">nx</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">X</span>
-    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">):</span>
         <span class="n">term2</span> <span class="o">=</span> <span class="n">nx</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">nx</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">P</span><span class="p">)))</span>
     <span class="n">term2</span> <span class="o">=</span> <span class="n">term2</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">term2</span><span class="p">)]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
     <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">term1</span> <span class="o">+</span> <span class="n">term2</span><span class="p">)</span></div>
@@ -199,12 +203,16 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">family</span> <span class="o">=</span> <span class="n">smf</span><span class="o">.</span><span class="n">Poisson</span><span class="p">()</span>
         <span class="k">elif</span> <span class="n">fam</span> <span class="o">==</span> <span class="s2">&quot;nb&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">nb_theta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">GlmpcaError</span><span class="p">(</span><span class="s2">&quot;Negative binomial dispersion parameter &#39;nb_theta&#39; must be specified&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">GlmpcaError</span><span class="p">(</span>
+                    <span class="s2">&quot;Negative binomial dispersion parameter &#39;nb_theta&#39; must be specified&quot;</span>
+                <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">family</span> <span class="o">=</span> <span class="n">smf</span><span class="o">.</span><span class="n">NegativeBinomial</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mi">1</span> <span class="o">/</span> <span class="n">nb_theta</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">fam</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;mult&quot;</span><span class="p">,</span> <span class="s2">&quot;bern&quot;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">family</span> <span class="o">=</span> <span class="n">smf</span><span class="o">.</span><span class="n">Binomial</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">fam</span> <span class="o">==</span> <span class="s2">&quot;mult&quot;</span> <span class="ow">and</span> <span class="n">mult_n</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">GlmpcaError</span><span class="p">(</span><span class="s2">&quot;Multinomial sample size parameter vector &#39;mult_n&#39; must be specified&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">GlmpcaError</span><span class="p">(</span>
+                    <span class="s2">&quot;Multinomial sample size parameter vector &#39;mult_n&#39; must be specified&quot;</span>
+                <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GlmpcaError</span><span class="p">(</span><span class="s2">&quot;unrecognized family type&quot;</span><span class="p">)</span>
         <span class="c1"># variance function, determined by GLM family</span>
@@ -215,23 +223,27 @@
         <span class="n">hfunc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">family</span><span class="o">.</span><span class="n">link</span><span class="o">.</span><span class="n">inverse_deriv</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">glmpca_fam</span> <span class="o">=</span> <span class="n">fam</span>
         <span class="k">if</span> <span class="n">fam</span> <span class="o">==</span> <span class="s2">&quot;poi&quot;</span><span class="p">:</span>
+
             <span class="k">def</span> <span class="nf">infograd</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">R</span><span class="p">):</span>
                 <span class="n">M</span> <span class="o">=</span> <span class="n">ilfunc</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>  <span class="c1"># ilfunc=exp</span>
                 <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;grad&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">Y</span> <span class="o">-</span> <span class="n">M</span><span class="p">),</span> <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="n">M</span><span class="p">}</span>
         <span class="k">elif</span> <span class="n">fam</span> <span class="o">==</span> <span class="s2">&quot;nb&quot;</span><span class="p">:</span>
+
             <span class="k">def</span> <span class="nf">infograd</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">R</span><span class="p">):</span>
                 <span class="n">M</span> <span class="o">=</span> <span class="n">ilfunc</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>  <span class="c1"># ilfunc=exp</span>
                 <span class="n">W</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">vfunc</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
-                <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;grad&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">Y</span> <span class="o">-</span> <span class="n">M</span><span class="p">)</span> <span class="o">*</span> <span class="n">W</span> <span class="o">*</span> <span class="n">M</span><span class="p">,</span> <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="n">W</span> <span class="o">*</span> <span class="p">(</span><span class="n">M</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)}</span>
+                <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;grad&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">Y</span> <span class="o">-</span> <span class="n">M</span><span class="p">)</span> <span class="o">*</span> <span class="n">W</span> <span class="o">*</span> <span class="n">M</span><span class="p">,</span> <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="n">W</span> <span class="o">*</span> <span class="p">(</span><span class="n">M</span><span class="o">**</span><span class="mi">2</span><span class="p">)}</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">nb_theta</span> <span class="o">=</span> <span class="n">nb_theta</span>
         <span class="k">elif</span> <span class="n">fam</span> <span class="o">==</span> <span class="s2">&quot;mult&quot;</span><span class="p">:</span>
+
             <span class="k">def</span> <span class="nf">infograd</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">R</span><span class="p">):</span>
                 <span class="n">P</span> <span class="o">=</span> <span class="n">ilfunc</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>  <span class="c1"># ilfunc=expit, P very small probabilities</span>
                 <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;grad&quot;</span><span class="p">:</span> <span class="n">Y</span> <span class="o">-</span> <span class="p">(</span><span class="n">mult_n</span> <span class="o">*</span> <span class="n">P</span><span class="p">),</span> <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="n">mult_n</span> <span class="o">*</span> <span class="n">vfunc</span><span class="p">(</span><span class="n">P</span><span class="p">)}</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">mult_n</span> <span class="o">=</span> <span class="n">mult_n</span>
         <span class="k">elif</span> <span class="n">fam</span> <span class="o">==</span> <span class="s2">&quot;bern&quot;</span><span class="p">:</span>
+
             <span class="k">def</span> <span class="nf">infograd</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">R</span><span class="p">):</span>
                 <span class="n">P</span> <span class="o">=</span> <span class="n">ilfunc</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
                 <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;grad&quot;</span><span class="p">:</span> <span class="n">Y</span> <span class="o">-</span> <span class="n">P</span><span class="p">,</span> <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="n">vfunc</span><span class="p">(</span><span class="n">P</span><span class="p">)}</span>
@@ -243,15 +255,19 @@
                 <span class="n">M</span> <span class="o">=</span> <span class="n">ilfunc</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
                 <span class="n">W</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">vfunc</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
                 <span class="n">H</span> <span class="o">=</span> <span class="n">hfunc</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
-                <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;grad&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">Y</span> <span class="o">-</span> <span class="n">M</span><span class="p">)</span> <span class="o">*</span> <span class="n">W</span> <span class="o">*</span> <span class="n">H</span><span class="p">,</span> <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="n">W</span> <span class="o">*</span> <span class="p">(</span><span class="n">H</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)}</span>
+                <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;grad&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">Y</span> <span class="o">-</span> <span class="n">M</span><span class="p">)</span> <span class="o">*</span> <span class="n">W</span> <span class="o">*</span> <span class="n">H</span><span class="p">,</span> <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="n">W</span> <span class="o">*</span> <span class="p">(</span><span class="n">H</span><span class="o">**</span><span class="mi">2</span><span class="p">)}</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">infograd</span> <span class="o">=</span> <span class="n">infograd</span>
         <span class="c1"># create deviance function</span>
         <span class="k">if</span> <span class="n">fam</span> <span class="o">==</span> <span class="s2">&quot;mult&quot;</span><span class="p">:</span>
+
             <span class="k">def</span> <span class="nf">dev_func</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">R</span><span class="p">):</span>
                 <span class="k">return</span> <span class="n">mat_binom_dev</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">ilfunc</span><span class="p">(</span><span class="n">R</span><span class="p">),</span> <span class="n">mult_n</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
+
             <span class="k">def</span> <span class="nf">dev_func</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">R</span><span class="p">):</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">family</span><span class="o">.</span><span class="n">deviance</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">ilfunc</span><span class="p">(</span><span class="n">R</span><span class="p">))</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">dev_func</span> <span class="o">=</span> <span class="n">dev_func</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -272,13 +288,13 @@
 
 <div class="viewcode-block" id="glmpca_init"><a class="viewcode-back" href="../../api/paste3.glmpca.glmpca_init.html#paste3.glmpca.glmpca_init">[docs]</a><span class="k">def</span> <span class="nf">glmpca_init</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">fam</span><span class="p">,</span> <span class="n">sz</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nb_theta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">  create the glmpca_family object and</span>
-<span class="sd">  initialize the A array (regression coefficients of X)</span>
-<span class="sd">  Y is the data (JxN array)</span>
-<span class="sd">  fam is the likelihood</span>
-<span class="sd">  sz optional vector of size factors, default: sz=colMeans(Y) or colSums(Y)</span>
-<span class="sd">  sz is ignored unless fam is &#39;poi&#39; or &#39;nb&#39;</span>
-<span class="sd">  &quot;&quot;&quot;</span>
+<span class="sd">    create the glmpca_family object and</span>
+<span class="sd">    initialize the A array (regression coefficients of X)</span>
+<span class="sd">    Y is the data (JxN array)</span>
+<span class="sd">    fam is the likelihood</span>
+<span class="sd">    sz optional vector of size factors, default: sz=colMeans(Y) or colSums(Y)</span>
+<span class="sd">    sz is ignored unless fam is &#39;poi&#39; or &#39;nb&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">sz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">sz</span><span class="p">)</span> <span class="o">!=</span> <span class="n">ncol</span><span class="p">(</span><span class="n">Y</span><span class="p">):</span>
         <span class="k">raise</span> <span class="n">GlmpcaError</span><span class="p">(</span><span class="s2">&quot;size factor must have length equal to columns of Y&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">fam</span> <span class="o">==</span> <span class="s2">&quot;mult&quot;</span><span class="p">:</span>
@@ -287,12 +303,19 @@
         <span class="n">mult_n</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">gf</span> <span class="o">=</span> <span class="n">GlmpcaFamily</span><span class="p">(</span><span class="n">fam</span><span class="p">,</span> <span class="n">nb_theta</span><span class="p">,</span> <span class="n">mult_n</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">fam</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;poi&quot;</span><span class="p">,</span> <span class="s2">&quot;nb&quot;</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">sz</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">sz</span> <span class="o">=</span> <span class="n">colMeans</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>  <span class="c1"># size factors</span>
+        <span class="k">if</span> <span class="n">sz</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sz</span> <span class="o">=</span> <span class="n">colMeans</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>  <span class="c1"># size factors</span>
         <span class="n">offsets</span> <span class="o">=</span> <span class="n">gf</span><span class="o">.</span><span class="n">family</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="n">sz</span><span class="p">)</span>
-        <span class="n">rfunc</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">U</span><span class="p">,</span> <span class="n">V</span><span class="p">:</span> <span class="n">offsets</span> <span class="o">+</span> <span class="n">tcrossprod</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">U</span><span class="p">)</span>  <span class="c1"># linear predictor</span>
+
+        <span class="k">def</span> <span class="nf">rfunc</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">V</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">offsets</span> <span class="o">+</span> <span class="n">tcrossprod</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">U</span><span class="p">)</span>  <span class="c1"># linear predictor</span>
+
         <span class="n">a1</span> <span class="o">=</span> <span class="n">gf</span><span class="o">.</span><span class="n">family</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="n">rowSums</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">sz</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">rfunc</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">U</span><span class="p">,</span> <span class="n">V</span><span class="p">:</span> <span class="n">tcrossprod</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">U</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">rfunc</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">V</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">tcrossprod</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">U</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">fam</span> <span class="o">==</span> <span class="s2">&quot;mult&quot;</span><span class="p">:</span>  <span class="c1"># offsets incorporated via family object</span>
             <span class="n">a1</span> <span class="o">=</span> <span class="n">gf</span><span class="o">.</span><span class="n">family</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="n">rowSums</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mult_n</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># no offsets (eg, bernoulli)</span>
@@ -304,22 +327,35 @@
 
 <div class="viewcode-block" id="est_nb_theta"><a class="viewcode-back" href="../../api/paste3.glmpca.est_nb_theta.html#paste3.glmpca.est_nb_theta">[docs]</a><span class="k">def</span> <span class="nf">est_nb_theta</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">th</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">  given count data y and predicted means mu&gt;0, and a neg binom theta &quot;th&quot;</span>
-<span class="sd">  use Newton&#39;s Method to update theta based on the negative binomial likelihood</span>
-<span class="sd">  note this uses observed rather than expected information</span>
-<span class="sd">  regularization:</span>
-<span class="sd">  let u=log(theta). We use the prior u~N(0,1) as penalty</span>
-<span class="sd">  equivalently we assume theta~lognormal(0,1) so the mode is at 1 (geometric distr)</span>
-<span class="sd">  dtheta/du=e^u=theta</span>
-<span class="sd">  d2theta/du2=theta</span>
-<span class="sd">  dL/dtheta * dtheta/du</span>
-<span class="sd">  &quot;&quot;&quot;</span>
+<span class="sd">    given count data y and predicted means mu&gt;0, and a neg binom theta &quot;th&quot;</span>
+<span class="sd">    use Newton&#39;s Method to update theta based on the negative binomial likelihood</span>
+<span class="sd">    note this uses observed rather than expected information</span>
+<span class="sd">    regularization:</span>
+<span class="sd">    let u=log(theta). We use the prior u~N(0,1) as penalty</span>
+<span class="sd">    equivalently we assume theta~lognormal(0,1) so the mode is at 1 (geometric distr)</span>
+<span class="sd">    dtheta/du=e^u=theta</span>
+<span class="sd">    d2theta/du2=theta</span>
+<span class="sd">    dL/dtheta * dtheta/du</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># n= length(y)</span>
     <span class="n">u</span> <span class="o">=</span> <span class="n">log</span><span class="p">(</span><span class="n">th</span><span class="p">)</span>
     <span class="c1"># dL/dtheta*dtheta/du</span>
-    <span class="n">score</span> <span class="o">=</span> <span class="n">th</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">digamma</span><span class="p">(</span><span class="n">th</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="n">digamma</span><span class="p">(</span><span class="n">th</span><span class="p">)</span> <span class="o">+</span> <span class="n">log</span><span class="p">(</span><span class="n">th</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">log</span><span class="p">(</span><span class="n">th</span> <span class="o">+</span> <span class="n">mu</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">y</span> <span class="o">+</span> <span class="n">th</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">mu</span> <span class="o">+</span> <span class="n">th</span><span class="p">))</span>
+    <span class="n">score</span> <span class="o">=</span> <span class="n">th</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+        <span class="n">digamma</span><span class="p">(</span><span class="n">th</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span>
+        <span class="o">-</span> <span class="n">digamma</span><span class="p">(</span><span class="n">th</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">log</span><span class="p">(</span><span class="n">th</span><span class="p">)</span>
+        <span class="o">+</span> <span class="mi">1</span>
+        <span class="o">-</span> <span class="n">log</span><span class="p">(</span><span class="n">th</span> <span class="o">+</span> <span class="n">mu</span><span class="p">)</span>
+        <span class="o">-</span> <span class="p">(</span><span class="n">y</span> <span class="o">+</span> <span class="n">th</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">mu</span> <span class="o">+</span> <span class="n">th</span><span class="p">)</span>
+    <span class="p">)</span>
     <span class="c1"># d^2L/dtheta^2 * (dtheta/du)^2</span>
-    <span class="n">info1</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">th</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">trigamma</span><span class="p">(</span><span class="n">th</span> <span class="o">+</span> <span class="n">mu</span><span class="p">)</span> <span class="o">-</span> <span class="n">trigamma</span><span class="p">(</span><span class="n">th</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">th</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="n">mu</span> <span class="o">+</span> <span class="n">th</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">y</span> <span class="o">+</span> <span class="n">th</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">mu</span> <span class="o">+</span> <span class="n">th</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">info1</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">th</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+        <span class="n">trigamma</span><span class="p">(</span><span class="n">th</span> <span class="o">+</span> <span class="n">mu</span><span class="p">)</span>
+        <span class="o">-</span> <span class="n">trigamma</span><span class="p">(</span><span class="n">th</span><span class="p">)</span>
+        <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">th</span>
+        <span class="o">-</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="n">mu</span> <span class="o">+</span> <span class="n">th</span><span class="p">)</span>
+        <span class="o">+</span> <span class="p">(</span><span class="n">y</span> <span class="o">+</span> <span class="n">th</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">mu</span> <span class="o">+</span> <span class="n">th</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="p">)</span>
     <span class="c1"># dL/dtheta*d^2theta/du^2 = score</span>
     <span class="n">info</span> <span class="o">=</span> <span class="n">info1</span> <span class="o">-</span> <span class="n">score</span>
     <span class="c1"># L2 penalty on u=log(th)</span>
@@ -328,9 +364,19 @@
     <span class="c1"># exp(u+sign(grad)*min(maxstep,abs(grad)))</span>
 
 
-<div class="viewcode-block" id="glmpca"><a class="viewcode-back" href="../../api/paste3.glmpca.glmpca.html#paste3.glmpca.glmpca">[docs]</a><span class="k">def</span> <span class="nf">glmpca</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">fam</span><span class="o">=</span><span class="s2">&quot;poi&quot;</span><span class="p">,</span> <span class="n">ctl</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;maxIter&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span> <span class="s2">&quot;eps&quot;</span><span class="p">:</span> <span class="mf">1e-4</span><span class="p">,</span> <span class="s2">&quot;optimizeTheta&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span> <span class="n">penalty</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-           <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;factors&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;loadings&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
-           <span class="n">nb_theta</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sz</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="glmpca"><a class="viewcode-back" href="../../api/paste3.glmpca.glmpca.html#paste3.glmpca.glmpca">[docs]</a><span class="k">def</span> <span class="nf">glmpca</span><span class="p">(</span>
+    <span class="n">Y</span><span class="p">,</span>
+    <span class="n">L</span><span class="p">,</span>
+    <span class="n">fam</span><span class="o">=</span><span class="s2">&quot;poi&quot;</span><span class="p">,</span>
+    <span class="n">ctl</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;maxIter&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span> <span class="s2">&quot;eps&quot;</span><span class="p">:</span> <span class="mf">1e-4</span><span class="p">,</span> <span class="s2">&quot;optimizeTheta&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="n">penalty</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">init</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;factors&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;loadings&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
+    <span class="n">nb_theta</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">X</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">Z</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">sz</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    GLM-PCA</span>
 <span class="sd">    This function implements the GLM-PCA dimensionality reduction method for high-dimensional count data.</span>
@@ -391,10 +437,11 @@
 <span class="sd">    ----------</span>
 <span class="sd">    .. [1] Townes FW, Hicks SC, Aryee MJ, and Irizarry RA. &quot;Feature selection and dimension reduction for single-cell RNA-seq based on a multinomial model&quot;, biorXiv, 2019. https://www.biorxiv.org/content/10.1101/574574v1</span>
 <span class="sd">    .. [2] Townes FW. &quot;Generalized principal component analysis&quot;, arXiv, 2019. https://arxiv.org/abs/1907.02647</span>
-<span class="sd">  &quot;&quot;&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># For negative binomial, convergence only works if starting with nb_theta large</span>
     <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">fam</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;poi&quot;</span><span class="p">,</span> <span class="s2">&quot;nb&quot;</span><span class="p">,</span> <span class="s2">&quot;mult&quot;</span><span class="p">,</span> <span class="s2">&quot;bern&quot;</span><span class="p">):</span> <span class="k">raise</span> <span class="n">GlmpcaError</span><span class="p">(</span><span class="s2">&quot;invalid fam&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fam</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;poi&quot;</span><span class="p">,</span> <span class="s2">&quot;nb&quot;</span><span class="p">,</span> <span class="s2">&quot;mult&quot;</span><span class="p">,</span> <span class="s2">&quot;bern&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GlmpcaError</span><span class="p">(</span><span class="s2">&quot;invalid fam&quot;</span><span class="p">)</span>
     <span class="n">J</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">shape</span>
     <span class="c1"># sanity check inputs</span>
     <span class="k">if</span> <span class="n">fam</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;poi&quot;</span><span class="p">,</span> <span class="s2">&quot;nb&quot;</span><span class="p">,</span> <span class="s2">&quot;mult&quot;</span><span class="p">,</span> <span class="s2">&quot;bern&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -409,13 +456,17 @@
         <span class="c1"># we force an intercept, so remove it from X to prevent collinearity</span>
         <span class="n">X</span> <span class="o">=</span> <span class="n">remove_intercept</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>  <span class="c1"># empty array to prevent dim mismatch errors with hstack later</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">)</span>  <span class="c1"># empty array to prevent dim mismatch errors with hstack later</span>
     <span class="n">Ko</span> <span class="o">=</span> <span class="n">ncol</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
     <span class="k">if</span> <span class="n">Z</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">nrow</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span> <span class="o">!=</span> <span class="n">nrow</span><span class="p">(</span><span class="n">Y</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">GlmpcaError</span><span class="p">(</span><span class="s2">&quot;Z rows must match rows of Y&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">J</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>  <span class="c1"># empty array to prevent dim mismatch errors with hstack later</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">)</span>  <span class="c1"># empty array to prevent dim mismatch errors with hstack later</span>
     <span class="n">Kf</span> <span class="o">=</span> <span class="n">ncol</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
     <span class="n">lid</span> <span class="o">=</span> <span class="p">(</span><span class="n">Ko</span> <span class="o">+</span> <span class="n">Kf</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">L</span><span class="p">))</span>
     <span class="n">uid</span> <span class="o">=</span> <span class="n">Ko</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">Kf</span> <span class="o">+</span> <span class="n">L</span><span class="p">))</span>
@@ -448,12 +499,17 @@
         <span class="n">dev</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">gf</span><span class="o">.</span><span class="n">dev_func</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">rfunc</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">V</span><span class="p">))</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">dev</span><span class="p">[</span><span class="n">t</span><span class="p">]):</span>
             <span class="k">raise</span> <span class="n">GlmpcaError</span><span class="p">(</span>
-                <span class="s2">&quot;Numerical divergence (deviance no longer finite), try increasing the penalty to improve stability of optimization.&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="mi">4</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dev</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="n">dev</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mf">0.1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dev</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]))</span> <span class="o">&lt;</span> <span class="n">ctl</span><span class="p">[</span><span class="s2">&quot;eps&quot;</span><span class="p">]:</span>
+                <span class="s2">&quot;Numerical divergence (deviance no longer finite), try increasing the penalty to improve stability of optimization.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">t</span> <span class="o">&gt;</span> <span class="mi">4</span>
+            <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dev</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="n">dev</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mf">0.1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dev</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]))</span> <span class="o">&lt;</span> <span class="n">ctl</span><span class="p">[</span><span class="s2">&quot;eps&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
             <span class="k">break</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Iteration: </span><span class="si">{:d}</span><span class="s2"> | deviance=</span><span class="si">{:.4E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">(</span><span class="n">dev</span><span class="p">[</span><span class="n">t</span><span class="p">]))</span>
-            <span class="k">if</span> <span class="n">fam</span> <span class="o">==</span> <span class="s2">&quot;nb&quot;</span><span class="p">:</span> <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot; | nb_theta: </span><span class="si">{:.3E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nb_theta</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">fam</span> <span class="o">==</span> <span class="s2">&quot;nb&quot;</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot; | nb_theta: </span><span class="si">{:.3E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nb_theta</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="c1"># (k in lid) ensures no penalty on regression coefficients:</span>
@@ -469,7 +525,9 @@
             <span class="n">U</span><span class="p">[:,</span> <span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">grads</span> <span class="o">/</span> <span class="n">infos</span>
         <span class="k">if</span> <span class="n">fam</span> <span class="o">==</span> <span class="s2">&quot;nb&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">ctl</span><span class="p">[</span><span class="s2">&quot;optimizeTheta&quot;</span><span class="p">]:</span>
-                <span class="n">nb_theta</span> <span class="o">=</span> <span class="n">est_nb_theta</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">gf</span><span class="o">.</span><span class="n">family</span><span class="o">.</span><span class="n">link</span><span class="o">.</span><span class="n">inverse</span><span class="p">(</span><span class="n">rfunc</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">V</span><span class="p">)),</span> <span class="n">nb_theta</span><span class="p">)</span>
+                <span class="n">nb_theta</span> <span class="o">=</span> <span class="n">est_nb_theta</span><span class="p">(</span>
+                    <span class="n">Y</span><span class="p">,</span> <span class="n">gf</span><span class="o">.</span><span class="n">family</span><span class="o">.</span><span class="n">link</span><span class="o">.</span><span class="n">inverse</span><span class="p">(</span><span class="n">rfunc</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">V</span><span class="p">)),</span> <span class="n">nb_theta</span>
+                <span class="p">)</span>
             <span class="n">gf</span> <span class="o">=</span> <span class="n">GlmpcaFamily</span><span class="p">(</span><span class="n">fam</span><span class="p">,</span> <span class="n">nb_theta</span><span class="p">)</span>
     <span class="c1"># postprocessing: include row and column labels for regression coefficients</span>
     <span class="k">if</span> <span class="n">ncol</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>

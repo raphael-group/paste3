@@ -96,7 +96,6 @@
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">matplotlib.patches</span> <span class="k">as</span> <span class="nn">mpatches</span>
 <span class="kn">import</span> <span class="nn">squidpy</span> <span class="k">as</span> <span class="nn">sq</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 </pre></div>
 </div>
@@ -120,10 +119,10 @@
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sliceA_filename</span> <span class="o">=</span> <span class="s1">&#39;../../../tests/data/input/151673.h5ad&#39;</span>
-<span class="n">sliceB_filename</span> <span class="o">=</span> <span class="s1">&#39;../../../tests/data/input/151674.h5ad&#39;</span>
-<span class="n">sliceC_filename</span> <span class="o">=</span> <span class="s1">&#39;../../../tests/data/input/151675.h5ad&#39;</span>
-<span class="n">sliceD_filename</span> <span class="o">=</span> <span class="s1">&#39;../../../tests/data/input/151676.h5ad&#39;</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sliceA_filename</span> <span class="o">=</span> <span class="s2">&quot;../../../tests/data/input/151673.h5ad&quot;</span>
+<span class="n">sliceB_filename</span> <span class="o">=</span> <span class="s2">&quot;../../../tests/data/input/151674.h5ad&quot;</span>
+<span class="n">sliceC_filename</span> <span class="o">=</span> <span class="s2">&quot;../../../tests/data/input/151675.h5ad&quot;</span>
+<span class="n">sliceD_filename</span> <span class="o">=</span> <span class="s2">&quot;../../../tests/data/input/151676.h5ad&quot;</span>
 <span class="n">sliceA</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">read_h5ad</span><span class="p">(</span><span class="n">sliceA_filename</span><span class="p">)</span>
 <span class="n">sliceB</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">read_h5ad</span><span class="p">(</span><span class="n">sliceB_filename</span><span class="p">)</span>
 <span class="n">sliceC</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">read_h5ad</span><span class="p">(</span><span class="n">sliceC_filename</span><span class="p">)</span>
@@ -154,7 +153,7 @@
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sliceA</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sliceA</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
@@ -696,32 +695,16 @@ array([[ 5769,  2807],
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sq</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spatial_scatter</span><span class="p">(</span>
-    <span class="n">sliceA</span><span class="p">,</span>
-    <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">color</span><span class="o">=</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">,</span>
-    <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="n">sliceA</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;layer_guess_reordered&quot;</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 <span class="p">)</span>
 <span class="n">sq</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spatial_scatter</span><span class="p">(</span>
-    <span class="n">sliceB</span><span class="p">,</span>
-    <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">color</span><span class="o">=</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">,</span>
-    <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="n">sliceB</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;layer_guess_reordered&quot;</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 <span class="p">)</span>
 <span class="n">sq</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spatial_scatter</span><span class="p">(</span>
-    <span class="n">sliceC</span><span class="p">,</span>
-    <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">color</span><span class="o">=</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">,</span>
-    <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="n">sliceC</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;layer_guess_reordered&quot;</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 <span class="p">)</span>
 <span class="n">sq</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spatial_scatter</span><span class="p">(</span>
-    <span class="n">sliceD</span><span class="p">,</span>
-    <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">color</span><span class="o">=</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">,</span>
-    <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="n">sliceD</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;layer_guess_reordered&quot;</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -787,7 +770,7 @@ WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns
 parameter does not have to be very accurate).</p>
 <p>Now we compute an alignment matrix between each pair of slices in our example dataset:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pi_AB</span> <span class="o">=</span> <span class="n">paste2</span><span class="o">.</span><span class="n">partial_pairwise_align</span><span class="p">(</span><span class="n">sliceA</span><span class="p">,</span> <span class="n">sliceB</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
@@ -802,134 +785,47 @@ parameter does not have to be very accurate).</p>
 PASTE2 starts...
 Starting GLM-PCA...
 Iteration: 0 | deviance=1.3992E+7
-Iteration: 1 | deviance=1.3991E+7
-Iteration: 2 | deviance=1.2327E+7
-Iteration: 3 | deviance=1.1982E+7
-Iteration: 4 | deviance=1.1832E+7
-Iteration: 5 | deviance=1.1752E+7
-Iteration: 6 | deviance=1.1707E+7
-Iteration: 7 | deviance=1.1679E+7
-Iteration: 8 | deviance=1.1660E+7
-Iteration: 9 | deviance=1.1646E+7
-Iteration: 10 | deviance=1.1636E+7
-Iteration: 11 | deviance=1.1628E+7
-Iteration: 12 | deviance=1.1621E+7
-Iteration: 13 | deviance=1.1615E+7
-Iteration: 14 | deviance=1.1611E+7
-Iteration: 15 | deviance=1.1607E+7
-Iteration: 16 | deviance=1.1603E+7
-Iteration: 17 | deviance=1.1601E+7
-Iteration: 18 | deviance=1.1598E+7
-Iteration: 19 | deviance=1.1596E+7
-Iteration: 20 | deviance=1.1594E+7
-Iteration: 21 | deviance=1.1592E+7
-Iteration: 22 | deviance=1.1590E+7
-Iteration: 23 | deviance=1.1589E+7
-Iteration: 24 | deviance=1.1588E+7
-Iteration: 25 | deviance=1.1587E+7
+Iteration: 1 | deviance=1.3990E+7
+Iteration: 2 | deviance=1.2289E+7
+Iteration: 3 | deviance=1.1924E+7
+Iteration: 4 | deviance=1.1782E+7
+Iteration: 5 | deviance=1.1718E+7
+Iteration: 6 | deviance=1.1685E+7
+Iteration: 7 | deviance=1.1664E+7
+Iteration: 8 | deviance=1.1649E+7
+Iteration: 9 | deviance=1.1638E+7
+Iteration: 10 | deviance=1.1629E+7
+Iteration: 11 | deviance=1.1623E+7
+Iteration: 12 | deviance=1.1617E+7
+Iteration: 13 | deviance=1.1612E+7
+Iteration: 14 | deviance=1.1608E+7
+Iteration: 15 | deviance=1.1605E+7
+Iteration: 16 | deviance=1.1602E+7
+Iteration: 17 | deviance=1.1599E+7
+Iteration: 18 | deviance=1.1597E+7
+Iteration: 19 | deviance=1.1594E+7
+Iteration: 20 | deviance=1.1593E+7
+Iteration: 21 | deviance=1.1591E+7
+Iteration: 22 | deviance=1.1589E+7
+Iteration: 23 | deviance=1.1588E+7
+Iteration: 24 | deviance=1.1587E+7
 GLM-PCA finished.
 It.  |Loss        |Relative loss|Absolute loss
 ------------------------------------------------
-    0|6.066630e+01|0.000000e+00|0.000000e+00
-    1|1.634618e+01|2.711343e+00|4.432012e+01
-    2|1.092875e+01|4.957044e-01|5.417431e+00
-    3|1.015943e+01|7.572514e-02|7.693242e-01
-    4|1.009742e+01|6.141026e-03|6.200853e-02
-    5|1.007097e+01|2.626185e-03|2.644823e-02
-    6|1.005727e+01|1.361993e-03|1.369794e-02
-    7|1.005085e+01|6.387416e-04|6.419899e-03
-    8|1.004732e+01|3.522432e-04|3.539099e-03
-    9|1.004542e+01|1.889910e-04|1.898494e-03
-   10|1.004433e+01|1.087252e-04|1.092071e-03
-   11|1.004360e+01|7.247221e-05|7.278817e-04
-   12|1.004306e+01|5.370646e-05|5.393771e-04
-   13|1.004290e+01|1.528681e-05|1.535240e-04
-   14|1.004286e+01|4.187448e-06|4.205397e-05
-   15|1.004285e+01|1.327654e-06|1.333343e-05
-   16|1.004284e+01|1.137233e-06|1.142105e-05
-   17|1.004283e+01|7.145480e-07|7.176085e-06
-   18|1.004282e+01|6.624142e-07|6.652509e-06
-   19|1.004282e+01|4.826952e-07|4.847621e-06
-   20|1.004282e+01|1.341576e-07|1.347320e-06
-   21|1.004282e+01|1.084818e-08|1.089462e-07
-   22|1.004282e+01|4.938728e-08|4.959874e-07
-   23|1.004282e+01|6.570004e-08|6.598134e-07
-   24|1.004282e+01|5.763893e-09|5.788572e-08
- 1000|1.004282e+01|0.000000e+00|0.000000e+00
+    0|5.865545e+01|0.000000e+00|0.000000e+00
+    1|1.618683e+01|2.623652e+00|4.246862e+01
+    2|1.092222e+01|4.820098e-01|5.264615e+00
 </pre></div></div>
 </div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pi_BC</span> <span class="o">=</span> <span class="n">paste2</span><span class="o">.</span><span class="n">partial_pairwise_align</span><span class="p">(</span><span class="n">sliceB</span><span class="p">,</span> <span class="n">sliceC</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-PASTE2 starts...
-Starting GLM-PCA...
-Iteration: 0 | deviance=1.3224E+7
-Iteration: 1 | deviance=1.3222E+7
-Iteration: 2 | deviance=1.1774E+7
-Iteration: 3 | deviance=1.1466E+7
-Iteration: 4 | deviance=1.1326E+7
-Iteration: 5 | deviance=1.1256E+7
-Iteration: 6 | deviance=1.1217E+7
-Iteration: 7 | deviance=1.1191E+7
-Iteration: 8 | deviance=1.1172E+7
-Iteration: 9 | deviance=1.1158E+7
-Iteration: 10 | deviance=1.1146E+7
-Iteration: 11 | deviance=1.1137E+7
-Iteration: 12 | deviance=1.1129E+7
-Iteration: 13 | deviance=1.1123E+7
-Iteration: 14 | deviance=1.1117E+7
-Iteration: 15 | deviance=1.1113E+7
-Iteration: 16 | deviance=1.1109E+7
-Iteration: 17 | deviance=1.1105E+7
-Iteration: 18 | deviance=1.1102E+7
-Iteration: 19 | deviance=1.1099E+7
-Iteration: 20 | deviance=1.1097E+7
-Iteration: 21 | deviance=1.1094E+7
-Iteration: 22 | deviance=1.1092E+7
-Iteration: 23 | deviance=1.1091E+7
-Iteration: 24 | deviance=1.1089E+7
-Iteration: 25 | deviance=1.1087E+7
-Iteration: 26 | deviance=1.1086E+7
-Iteration: 27 | deviance=1.1085E+7
-Iteration: 28 | deviance=1.1084E+7
-GLM-PCA finished.
-It.  |Loss        |Relative loss|Absolute loss
-------------------------------------------------
-    0|6.843662e+01|0.000000e+00|0.000000e+00
-    1|1.873568e+01|2.652743e+00|4.970094e+01
-    2|1.228927e+01|5.245556e-01|6.446406e+00
-    3|1.125729e+01|9.167219e-02|1.031981e+00
-    4|1.117734e+01|7.152866e-03|7.995003e-02
-    5|1.115479e+01|2.022073e-03|2.255579e-02
-    6|1.114182e+01|1.163538e-03|1.296394e-02
-    7|1.113429e+01|6.764847e-04|7.532177e-03
-    8|1.113082e+01|3.118754e-04|3.471428e-03
-    9|1.112899e+01|1.640241e-04|1.825423e-03
-   10|1.112771e+01|1.149130e-04|1.278719e-03
-   11|1.112694e+01|6.974498e-05|7.760481e-04
-   12|1.112645e+01|4.381334e-05|4.874870e-04
-   13|1.112624e+01|1.922370e-05|2.138874e-04
-   14|1.112589e+01|3.121654e-05|3.473118e-04
-   15|1.112557e+01|2.848668e-05|3.169306e-04
-   16|1.112534e+01|2.075129e-05|2.308651e-04
-   17|1.112517e+01|1.573354e-05|1.750382e-04
-   18|1.112501e+01|1.392700e-05|1.549380e-04
-   19|1.112500e+01|1.204542e-06|1.340052e-05
-   20|1.112500e+01|1.489809e-08|1.657412e-07
- 1000|1.112500e+01|2.016928e-10|2.243832e-09
-</pre></div></div>
-</div>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
@@ -937,73 +833,9 @@ It.  |Loss        |Relative loss|Absolute loss
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-PASTE2 starts...
-Starting GLM-PCA...
-Iteration: 0 | deviance=1.2106E+7
-Iteration: 1 | deviance=1.2105E+7
-Iteration: 2 | deviance=1.0959E+7
-Iteration: 3 | deviance=1.0659E+7
-Iteration: 4 | deviance=1.0525E+7
-Iteration: 5 | deviance=1.0460E+7
-Iteration: 6 | deviance=1.0423E+7
-Iteration: 7 | deviance=1.0399E+7
-Iteration: 8 | deviance=1.0382E+7
-Iteration: 9 | deviance=1.0370E+7
-Iteration: 10 | deviance=1.0360E+7
-Iteration: 11 | deviance=1.0351E+7
-Iteration: 12 | deviance=1.0344E+7
-Iteration: 13 | deviance=1.0338E+7
-Iteration: 14 | deviance=1.0333E+7
-Iteration: 15 | deviance=1.0329E+7
-Iteration: 16 | deviance=1.0325E+7
-Iteration: 17 | deviance=1.0322E+7
-Iteration: 18 | deviance=1.0319E+7
-Iteration: 19 | deviance=1.0316E+7
-Iteration: 20 | deviance=1.0313E+7
-Iteration: 21 | deviance=1.0311E+7
-Iteration: 22 | deviance=1.0309E+7
-Iteration: 23 | deviance=1.0307E+7
-Iteration: 24 | deviance=1.0306E+7
-Iteration: 25 | deviance=1.0304E+7
-Iteration: 26 | deviance=1.0303E+7
-Iteration: 27 | deviance=1.0301E+7
-Iteration: 28 | deviance=1.0300E+7
-Iteration: 29 | deviance=1.0299E+7
-Iteration: 30 | deviance=1.0298E+7
-GLM-PCA finished.
-It.  |Loss        |Relative loss|Absolute loss
-------------------------------------------------
-    0|5.628949e+01|0.000000e+00|0.000000e+00
-    1|1.695953e+01|2.319049e+00|3.932996e+01
-    2|1.268093e+01|3.374044e-01|4.278600e+00
-    3|1.188740e+01|6.675373e-02|7.935281e-01
-    4|1.154612e+01|2.955746e-02|3.412740e-01
-    5|1.148011e+01|5.750659e-03|6.601817e-02
-    6|1.147491e+01|4.526631e-04|5.194269e-03
-    7|1.147347e+01|1.252328e-04|1.436855e-03
-    8|1.147305e+01|3.691361e-05|4.235118e-04
-    9|1.147288e+01|1.457938e-05|1.672675e-04
-   10|1.147275e+01|1.156879e-05|1.327259e-04
-   11|1.147256e+01|1.656129e-05|1.900004e-04
-   12|1.147239e+01|1.509654e-05|1.731934e-04
-   13|1.147227e+01|1.004455e-05|1.152339e-04
-   14|1.147223e+01|4.099528e-06|4.703071e-05
-   15|1.147221e+01|1.723324e-06|1.977033e-05
-   16|1.147218e+01|1.829488e-06|2.098822e-05
-   17|1.147218e+01|6.622783e-07|7.597774e-06
-   18|1.147217e+01|1.913344e-07|2.195022e-06
-   19|1.147217e+01|3.442322e-08|3.949092e-07
-   20|1.147217e+01|7.420791e-09|8.513261e-08
-</pre></div></div>
-</div>
 <p>Let’s check the shape of each alignment matrix. For aligning a slice with n1 spots and a slice with n2 spots, the alignment matrix should be of shape (n1 * n2)</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">pi_AB</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
@@ -1012,20 +844,10 @@ It.  |Loss        |Relative loss|Absolute loss
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-(2929, 2877)
-(2877, 2873)
-(2873, 2701)
-</pre></div></div>
-</div>
 <p>There are other optional parameters to PASTE2.partial_pairwise_align() as well. You can checkout the original function signature in the souce code with documentation.</p>
 <p>Let’s visualize the alignment between sliceA and sliceB:</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">largest_indices</span><span class="p">(</span><span class="n">ary</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
@@ -1036,46 +858,83 @@ It.  |Loss        |Relative loss|Absolute loss
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">ary</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">plot2D_samples_mat</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">xt</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">thr</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">weight_alpha</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;color&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;c&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;k&#39;</span>
+<span class="k">def</span> <span class="nf">plot2D_samples_mat</span><span class="p">(</span>
+    <span class="n">xs</span><span class="p">,</span> <span class="n">xt</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">thr</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">weight_alpha</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">):</span>
+    <span class="k">if</span> <span class="p">(</span><span class="s2">&quot;color&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="s2">&quot;c&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;color&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;k&quot;</span>
     <span class="n">mx</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
     <span class="c1">#     idx = np.where(G/mx&gt;=thr)</span>
     <span class="n">idx</span> <span class="o">=</span> <span class="n">largest_indices</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">top</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">])):</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">xs</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">l</span><span class="p">],</span> <span class="mi">0</span><span class="p">],</span> <span class="n">xt</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">l</span><span class="p">],</span> <span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="n">xs</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">l</span><span class="p">],</span> <span class="mi">1</span><span class="p">],</span> <span class="n">xt</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">l</span><span class="p">],</span> <span class="mi">1</span><span class="p">]],</span>
-                 <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">weight_alpha</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">weight_alpha</span> <span class="o">*</span> <span class="n">G</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">l</span><span class="p">],</span> <span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">l</span><span class="p">]]</span> <span class="o">/</span> <span class="n">mx</span><span class="p">),</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">])):</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">xs</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="mi">0</span><span class="p">],</span> <span class="n">xt</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="mi">0</span><span class="p">]],</span>
+            <span class="p">[</span><span class="n">xs</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="mi">1</span><span class="p">],</span> <span class="n">xt</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="mi">1</span><span class="p">]],</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">weight_alpha</span><span class="p">)</span>
+            <span class="o">+</span> <span class="p">(</span><span class="n">weight_alpha</span> <span class="o">*</span> <span class="n">G</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">idx</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">]]</span> <span class="o">/</span> <span class="n">mx</span><span class="p">),</span>
+            <span class="n">c</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">plot_slice_pairwise_alignment</span><span class="p">(</span><span class="n">slice1</span><span class="p">,</span> <span class="n">slice2</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">thr</span><span class="o">=</span><span class="mi">1</span> <span class="o">-</span> <span class="mf">1e-8</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
-                                  <span class="n">weight_alpha</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="n">coordinates1</span><span class="p">,</span> <span class="n">coordinates2</span> <span class="o">=</span> <span class="n">slice1</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">],</span> <span class="n">slice2</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">]</span>
+<span class="k">def</span> <span class="nf">plot_slice_pairwise_alignment</span><span class="p">(</span>
+    <span class="n">slice1</span><span class="p">,</span> <span class="n">slice2</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">thr</span><span class="o">=</span><span class="mi">1</span> <span class="o">-</span> <span class="mf">1e-8</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">weight_alpha</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">):</span>
+    <span class="n">coordinates1</span><span class="p">,</span> <span class="n">coordinates2</span> <span class="o">=</span> <span class="n">slice1</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">],</span> <span class="n">slice2</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span>
     <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">coordinates1</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">coordinates2</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">*</span> <span class="mf">1.1</span>
     <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">coordinates2</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="n">temp</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">offset</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
-    <span class="n">plot2D_samples_mat</span><span class="p">(</span><span class="n">coordinates1</span><span class="p">,</span> <span class="n">coordinates2</span> <span class="o">+</span> <span class="n">temp</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">thr</span><span class="o">=</span><span class="n">thr</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="n">top</span><span class="p">,</span>
-                       <span class="n">weight_alpha</span><span class="o">=</span><span class="n">weight_alpha</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">coordinates1</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">coordinates1</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span>
-        <span class="n">slice1</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
-            <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">slice1</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span> <span class="n">slice1</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;layer_guess_reordered_colors&#39;</span><span class="p">])))))</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">coordinates2</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">offset</span><span class="p">,</span> <span class="n">coordinates2</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span>
-        <span class="n">slice2</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
-            <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">slice2</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span> <span class="n">slice2</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;layer_guess_reordered_colors&#39;</span><span class="p">])))))</span>
+    <span class="n">plot2D_samples_mat</span><span class="p">(</span>
+        <span class="n">coordinates1</span><span class="p">,</span>
+        <span class="n">coordinates2</span> <span class="o">+</span> <span class="n">temp</span><span class="p">,</span>
+        <span class="n">pi</span><span class="p">,</span>
+        <span class="n">thr</span><span class="o">=</span><span class="n">thr</span><span class="p">,</span>
+        <span class="n">c</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+        <span class="n">top</span><span class="o">=</span><span class="n">top</span><span class="p">,</span>
+        <span class="n">weight_alpha</span><span class="o">=</span><span class="n">weight_alpha</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+        <span class="n">coordinates1</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="n">coordinates1</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">s</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span>
+            <span class="n">slice1</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;layer_guess_reordered&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+                <span class="nb">dict</span><span class="p">(</span>
+                    <span class="nb">zip</span><span class="p">(</span>
+                        <span class="n">slice1</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;layer_guess_reordered&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span>
+                        <span class="n">slice1</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;layer_guess_reordered_colors&quot;</span><span class="p">],</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+        <span class="n">coordinates2</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">offset</span><span class="p">,</span>
+        <span class="n">coordinates2</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">s</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span>
+        <span class="n">color</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span>
+            <span class="n">slice2</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;layer_guess_reordered&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+                <span class="nb">dict</span><span class="p">(</span>
+                    <span class="nb">zip</span><span class="p">(</span>
+                        <span class="n">slice2</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;layer_guess_reordered&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span>
+                        <span class="n">slice2</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;layer_guess_reordered_colors&quot;</span><span class="p">],</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
 
 <span class="n">plot_slice_pairwise_alignment</span><span class="p">(</span><span class="n">sliceA</span><span class="p">,</span> <span class="n">sliceB</span><span class="p">,</span> <span class="n">pi_AB</span><span class="p">)</span>
 </pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_paste2_tutorial_20_0.png" src="../_images/notebooks_paste2_tutorial_20_0.png" />
 </div>
 </div>
 <div class="nbinput nblast docutils container">
@@ -1090,61 +949,75 @@ It.  |Loss        |Relative loss|Absolute loss
 <section id="Project-all-slices-onto-the-same-coordiante-system-according-to-the-alignment">
 <h1>Project all slices onto the same coordiante system according to the alignment<a class="headerlink" href="#Project-all-slices-onto-the-same-coordiante-system-according-to-the-alignment" title="Permalink to this heading"></a></h1>
 <p>Once the alignment matrix between each pair of adjacent slices in a sequence of consecutive slices are computed, we can use this information to project all slices onto the same 2D coordinate system. 3D reconstruction can be done by assiging a z-coordiante to each slice after the projection.</p>
-<p>Specifically, we use projection.partial_stack_slices_pairwise( ):</p>
+<p>Specifically, we use visualization.partial_stack_slices_pairwise( ):</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pis</span> <span class="o">=</span> <span class="p">[</span><span class="n">pi_AB</span><span class="p">,</span> <span class="n">pi_BC</span><span class="p">,</span> <span class="n">pi_CD</span><span class="p">]</span>
 <span class="n">slices</span> <span class="o">=</span> <span class="p">[</span><span class="n">sliceA</span><span class="p">,</span> <span class="n">sliceB</span><span class="p">,</span> <span class="n">sliceC</span><span class="p">,</span> <span class="n">sliceD</span><span class="p">]</span>
 
-<span class="n">new_slices</span> <span class="o">=</span> <span class="n">projection</span><span class="o">.</span><span class="n">partial_stack_slices_pairwise</span><span class="p">(</span><span class="n">slices</span><span class="p">,</span> <span class="n">pis</span><span class="p">)</span>
+<span class="n">new_slices</span> <span class="o">=</span> <span class="n">visualization</span><span class="o">.</span><span class="n">partial_stack_slices_pairwise</span><span class="p">(</span><span class="n">slices</span><span class="p">,</span> <span class="n">pis</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <p>Now let’s plot the coordinates of all slices after the projection:</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">layer_to_color_map</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Layer</span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span><span class="n">sns</span><span class="o">.</span><span class="n">color_palette</span><span class="p">()[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">)}</span>
-<span class="n">layer_to_color_map</span><span class="p">[</span><span class="s1">&#39;WM&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">color_palette</span><span class="p">()[</span><span class="mi">6</span><span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">layer_to_color_map</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;Layer</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span> <span class="n">sns</span><span class="o">.</span><span class="n">color_palette</span><span class="p">()[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="n">layer_to_color_map</span><span class="p">[</span><span class="s2">&quot;WM&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">color_palette</span><span class="p">()[</span><span class="mi">6</span><span class="p">]</span>
+
+
 <span class="k">def</span> <span class="nf">plot_slices_overlap</span><span class="p">(</span><span class="n">slices</span><span class="p">,</span> <span class="n">layer_to_color_map</span><span class="o">=</span><span class="n">layer_to_color_map</span><span class="p">):</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)):</span>
         <span class="n">adata</span> <span class="o">=</span> <span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-        <span class="n">colors</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;str&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">layer_to_color_map</span><span class="p">))</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">][:,</span><span class="mi">0</span><span class="p">],</span><span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">][:,</span><span class="mi">1</span><span class="p">],</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="o">=</span><span class="p">[</span><span class="n">mpatches</span><span class="o">.</span><span class="n">Patch</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">layer_to_color_map</span><span class="p">[</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span> <span class="n">label</span><span class="o">=</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;layer_guess_reordered&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">))],</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;Cortex layer&#39;</span><span class="p">,</span><span class="n">title_fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span><span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;layer_guess_reordered&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;str&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">layer_to_color_map</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+            <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">][:,</span> <span class="mi">1</span><span class="p">],</span>
+            <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">s</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+            <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
+        <span class="n">handles</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">mpatches</span><span class="o">.</span><span class="n">Patch</span><span class="p">(</span>
+                <span class="n">color</span><span class="o">=</span><span class="n">layer_to_color_map</span><span class="p">[</span>
+                    <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;layer_guess_reordered&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="p">],</span>
+                <span class="n">label</span><span class="o">=</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;layer_guess_reordered&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;layer_guess_reordered&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">))</span>
+        <span class="p">],</span>
+        <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Cortex layer&quot;</span><span class="p">,</span>
+        <span class="n">title_fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+        <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="p">)</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
 
 <span class="n">plot_slices_overlap</span><span class="p">(</span><span class="n">new_slices</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_paste2_tutorial_25_0.png" src="../_images/notebooks_paste2_tutorial_25_0.png" />
-</div>
-</div>
 <p>Or just the first two, which reproduces Figure 3C of the paper:</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_slices_overlap</span><span class="p">(</span><span class="n">new_slices</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
 </pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_paste2_tutorial_27_0.png" src="../_images/notebooks_paste2_tutorial_27_0.png" />
 </div>
 </div>
 </section>

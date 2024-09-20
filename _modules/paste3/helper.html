@@ -206,12 +206,12 @@
 
 
 <span class="c1">## Covert a sparse matrix into a dense matrix</span>
-<span class="n">to_dense_array</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">X</span><span class="p">:</span> <span class="p">(</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">todense</span><span class="p">())</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csr</span><span class="o">.</span><span class="n">spmatrix</span><span class="p">)</span> <span class="k">else</span> <span class="n">X</span>
-<span class="p">)</span>
+<span class="k">def</span> <span class="nf">to_dense_array</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">todense</span><span class="p">())</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csr</span><span class="o">.</span><span class="n">spmatrix</span><span class="p">)</span> <span class="k">else</span> <span class="n">X</span>
 
-<span class="c1">## Returns the data matrix or representation</span>
-<span class="n">extract_data_matrix</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">adata</span><span class="p">,</span> <span class="n">rep</span><span class="p">:</span> <span class="n">adata</span><span class="o">.</span><span class="n">X</span> <span class="k">if</span> <span class="n">rep</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">rep</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">extract_data_matrix</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">rep</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">adata</span><span class="o">.</span><span class="n">X</span> <span class="k">if</span> <span class="n">rep</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="n">rep</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="filter_for_common_genes"><a class="viewcode-back" href="../../api/paste3.helper.filter_for_common_genes.html#paste3.helper.filter_for_common_genes">[docs]</a><span class="k">def</span> <span class="nf">filter_for_common_genes</span><span class="p">(</span><span class="n">slices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">AnnData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>

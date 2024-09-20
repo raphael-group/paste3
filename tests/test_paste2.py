@@ -19,8 +19,6 @@ input_dir = test_dir / "data/input"
 output_dir = test_dir / "data/output"
 
 
-
-
 def test_partial_pairwise_align(slices2):
     pi_BC = partial_pairwise_align(slices2[0], slices2[1], s=0.7)
 

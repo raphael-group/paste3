@@ -70,4 +70,3 @@ Miscellaneous
 
    helper.filter_for_common_genes
    helper.match_spots_using_spatial_heuristic
-

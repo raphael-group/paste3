@@ -2,7 +2,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/raphael-group/paste3/badge.svg?branch=main)](https://coveralls.io/github/raphael-group/paste3?branch=main)
 [![Docs](https://github.com/raphael-group/paste3/actions/workflows/docs.yml/badge.svg)](https://raphael-group.github.io/paste3/)
 
-(Note: This repository integrates Paste and Paste 2, and is a work in progress) 
+(Note: This repository integrates Paste and Paste 2, and is a work in progress)
 # PASTE
 
 ![PASTE Overview](https://github.com/raphael-group/paste/blob/main/docs/source/_static/images/paste_overview.png)
@@ -27,9 +27,9 @@ Additional examples and the code to reproduce the paper's analyses can be found 
 
 ### Installation
 
-The easiest way is to install PASTE on pypi: https://pypi.org/project/paste-bio/. 
+The easiest way is to install PASTE on pypi: https://pypi.org/project/paste-bio/.
 
-`pip install paste-bio` 
+`pip install paste-bio`
 
 Or you can install PASTE on bioconda: https://anaconda.org/bioconda/paste-bio.
 
@@ -38,14 +38,14 @@ Or you can install PASTE on bioconda: https://anaconda.org/bioconda/paste-bio.
 Check out Tutorial.ipynb for an example of how to use PASTE.
 
 Alternatively, you can clone the respository and try the following example in a
-notebook or the command line. 
+notebook or the command line.
 
 ### Quick Start
 
 To use PASTE we require at least two slices of spatial-omics data (both
 expression and coordinates) that are in
 anndata format (i.e. read in by scanpy/squidpy). We have included a breast
-cancer dataset from [1] in the [sample_data folder](tests/data/input/) of this repo 
+cancer dataset from [1] in the [sample_data folder](tests/data/input/) of this repo
 that we will use as an example below to show how to use PASTE.
 
 ```python
@@ -79,7 +79,7 @@ slice1, slice2 = slices
 # Pairwise align the slices
 pi12 = pst.pairwise_align(slice1, slice2)
 
-# To visualize the alignment you can stack the slices 
+# To visualize the alignment you can stack the slices
 # according to the alignment pi
 slices, pis = [slice1, slice2], [pi12]
 new_slices = pst.stack_slices_pairwise(slices, pis)
@@ -106,11 +106,11 @@ initial_slice = slice1.copy()
 slices = [slice1, slice2]
 lmbda = len(slices) * [1 / len(slices)]  # set hyperparameter to be uniform
 
-## Possible to pass in an initial pi (as keyword argument pis_init) 
+## Possible to pass in an initial pi (as keyword argument pis_init)
 ## to improve performance, see Tutorial.ipynb notebook for more details.
 center_slice, pis = pst.center_align(initial_slice, slices, lmbda)
 
-## The low dimensional representation of our center slice is held 
+## The low dimensional representation of our center slice is held
 ## in the matrices W and H, which can be used for downstream analyses
 W = center_slice.uns['paste_W']
 H = center_slice.uns['paste_H']
@@ -121,13 +121,13 @@ PASTE now is compatible with gpu via Pytorch. All we need to do is add the follo
 ```
 pi12 = pst.pairwise_align(slice1, slice2, backend = ot.backend.TorchBackend(), use_gpu = True)
 
-center_slice, pis = pst.center_align(initial_slice, slices, lmbda, backend = ot.backend.TorchBackend(), use_gpu = True) 
+center_slice, pis = pst.center_align(initial_slice, slices, lmbda, backend = ot.backend.TorchBackend(), use_gpu = True)
 ```
 For more details, see the GPU section of the [Tutorial notebook](docs/source/notebooks/getting-started.ipynb).
 
 ### Command Line
 
-We provide the option of running PASTE from the command line. 
+We provide the option of running PASTE from the command line.
 
 First, clone the repository:
 
@@ -162,7 +162,7 @@ Note: `pairwise` will return pairwise alignment between each consecutive pair of
 
 Added sample spatial transcriptomics dataset consisting of four breast cancer slice courtesy of:
 
-[1] Ståhl, Patrik & Salmén, Fredrik & Vickovic, Sanja & Lundmark, Anna & Fernandez Navarro, Jose & Magnusson, Jens & Giacomello, Stefania & Asp, Michaela & Westholm, Jakub & Huss, Mikael & Mollbrink, Annelie & Linnarsson, Sten & Codeluppi, Simone & Borg, Åke & Pontén, Fredrik & Costea, Paul & Sahlén, Pelin Akan & Mulder, Jan & Bergmann, Olaf & Frisén, Jonas. (2016). Visualization and analysis of gene expression in tissue sections by spatial transcriptomics. Science. 353. 78-82. 10.1126/science.aaf2403. 
+[1] Ståhl, Patrik & Salmén, Fredrik & Vickovic, Sanja & Lundmark, Anna & Fernandez Navarro, Jose & Magnusson, Jens & Giacomello, Stefania & Asp, Michaela & Westholm, Jakub & Huss, Mikael & Mollbrink, Annelie & Linnarsson, Sten & Codeluppi, Simone & Borg, Åke & Pontén, Fredrik & Costea, Paul & Sahlén, Pelin Akan & Mulder, Jan & Bergmann, Olaf & Frisén, Jonas. (2016). Visualization and analysis of gene expression in tissue sections by spatial transcriptomics. Science. 353. 78-82. 10.1126/science.aaf2403.
 
 Note: Original data is (.tsv), but we converted it to (.csv).
 

@@ -130,8 +130,12 @@ def norm_and_center_coordinates(X):
 
 
 ## Covert a sparse matrix into a dense matrix
-def to_dense_array(X): return np.array(X.todense()) if isinstance(X, scipy.sparse.csr.spmatrix) else X
-def extract_data_matrix(adata, rep): return adata.X if rep is None else adata.obsm[rep]
+def to_dense_array(X):
+    return np.array(X.todense()) if isinstance(X, scipy.sparse.csr.spmatrix) else X
+
+
+def extract_data_matrix(adata, rep):
+    return adata.X if rep is None else adata.obsm[rep]
 
 
 def filter_for_common_genes(slices: List[AnnData]) -> None:

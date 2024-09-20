@@ -126,6 +126,7 @@ def test_glmpca_distance():
         rtol=1e-04,
     )
 
+
 def test_pca_distance(slices2):
     common_genes = intersect(slices2[1].var.index, slices2[2].var.index)
     sliceA = slices2[1][:, common_genes]
@@ -148,9 +149,10 @@ def test_high_umi_gene_distance(slices):
     sliceA = slices[1][:, common_genes]
     sliceB = slices[2][:, common_genes]
 
-    sliceA_X, sliceB_X = to_dense_array(
-        extract_data_matrix(sliceA, None)
-    ), to_dense_array(extract_data_matrix(sliceB, None))
+    sliceA_X, sliceB_X = (
+        to_dense_array(extract_data_matrix(sliceA, None)),
+        to_dense_array(extract_data_matrix(sliceB, None)),
+    )
 
     high_umi_gene_distance_matrix = high_umi_gene_distance(sliceA_X, sliceB_X, n=2000)
     assert_frame_equal(
@@ -186,9 +188,10 @@ def test_norm_and_center_coordinates(slices):
     sliceA = slices[1][:, common_genes]
     sliceB = slices[2][:, common_genes]
 
-    sliceA_X, sliceB_X = to_dense_array(
-        extract_data_matrix(sliceA, None)
-    ), to_dense_array(extract_data_matrix(sliceB, None))
+    sliceA_X, sliceB_X = (
+        to_dense_array(extract_data_matrix(sliceA, None)),
+        to_dense_array(extract_data_matrix(sliceB, None)),
+    )
 
     X = norm_and_center_coordinates(sliceA_X)
     Y = norm_and_center_coordinates(sliceB_X)

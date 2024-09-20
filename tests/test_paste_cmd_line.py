@@ -108,6 +108,6 @@ def test_cmd_line_pairwise(tmp_path):
 
     assert result is None
     assert_frame_equal(
-        pd.read_csv(tmp_path / f"paste_output/slice1_slice2_pairwise.csv"),
+        pd.read_csv(tmp_path / "paste_output/slice1_slice2_pairwise.csv"),
         pd.read_csv(output_dir / "slices_1_2_pairwise.csv"),
     )

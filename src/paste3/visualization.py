@@ -8,11 +8,12 @@ import matplotlib.pyplot as plt
     Functions to plot slices and align spatial coordinates after obtaining a mapping from PASTE.
 """
 
+
 def stack_slices_pairwise(
     slices: List[AnnData],
     pis: List[np.ndarray],
     output_params: bool = False,
-    matrix: bool = False
+    matrix: bool = False,
 ) -> Tuple[List[AnnData], Optional[List[float]], Optional[List[np.ndarray]]]:
     """
     Align spatial coordinates of sequential pairwise slices.
@@ -36,15 +37,25 @@ def stack_slices_pairwise(
         - List of angles of rotation (theta) for each slice.
         - List of translations [x_translation, y_translation] for each slice.
     """
-    assert len(slices) == len(pis) + 1, "'slices' should have length one more than 'pis'. Please double check."
+    assert (
+        len(slices) == len(pis) + 1
+    ), "'slices' should have length one more than 'pis'. Please double check."
     assert len(slices) > 1, "You should have at least 2 layers."
     new_coor = []
     thetas = []
     translations = []
     if not output_params:
-        S1, S2  = generalized_procrustes_analysis(slices[0].obsm['spatial'], slices[1].obsm['spatial'], pis[0])
+        S1, S2 = generalized_procrustes_analysis(
+            slices[0].obsm["spatial"], slices[1].obsm["spatial"], pis[0]
+        )
     else:
-        S1, S2,theta,tX,tY  = generalized_procrustes_analysis(slices[0].obsm['spatial'], slices[1].obsm['spatial'], pis[0],output_params=output_params, matrix=matrix)
+        S1, S2, theta, tX, tY = generalized_procrustes_analysis(
+            slices[0].obsm["spatial"],
+            slices[1].obsm["spatial"],
+            pis[0],
+            output_params=output_params,
+            matrix=matrix,
+        )
         thetas.append(theta)
         translations.append(tX)
         translations.append(tY)
@@ -52,9 +63,17 @@ def stack_slices_pairwise(
     new_coor.append(S2)
     for i in range(1, len(slices) - 1):
         if not output_params:
-            x, y = generalized_procrustes_analysis(new_coor[i], slices[i+1].obsm['spatial'], pis[i])
+            x, y = generalized_procrustes_analysis(
+                new_coor[i], slices[i + 1].obsm["spatial"], pis[i]
+            )
         else:
-            x, y,theta,tX,tY = generalized_procrustes_analysis(new_coor[i], slices[i+1].obsm['spatial'], pis[i],output_params=output_params, matrix=matrix)
+            x, y, theta, tX, tY = generalized_procrustes_analysis(
+                new_coor[i],
+                slices[i + 1].obsm["spatial"],
+                pis[i],
+                output_params=output_params,
+                matrix=matrix,
+            )
             thetas.append(theta)
             translations.append(tY)
         new_coor.append(y)
@@ -62,7 +81,7 @@ def stack_slices_pairwise(
     new_slices = []
     for i in range(len(slices)):
         s = slices[i].copy()
-        s.obsm['spatial'] = new_coor[i]
+        s.obsm["spatial"] = new_coor[i]
         new_slices.append(s)
 
     if not output_params:
@@ -76,7 +95,8 @@ def stack_slices_center(
     slices: List[AnnData],
     pis: List[np.ndarray],
     matrix: bool = False,
-    output_params: bool = False) -> Tuple[AnnData, List[AnnData], Optional[List[float]], Optional[List[np.ndarray]]]:
+    output_params: bool = False,
+) -> Tuple[AnnData, List[AnnData], Optional[List[float]], Optional[List[np.ndarray]]]:
     """
     Align spatial coordinates of a list of slices to a center_slice.
 
@@ -107,16 +127,26 @@ def stack_slices_center(
         - List of angles of rotation (theta) for each slice.
         - List of translations [x_translation, y_translation] for each slice.
     """
-    assert len(slices) == len(pis), "'slices' should have the same length 'pis'. Please double check."
+    assert len(slices) == len(
+        pis
+    ), "'slices' should have the same length 'pis'. Please double check."
     new_coor = []
     thetas = []
     translations = []
 
     for i in range(len(slices)):
         if not output_params:
-            c, y = generalized_procrustes_analysis(center_slice.obsm['spatial'], slices[i].obsm['spatial'], pis[i])
+            c, y = generalized_procrustes_analysis(
+                center_slice.obsm["spatial"], slices[i].obsm["spatial"], pis[i]
+            )
         else:
-            c, y,theta,tX,tY = generalized_procrustes_analysis(center_slice.obsm['spatial'], slices[i].obsm['spatial'], pis[i],output_params=output_params, matrix=matrix)
+            c, y, theta, tX, tY = generalized_procrustes_analysis(
+                center_slice.obsm["spatial"],
+                slices[i].obsm["spatial"],
+                pis[i],
+                output_params=output_params,
+                matrix=matrix,
+            )
             thetas.append(theta)
             translations.append(tY)
         new_coor.append(y)
@@ -124,21 +154,20 @@ def stack_slices_center(
     new_slices = []
     for i in range(len(slices)):
         s = slices[i].copy()
-        s.obsm['spatial'] = new_coor[i]
+        s.obsm["spatial"] = new_coor[i]
         new_slices.append(s)
 
     new_center = center_slice.copy()
-    new_center.obsm['spatial'] = c
+    new_center.obsm["spatial"] = c
     if not output_params:
         return new_center, new_slices
     else:
         return new_center, new_slices, thetas, translations
 
+
 def plot_slice(
-    sliceX: AnnData,
-    color,
-    ax: Optional[plt.Axes] = None,
-    s: float = 100) -> None:
+    sliceX: AnnData, color, ax: Optional[plt.Axes] = None, s: float = 100
+) -> None:
     """
     Plots slice spatial coordinates.
 
@@ -148,13 +177,21 @@ def plot_slice(
         ax: Pre-existing axes for the plot. Otherwise, call ``matplotlib.pyplot.gca()`` internally.
         s: Size of spots.
     """
-    sns.scatterplot(x = sliceX.obsm['spatial'][:,0],y = sliceX.obsm['spatial'][:,1],linewidth=0,s=s, marker=".",color=color,ax=ax)
+    sns.scatterplot(
+        x=sliceX.obsm["spatial"][:, 0],
+        y=sliceX.obsm["spatial"][:, 1],
+        linewidth=0,
+        s=s,
+        marker=".",
+        color=color,
+        ax=ax,
+    )
     if ax:
         ax.invert_yaxis()
-        ax.axis('off')
+        ax.axis("off")
 
 
-def generalized_procrustes_analysis(X, Y, pi, output_params = False, matrix = False):
+def generalized_procrustes_analysis(X, Y, pi, output_params=False, matrix=False):
     """
     Finds and applies optimal rotation between spatial coordinates of two layers (may also do a reflection).
 
@@ -180,14 +217,13 @@ def generalized_procrustes_analysis(X, Y, pi, output_params = False, matrix = Fa
     R = Vt.T.dot(U.T)
     Y = R.dot(Y.T).T
     if output_params and not matrix:
-        M = np.array([[0,-1],[1,0]])
-        theta = np.arctan(np.trace(M.dot(H))/np.trace(H))
-        return X,Y,theta,tX,tY
+        M = np.array([[0, -1], [1, 0]])
+        theta = np.arctan(np.trace(M.dot(H)) / np.trace(H))
+        return X, Y, theta, tX, tY
     elif output_params and matrix:
         return X, Y, R, tX, tY
     else:
-        return X,Y
-
+        return X, Y
 
 
 def partial_stack_slices_pairwise(slices, pis):
@@ -204,22 +240,28 @@ def partial_stack_slices_pairwise(slices, pis):
     Return: new_slices - list of slices (AnnData Object) with new spatial coordinates.
     """
 
-    assert len(slices) == len(pis) + 1, "'slices' should have length one more than 'pis'. Please double check."
+    assert (
+        len(slices) == len(pis) + 1
+    ), "'slices' should have length one more than 'pis'. Please double check."
     assert len(slices) > 1, "You should have at least 2 layers."
 
     new_coor = []
-    S1, S2 = partial_procrustes_analysis(slices[0].obsm['spatial'], slices[1].obsm['spatial'], pis[0])
+    S1, S2 = partial_procrustes_analysis(
+        slices[0].obsm["spatial"], slices[1].obsm["spatial"], pis[0]
+    )
     new_coor.append(S1)
     new_coor.append(S2)
     for i in range(1, len(slices) - 1):
-        x, y = partial_procrustes_analysis(new_coor[i], slices[i + 1].obsm['spatial'], pis[i])
-        shift = new_coor[i][0,:] - x[0,:]
+        x, y = partial_procrustes_analysis(
+            new_coor[i], slices[i + 1].obsm["spatial"], pis[i]
+        )
+        shift = new_coor[i][0, :] - x[0, :]
         y = y + shift
         new_coor.append(y)
     new_slices = []
     for i in range(len(slices)):
         s = slices[i].copy()
-        s.obsm['spatial'] = new_coor[i]
+        s.obsm["spatial"] = new_coor[i]
         new_slices.append(s)
     return new_slices
 

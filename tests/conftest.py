@@ -42,6 +42,7 @@ def spot_distance_matrix(slices):
 
     return spot_distances
 
+
 @pytest.fixture(scope="session")
 def intersecting_slices(slices):
     # Make a copy of the list

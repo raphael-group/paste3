@@ -1,6 +1,7 @@
 """
 Python implementation of the generalized PCA for dimension reduction of non-normally distributed data. The original R implementation is at https://github.com/willtownes/glmpca
 """
+
 import numpy as np
 from numpy import log
 from scipy.special import digamma, polygamma
@@ -30,9 +31,9 @@ def colMeans(x):
 
 def colNorms(x):
     """
-  compute the L2 norms of columns of an array
-  """
-    return np.sqrt(colSums(x ** 2))
+    compute the L2 norms of columns of an array
+    """
+    return np.sqrt(colSums(x**2))
 
 
 def ncol(x):
@@ -58,18 +59,21 @@ def cvec1(n):
 
 def ortho(U, V, A, X=1, G=None, Z=0):
     """
-  U is NxL array of cell factors
-  V is JxL array of loadings onto genes
-  X is NxKo array of cell specific covariates
-  A is JxKo array of coefficients of X
-  Z is JxKf array of gene specific covariates
-  G is NxKf array of coefficients of Z
-  assume the data Y is of dimension JxN
-  imputed expression: E[Y] = g^{-1}(R) where R = VU'+AX'+ZG'
-  """
-    if np.all(X == 1): X = cvec1(nrow(U))
-    if np.all(Z == 0): Z = np.zeros((nrow(V), 1))
-    if np.all(G == 0): G = None
+    U is NxL array of cell factors
+    V is JxL array of loadings onto genes
+    X is NxKo array of cell specific covariates
+    A is JxKo array of coefficients of X
+    Z is JxKf array of gene specific covariates
+    G is NxKf array of coefficients of Z
+    assume the data Y is of dimension JxN
+    imputed expression: E[Y] = g^{-1}(R) where R = VU'+AX'+ZG'
+    """
+    if np.all(X == 1):
+        X = cvec1(nrow(U))
+    if np.all(Z == 0):
+        Z = np.zeros((nrow(V), 1))
+    if np.all(G == 0):
+        G = None
     # we assume A is not null or zero
     # remove correlation between U and A
     # at minimum, this will cause factors to have mean zero
@@ -95,16 +99,16 @@ def ortho(U, V, A, X=1, G=None, Z=0):
 
 def mat_binom_dev(X, P, n):
     """
-  binomial deviance for two arrays
-  X,P are JxN arrays
-  n is vector of length N (same as cols of X,P)
-  """
-    with np.errstate(divide='ignore', invalid='ignore'):
+    binomial deviance for two arrays
+    X,P are JxN arrays
+    n is vector of length N (same as cols of X,P)
+    """
+    with np.errstate(divide="ignore", invalid="ignore"):
         term1 = X * log(X / (n * P))
     term1 = term1[np.isfinite(term1)].sum()
     # nn= x<n
     nx = n - X
-    with np.errstate(divide='ignore', invalid='ignore'):
+    with np.errstate(divide="ignore", invalid="ignore"):
         term2 = nx * log(nx / (n * (1 - P)))
     term2 = term2[np.isfinite(term2)].sum()
     return 2 * (term1 + term2)
@@ -123,12 +127,16 @@ class GlmpcaFamily(object):
             self.family = smf.Poisson()
         elif fam == "nb":
             if nb_theta is None:
-                raise GlmpcaError("Negative binomial dispersion parameter 'nb_theta' must be specified")
+                raise GlmpcaError(
+                    "Negative binomial dispersion parameter 'nb_theta' must be specified"
+                )
             self.family = smf.NegativeBinomial(alpha=1 / nb_theta)
         elif fam in ("mult", "bern"):
             self.family = smf.Binomial()
             if fam == "mult" and mult_n is None:
-                raise GlmpcaError("Multinomial sample size parameter vector 'mult_n' must be specified")
+                raise GlmpcaError(
+                    "Multinomial sample size parameter vector 'mult_n' must be specified"
+                )
         else:
             raise GlmpcaError("unrecognized family type")
         # variance function, determined by GLM family
@@ -139,23 +147,27 @@ class GlmpcaFamily(object):
         hfunc = self.family.link.inverse_deriv
         self.glmpca_fam = fam
         if fam == "poi":
+
             def infograd(Y, R):
                 M = ilfunc(R)  # ilfunc=exp
                 return {"grad": (Y - M), "info": M}
         elif fam == "nb":
+
             def infograd(Y, R):
                 M = ilfunc(R)  # ilfunc=exp
                 W = 1 / vfunc(M)
-                return {"grad": (Y - M) * W * M, "info": W * (M ** 2)}
+                return {"grad": (Y - M) * W * M, "info": W * (M**2)}
 
             self.nb_theta = nb_theta
         elif fam == "mult":
+
             def infograd(Y, R):
                 P = ilfunc(R)  # ilfunc=expit, P very small probabilities
                 return {"grad": Y - (mult_n * P), "info": mult_n * vfunc(P)}
 
             self.mult_n = mult_n
         elif fam == "bern":
+
             def infograd(Y, R):
                 P = ilfunc(R)
                 return {"grad": Y - P, "info": vfunc(P)}
@@ -167,15 +179,19 @@ class GlmpcaFamily(object):
                 M = ilfunc(R)
                 W = 1 / vfunc(M)
                 H = hfunc(R)
-                return {"grad": (Y - M) * W * H, "info": W * (H ** 2)}
+                return {"grad": (Y - M) * W * H, "info": W * (H**2)}
+
         self.infograd = infograd
         # create deviance function
         if fam == "mult":
+
             def dev_func(Y, R):
                 return mat_binom_dev(Y, ilfunc(R), mult_n)
         else:
+
             def dev_func(Y, R):
                 return self.family.deviance(Y, ilfunc(R))
+
         self.dev_func = dev_func
 
     def __str__(self):
@@ -196,13 +212,13 @@ def remove_intercept(X):
 
 def glmpca_init(Y, fam, sz=None, nb_theta=None):
     """
-  create the glmpca_family object and
-  initialize the A array (regression coefficients of X)
-  Y is the data (JxN array)
-  fam is the likelihood
-  sz optional vector of size factors, default: sz=colMeans(Y) or colSums(Y)
-  sz is ignored unless fam is 'poi' or 'nb'
-  """
+    create the glmpca_family object and
+    initialize the A array (regression coefficients of X)
+    Y is the data (JxN array)
+    fam is the likelihood
+    sz optional vector of size factors, default: sz=colMeans(Y) or colSums(Y)
+    sz is ignored unless fam is 'poi' or 'nb'
+    """
     if sz is not None and len(sz) != ncol(Y):
         raise GlmpcaError("size factor must have length equal to columns of Y")
     if fam == "mult":
@@ -211,7 +227,8 @@ def glmpca_init(Y, fam, sz=None, nb_theta=None):
         mult_n = None
     gf = GlmpcaFamily(fam, nb_theta, mult_n)
     if fam in ("poi", "nb"):
-        if sz is None: sz = colMeans(Y)  # size factors
+        if sz is None:
+            sz = colMeans(Y)  # size factors
         offsets = gf.family.link(sz)
         rfunc = lambda U, V: offsets + tcrossprod(V, U)  # linear predictor
         a1 = gf.family.link(rowSums(Y) / np.sum(sz))
@@ -228,22 +245,35 @@ def glmpca_init(Y, fam, sz=None, nb_theta=None):
 
 def est_nb_theta(y, mu, th):
     """
-  given count data y and predicted means mu>0, and a neg binom theta "th"
-  use Newton's Method to update theta based on the negative binomial likelihood
-  note this uses observed rather than expected information
-  regularization:
-  let u=log(theta). We use the prior u~N(0,1) as penalty
-  equivalently we assume theta~lognormal(0,1) so the mode is at 1 (geometric distr)
-  dtheta/du=e^u=theta
-  d2theta/du2=theta
-  dL/dtheta * dtheta/du
-  """
+    given count data y and predicted means mu>0, and a neg binom theta "th"
+    use Newton's Method to update theta based on the negative binomial likelihood
+    note this uses observed rather than expected information
+    regularization:
+    let u=log(theta). We use the prior u~N(0,1) as penalty
+    equivalently we assume theta~lognormal(0,1) so the mode is at 1 (geometric distr)
+    dtheta/du=e^u=theta
+    d2theta/du2=theta
+    dL/dtheta * dtheta/du
+    """
     # n= length(y)
     u = log(th)
     # dL/dtheta*dtheta/du
-    score = th * np.sum(digamma(th + y) - digamma(th) + log(th) + 1 - log(th + mu) - (y + th) / (mu + th))
+    score = th * np.sum(
+        digamma(th + y)
+        - digamma(th)
+        + log(th)
+        + 1
+        - log(th + mu)
+        - (y + th) / (mu + th)
+    )
     # d^2L/dtheta^2 * (dtheta/du)^2
-    info1 = -(th ** 2) * np.sum(trigamma(th + mu) - trigamma(th) + 1 / th - 2 / (mu + th) + (y + th) / (mu + th) ** 2)
+    info1 = -(th**2) * np.sum(
+        trigamma(th + mu)
+        - trigamma(th)
+        + 1 / th
+        - 2 / (mu + th)
+        + (y + th) / (mu + th) ** 2
+    )
     # dL/dtheta*d^2theta/du^2 = score
     info = info1 - score
     # L2 penalty on u=log(th)
@@ -252,9 +282,19 @@ def est_nb_theta(y, mu, th):
     # exp(u+sign(grad)*min(maxstep,abs(grad)))
 
 
-def glmpca(Y, L, fam="poi", ctl={"maxIter": 1000, "eps": 1e-4, "optimizeTheta": True}, penalty=1,
-           verbose=False, init={"factors": None, "loadings": None},
-           nb_theta=100, X=None, Z=None, sz=None):
+def glmpca(
+    Y,
+    L,
+    fam="poi",
+    ctl={"maxIter": 1000, "eps": 1e-4, "optimizeTheta": True},
+    penalty=1,
+    verbose=False,
+    init={"factors": None, "loadings": None},
+    nb_theta=100,
+    X=None,
+    Z=None,
+    sz=None,
+):
     """
     GLM-PCA
     This function implements the GLM-PCA dimensionality reduction method for high-dimensional count data.
@@ -315,10 +355,11 @@ def glmpca(Y, L, fam="poi", ctl={"maxIter": 1000, "eps": 1e-4, "optimizeTheta": 
     ----------
     .. [1] Townes FW, Hicks SC, Aryee MJ, and Irizarry RA. "Feature selection and dimension reduction for single-cell RNA-seq based on a multinomial model", biorXiv, 2019. https://www.biorxiv.org/content/10.1101/574574v1
     .. [2] Townes FW. "Generalized principal component analysis", arXiv, 2019. https://arxiv.org/abs/1907.02647
-  """
+    """
     # For negative binomial, convergence only works if starting with nb_theta large
     Y = np.array(Y)
-    if fam not in ("poi", "nb", "mult", "bern"): raise GlmpcaError("invalid fam")
+    if fam not in ("poi", "nb", "mult", "bern"):
+        raise GlmpcaError("invalid fam")
     J, N = Y.shape
     # sanity check inputs
     if fam in ("poi", "nb", "mult", "bern") and np.min(Y) < 0:
@@ -333,13 +374,17 @@ def glmpca(Y, L, fam="poi", ctl={"maxIter": 1000, "eps": 1e-4, "optimizeTheta": 
         # we force an intercept, so remove it from X to prevent collinearity
         X = remove_intercept(X)
     else:
-        X = np.zeros((N, 0))  # empty array to prevent dim mismatch errors with hstack later
+        X = np.zeros(
+            (N, 0)
+        )  # empty array to prevent dim mismatch errors with hstack later
     Ko = ncol(X) + 1
     if Z is not None:
         if nrow(Z) != nrow(Y):
             raise GlmpcaError("Z rows must match rows of Y")
     else:
-        Z = np.zeros((J, 0))  # empty array to prevent dim mismatch errors with hstack later
+        Z = np.zeros(
+            (J, 0)
+        )  # empty array to prevent dim mismatch errors with hstack later
     Kf = ncol(Z)
     lid = (Ko + Kf) + np.array(range(L))
     uid = Ko + np.array(range(Kf + L))
@@ -372,12 +417,17 @@ def glmpca(Y, L, fam="poi", ctl={"maxIter": 1000, "eps": 1e-4, "optimizeTheta": 
         dev[t] = gf.dev_func(Y, rfunc(U, V))
         if not np.isfinite(dev[t]):
             raise GlmpcaError(
-                "Numerical divergence (deviance no longer finite), try increasing the penalty to improve stability of optimization.")
-        if t > 4 and np.abs(dev[t] - dev[t - 1]) / (0.1 + np.abs(dev[t - 1])) < ctl["eps"]:
+                "Numerical divergence (deviance no longer finite), try increasing the penalty to improve stability of optimization."
+            )
+        if (
+            t > 4
+            and np.abs(dev[t] - dev[t - 1]) / (0.1 + np.abs(dev[t - 1])) < ctl["eps"]
+        ):
             break
         if verbose:
             msg = "Iteration: {:d} | deviance={:.4E}".format(t, Decimal(dev[t]))
-            if fam == "nb": msg += " | nb_theta: {:.3E}".format(nb_theta)
+            if fam == "nb":
+                msg += " | nb_theta: {:.3E}".format(nb_theta)
             print(msg)
 
         # (k in lid) ensures no penalty on regression coefficients:
@@ -393,7 +443,9 @@ def glmpca(Y, L, fam="poi", ctl={"maxIter": 1000, "eps": 1e-4, "optimizeTheta": 
             U[:, k] += grads / infos
         if fam == "nb":
             if ctl["optimizeTheta"]:
-                nb_theta = est_nb_theta(Y, gf.family.link.inverse(rfunc(U, V)), nb_theta)
+                nb_theta = est_nb_theta(
+                    Y, gf.family.link.inverse(rfunc(U, V)), nb_theta
+                )
             gf = GlmpcaFamily(fam, nb_theta)
     # postprocessing: include row and column labels for regression coefficients
     if ncol(Z) == 0:

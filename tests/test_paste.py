@@ -196,7 +196,6 @@ def test_fused_gromov_wasserstein(slices, spot_distance_matrix):
 
 
 def test_gromov_linesearch(slices, spot_distance_matrix):
-
     nx = ot.backend.NumpyBackend()
 
     G = 1.509115054931788e-05 * np.ones((251, 264))

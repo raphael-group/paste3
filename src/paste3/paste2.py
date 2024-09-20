@@ -2,11 +2,19 @@ import numpy as np
 import ot
 from scipy.spatial import distance
 
-from paste3.helper import kl_divergence, intersect, to_dense_array, extract_data_matrix, generalized_kl_divergence, \
-    high_umi_gene_distance, pca_distance, glmpca_distance
+from paste3.helper import (
+    kl_divergence,
+    intersect,
+    to_dense_array,
+    extract_data_matrix,
+    generalized_kl_divergence,
+    high_umi_gene_distance,
+    pca_distance,
+    glmpca_distance,
+)
 
 
-def gwloss_partial(C1, C2, T, loss_fun='square_loss'):
+def gwloss_partial(C1, C2, T, loss_fun="square_loss"):
     g = gwgrad_partial(C1, C2, T, loss_fun) * 0.5
     return np.sum(g * T)
 
@@ -15,11 +23,11 @@ def wloss(M, T):
     return np.sum(M * T)
 
 
-def fgwloss_partial(alpha, M, C1, C2, T, loss_fun='square_loss'):
+def fgwloss_partial(alpha, M, C1, C2, T, loss_fun="square_loss"):
     return (1 - alpha) * wloss(M, T) + alpha * gwloss_partial(C1, C2, T, loss_fun)
 
 
-def print_fgwloss_partial(alpha, M, C1, C2, T, loss_fun='square_loss'):
+def print_fgwloss_partial(alpha, M, C1, C2, T, loss_fun="square_loss"):
     print("W term is: " + str((1 - alpha) * wloss(M, T)))
     print("GW term is: " + str(alpha * gwloss_partial(C1, C2, T, loss_fun)))
 
@@ -47,19 +55,21 @@ def gwgrad_partial(C1, C2, T, loss_fun="square_loss"):
     numpy.array of shape (n_p, n_q)
         gradient
     """
-    if loss_fun == 'square_loss':
+    if loss_fun == "square_loss":
+
         def f1(a):
-            return (a**2)
+            return a**2
 
         def f2(b):
-            return (b**2)
+            return b**2
 
         def h1(a):
             return a
 
         def h2(b):
             return 2 * b
-    elif loss_fun == 'kl_loss':
+    elif loss_fun == "kl_loss":
+
         def f1(a):
             return a * np.log(a + 1e-15) - a
 
@@ -72,39 +82,53 @@ def gwgrad_partial(C1, C2, T, loss_fun="square_loss"):
         def h2(b):
             return np.log(b + 1e-15)
 
-    #cC1 = np.dot(C1 ** 2 / 2, np.dot(T, np.ones(C2.shape[0]).reshape(-1, 1)))
-    A = np.dot(
-        f1(C1),
-        np.dot(T, np.ones(C2.shape[0]).reshape(-1, 1))
-    )
+    # cC1 = np.dot(C1 ** 2 / 2, np.dot(T, np.ones(C2.shape[0]).reshape(-1, 1)))
+    A = np.dot(f1(C1), np.dot(T, np.ones(C2.shape[0]).reshape(-1, 1)))
 
-    #cC2 = np.dot(np.dot(np.ones(C1.shape[0]).reshape(1, -1), T), C2 ** 2 / 2)
+    # cC2 = np.dot(np.dot(np.ones(C1.shape[0]).reshape(1, -1), T), C2 ** 2 / 2)
     B = np.dot(
-        np.dot(np.ones(C1.shape[0]).reshape(1, -1), T),
-        f2(C2).T
+        np.dot(np.ones(C1.shape[0]).reshape(1, -1), T), f2(C2).T
     )  # does f2(C2) here need transpose?
 
     constC = A + B
-    #C = -np.dot(C1, T).dot(C2.T)
+    # C = -np.dot(C1, T).dot(C2.T)
     C = -np.dot(h1(C1), T).dot(h2(C2).T)
     tens = constC + C
     return tens * 2
 
 
-def fgwgrad_partial(alpha, M, C1, C2, T, loss_fun='square_loss'):
+def fgwgrad_partial(alpha, M, C1, C2, T, loss_fun="square_loss"):
     return (1 - alpha) * M + alpha * gwgrad_partial(C1, C2, T, loss_fun)
 
 
-def partial_fused_gromov_wasserstein(M, C1, C2, p, q, alpha, m=None, G0=None, loss_fun='square_loss', armijo=False, log=False, verbose=False, numItermax=1000, tol=1e-7, stopThr=1e-9, stopThr2=1e-9):
+def partial_fused_gromov_wasserstein(
+    M,
+    C1,
+    C2,
+    p,
+    q,
+    alpha,
+    m=None,
+    G0=None,
+    loss_fun="square_loss",
+    armijo=False,
+    log=False,
+    verbose=False,
+    numItermax=1000,
+    tol=1e-7,
+    stopThr=1e-9,
+    stopThr2=1e-9,
+):
     if m is None:
         # m = np.min((np.sum(p), np.sum(q)))
         raise ValueError("Parameter m is not provided.")
     elif m < 0:
-        raise ValueError("Problem infeasible. Parameter m should be greater"
-                         " than 0.")
+        raise ValueError("Problem infeasible. Parameter m should be greater" " than 0.")
     elif m > np.min((np.sum(p), np.sum(q))):
-        raise ValueError("Problem infeasible. Parameter m should lower or"
-                         " equal to min(|p|_1, |q|_1).")
+        raise ValueError(
+            "Problem infeasible. Parameter m should lower or"
+            " equal to min(|p|_1, |q|_1)."
+        )
 
     if G0 is None:
         G0 = np.outer(p, q)
@@ -118,13 +142,18 @@ def partial_fused_gromov_wasserstein(M, C1, C2, p, q, alpha, m=None, G0=None, lo
     err = 1
 
     if log:
-        log = {'err': [], 'loss': []}
+        log = {"err": [], "loss": []}
     f_val = fgwloss_partial(alpha, M, C1, C2, G0, loss_fun)
     if verbose:
-        print('{:5s}|{:12s}|{:8s}|{:8s}'.format(
-            'It.', 'Loss', 'Relative loss', 'Absolute loss') + '\n' + '-' * 48)
-        print('{:5d}|{:8e}|{:8e}|{:8e}'.format(cpt, f_val, 0, 0))
-        #print_fgwloss_partial(alpha, M, C1, C2, G0, loss_fun)
+        print(
+            "{:5s}|{:12s}|{:8s}|{:8s}".format(
+                "It.", "Loss", "Relative loss", "Absolute loss"
+            )
+            + "\n"
+            + "-" * 48
+        )
+        print("{:5d}|{:8e}|{:8e}|{:8e}".format(cpt, f_val, 0, 0))
+        # print_fgwloss_partial(alpha, M, C1, C2, G0, loss_fun)
 
     # while err > tol and cpt < numItermax:
     while cpt < numItermax:
@@ -133,21 +162,25 @@ def partial_fused_gromov_wasserstein(M, C1, C2, p, q, alpha, m=None, G0=None, lo
 
         gradF = fgwgrad_partial(alpha, M, C1, C2, G0, loss_fun)
         gradF_emd = np.zeros(dim_G_extended)
-        gradF_emd[:len(p), :len(q)] = gradF
+        gradF_emd[: len(p), : len(q)] = gradF
         gradF_emd[-nb_dummies:, -nb_dummies:] = np.max(gradF) * 1e2
         gradF_emd = np.asarray(gradF_emd, dtype=np.float64)
 
-        Gc, logemd = ot.lp.emd(p_extended, q_extended, gradF_emd, numItermax=1000000, log=True)
-        if logemd['warning'] is not None:
-            raise ValueError("Error in the EMD resolution: try to increase the"
-                             " number of dummy points")
+        Gc, logemd = ot.lp.emd(
+            p_extended, q_extended, gradF_emd, numItermax=1000000, log=True
+        )
+        if logemd["warning"] is not None:
+            raise ValueError(
+                "Error in the EMD resolution: try to increase the"
+                " number of dummy points"
+            )
 
-        G0 = Gc[:len(p), :len(q)]
+        G0 = Gc[: len(p), : len(q)]
 
         if cpt % 10 == 0:  # to speed up the computations
             err = np.linalg.norm(G0 - Gprev)
             if log:
-                log['err'].append(err)
+                log["err"].append(err)
             # if verbose:
             #     if cpt % 200 == 0:
             #         print('{:5s}|{:12s}|{:12s}'.format(
@@ -159,7 +192,9 @@ def partial_fused_gromov_wasserstein(M, C1, C2, p, q, alpha, m=None, G0=None, lo
 
         if not armijo:
             a = alpha * gwloss_partial(C1, C2, deltaG, loss_fun)
-            b = (1 - alpha) * wloss(M, deltaG) + 2 * alpha * np.sum(gwgrad_partial(C1, C2, deltaG, loss_fun) * 0.5 * Gprev)
+            b = (1 - alpha) * wloss(M, deltaG) + 2 * alpha * np.sum(
+                gwgrad_partial(C1, C2, deltaG, loss_fun) * 0.5 * Gprev
+            )
             # c = (1 - alpha) * wloss(M, Gprev) + alpha * gwloss_partial(C1, C2, Gprev, loss_fun)
             c = fgwloss_partial(alpha, M, C1, C2, Gprev, loss_fun)
 
@@ -167,8 +202,10 @@ def partial_fused_gromov_wasserstein(M, C1, C2, p, q, alpha, m=None, G0=None, lo
             # gamma = ot.optim.solve_1d_linesearch_quad(a, b, c)
             # f_val = a * gamma ** 2 + b * gamma + c
         else:
+
             def f(x, alpha, M, C1, C2, lossfunc):
                 return fgwloss_partial(alpha, M, C1, C2, x, lossfunc)
+
             xk = Gprev
             pk = deltaG
             gfk = fgwgrad_partial(alpha, M, C1, C2, xk, loss_fun)
@@ -189,23 +226,40 @@ def partial_fused_gromov_wasserstein(M, C1, C2, p, q, alpha, m=None, G0=None, lo
         if relative_delta_fval < stopThr or abs_delta_fval < stopThr2:
             cpt = numItermax
         if log:
-            log['loss'].append(f_val)
+            log["loss"].append(f_val)
         if verbose:
             # if cpt % 20 == 0:
             #     print('{:5s}|{:12s}|{:8s}|{:8s}'.format(
             #         'It.', 'Loss', 'Relative loss', 'Absolute loss') + '\n' + '-' * 48)
-            print('{:5d}|{:8e}|{:8e}|{:8e}'.format(cpt, f_val, relative_delta_fval, abs_delta_fval))
-            #print_fgwloss_partial(alpha, M, C1, C2, G0, loss_fun)
+            print(
+                "{:5d}|{:8e}|{:8e}|{:8e}".format(
+                    cpt, f_val, relative_delta_fval, abs_delta_fval
+                )
+            )
+            # print_fgwloss_partial(alpha, M, C1, C2, G0, loss_fun)
 
     if log:
-        log['partial_fgw_cost'] = fgwloss_partial(alpha, M, C1, C2, G0, loss_fun)
-        return G0[:len(p), :len(q)], log
+        log["partial_fgw_cost"] = fgwloss_partial(alpha, M, C1, C2, G0, loss_fun)
+        return G0[: len(p), : len(q)], log
     else:
-        return G0[:len(p), :len(q)]
+        return G0[: len(p), : len(q)]
 
 
-def partial_pairwise_align(sliceA, sliceB, s, alpha=0.1, armijo=False, dissimilarity='glmpca', use_rep=None, G_init=None, a_distribution=None,
-                   b_distribution=None, norm=True, return_obj=False, verbose=True):
+def partial_pairwise_align(
+    sliceA,
+    sliceB,
+    s,
+    alpha=0.1,
+    armijo=False,
+    dissimilarity="glmpca",
+    use_rep=None,
+    G_init=None,
+    a_distribution=None,
+    b_distribution=None,
+    norm=True,
+    return_obj=False,
+    verbose=True,
+):
     """
     Calculates and returns optimal *partial* alignment of two slices.
 
@@ -235,28 +289,31 @@ def partial_pairwise_align(sliceA, sliceB, s, alpha=0.1, armijo=False, dissimila
     # print('Filtered all slices for common genes. There are ' + str(len(common_genes)) + ' common genes.')
 
     # Calculate spatial distances
-    D_A = distance.cdist(sliceA.obsm['spatial'], sliceA.obsm['spatial'])
-    D_B = distance.cdist(sliceB.obsm['spatial'], sliceB.obsm['spatial'])
+    D_A = distance.cdist(sliceA.obsm["spatial"], sliceA.obsm["spatial"])
+    D_B = distance.cdist(sliceB.obsm["spatial"], sliceB.obsm["spatial"])
 
     # Calculate expression dissimilarity
-    A_X, B_X = to_dense_array(extract_data_matrix(sliceA, use_rep)), to_dense_array(extract_data_matrix(sliceB, use_rep))
-    if dissimilarity.lower() == 'euclidean' or dissimilarity.lower() == 'euc':
+    A_X, B_X = (
+        to_dense_array(extract_data_matrix(sliceA, use_rep)),
+        to_dense_array(extract_data_matrix(sliceB, use_rep)),
+    )
+    if dissimilarity.lower() == "euclidean" or dissimilarity.lower() == "euc":
         M = distance.cdist(A_X, B_X)
-    elif dissimilarity.lower() == 'gkl':
+    elif dissimilarity.lower() == "gkl":
         s_A = A_X + 0.01
         s_B = B_X + 0.01
         M = generalized_kl_divergence(s_A, s_B)
         M /= M[M > 0].max()
         M *= 10
-    elif dissimilarity.lower() == 'kl':
+    elif dissimilarity.lower() == "kl":
         s_A = A_X + 0.01
         s_B = B_X + 0.01
         M = kl_divergence(s_A, s_B)
-    elif dissimilarity.lower() == 'selection_kl':
+    elif dissimilarity.lower() == "selection_kl":
         M = high_umi_gene_distance(A_X, B_X, 2000)
     elif dissimilarity.lower() == "pca":
         M = pca_distance(sliceA, sliceB, 2000, 20)
-    elif dissimilarity.lower() == 'glmpca':
+    elif dissimilarity.lower() == "glmpca":
         M = glmpca_distance(A_X, B_X, latent_dim=50, filter=True, verbose=verbose)
     else:
         print("ERROR")
@@ -280,25 +337,51 @@ def partial_pairwise_align(sliceA, sliceB, s, alpha=0.1, armijo=False, dissimila
         """
         Code for normalizing distance matrix
         """
-        D_A /= D_A[D_A>0].max()
-        #D_A *= 10
+        D_A /= D_A[D_A > 0].max()
+        # D_A *= 10
         D_A *= M.max()
-        D_B /= D_B[D_B>0].max()
-        #D_B *= 10
+        D_B /= D_B[D_B > 0].max()
+        # D_B *= 10
         D_B *= M.max()
         """
         Code for normalizing distance matrix ends
         """
-    pi, log = partial_fused_gromov_wasserstein(M, D_A, D_B, a, b, alpha=alpha, m=m, G0=G_init, loss_fun='square_loss', armijo=armijo, log=True, verbose=verbose)
+    pi, log = partial_fused_gromov_wasserstein(
+        M,
+        D_A,
+        D_B,
+        a,
+        b,
+        alpha=alpha,
+        m=m,
+        G0=G_init,
+        loss_fun="square_loss",
+        armijo=armijo,
+        log=True,
+        verbose=verbose,
+    )
 
     if return_obj:
-        return pi, log['partial_fgw_cost']
+        return pi, log["partial_fgw_cost"]
     return pi
 
 
-
-def partial_pairwise_align_histology(sliceA, sliceB, alpha=0.1, s=None, armijo=False, dissimilarity='glmpca', use_rep=None, G_init=None, a_distribution=None,
-                   b_distribution=None, norm=True, return_obj=False, verbose=False, **kwargs):
+def partial_pairwise_align_histology(
+    sliceA,
+    sliceB,
+    alpha=0.1,
+    s=None,
+    armijo=False,
+    dissimilarity="glmpca",
+    use_rep=None,
+    G_init=None,
+    a_distribution=None,
+    b_distribution=None,
+    norm=True,
+    return_obj=False,
+    verbose=False,
+    **kwargs,
+):
     """
     Optimal partial alignment of two slices using both gene expression and histological image information.
 
@@ -314,18 +397,21 @@ def partial_pairwise_align_histology(sliceA, sliceB, alpha=0.1, s=None, armijo=F
     # print('Filtered all slices for common genes. There are ' + str(len(common_genes)) + ' common genes.')
 
     # Calculate spatial distances
-    D_A = distance.cdist(sliceA.obsm['spatial'], sliceA.obsm['spatial'])
-    D_B = distance.cdist(sliceB.obsm['spatial'], sliceB.obsm['spatial'])
+    D_A = distance.cdist(sliceA.obsm["spatial"], sliceA.obsm["spatial"])
+    D_B = distance.cdist(sliceB.obsm["spatial"], sliceB.obsm["spatial"])
 
     # Calculate expression dissimilarity
-    A_X, B_X = to_dense_array(extract_data_matrix(sliceA, use_rep)), to_dense_array(extract_data_matrix(sliceB, use_rep))
-    if dissimilarity.lower() == 'euclidean' or dissimilarity.lower() == 'euc':
+    A_X, B_X = (
+        to_dense_array(extract_data_matrix(sliceA, use_rep)),
+        to_dense_array(extract_data_matrix(sliceB, use_rep)),
+    )
+    if dissimilarity.lower() == "euclidean" or dissimilarity.lower() == "euc":
         M_exp = distance.cdist(A_X, B_X)
-    elif dissimilarity.lower() == 'kl':
+    elif dissimilarity.lower() == "kl":
         s_A = A_X + 0.01
         s_B = B_X + 0.01
         M_exp = kl_divergence(s_A, s_B)
-    elif dissimilarity.lower() == 'glmpca':
+    elif dissimilarity.lower() == "glmpca":
         M_exp = glmpca_distance(A_X, B_X, latent_dim=50, filter=True, verbose=verbose)
     else:
         print("ERROR")
@@ -334,7 +420,7 @@ def partial_pairwise_align_histology(sliceA, sliceB, alpha=0.1, s=None, armijo=F
     # Calculate RGB dissimilarity
     # sliceA_rgb = (sliceA.obsm['rgb'] - np.mean(sliceA.obsm['rgb'], axis=0)) / np.std(sliceA.obsm['rgb'], axis=0)
     # sliceB_rgb = (sliceB.obsm['rgb'] - np.mean(sliceB.obsm['rgb'], axis=0)) / np.std(sliceB.obsm['rgb'], axis=0)
-    M_rgb = distance.cdist(sliceA.obsm['rgb'], sliceB.obsm['rgb'])
+    M_rgb = distance.cdist(sliceA.obsm["rgb"], sliceB.obsm["rgb"])
     # M_rgb = distance.cdist(sliceA_rgb, sliceB_rgb)
 
     # Scale M_exp and M_rgb, obtain M by taking half from each
@@ -362,24 +448,50 @@ def partial_pairwise_align_histology(sliceA, sliceB, alpha=0.1, s=None, armijo=F
         """
         Code for normalizing distance matrix
         """
-        D_A /= D_A[D_A>0].max()
+        D_A /= D_A[D_A > 0].max()
         D_A *= M.max()
-        D_B /= D_B[D_B>0].max()
+        D_B /= D_B[D_B > 0].max()
         D_B *= M.max()
         """
         Code for normalizing distance matrix ends
         """
 
     # Run OT
-    pi, log = partial_fused_gromov_wasserstein(M, D_A, D_B, a, b, alpha=alpha, m=m, G0=G_init, loss_fun='square_loss', armijo=armijo, log=True, verbose=verbose)
+    pi, log = partial_fused_gromov_wasserstein(
+        M,
+        D_A,
+        D_B,
+        a,
+        b,
+        alpha=alpha,
+        m=m,
+        G0=G_init,
+        loss_fun="square_loss",
+        armijo=armijo,
+        log=True,
+        verbose=verbose,
+    )
 
     if return_obj:
-        return pi, log['partial_fgw_cost']
+        return pi, log["partial_fgw_cost"]
     return pi
 
 
-def partial_pairwise_align_given_cost_matrix(sliceA, sliceB, M, s, alpha=0.1, armijo=False, G_init=None, a_distribution=None,
-                   b_distribution=None, norm=True, return_obj=False, verbose=False, **kwargs):
+def partial_pairwise_align_given_cost_matrix(
+    sliceA,
+    sliceB,
+    M,
+    s,
+    alpha=0.1,
+    armijo=False,
+    G_init=None,
+    a_distribution=None,
+    b_distribution=None,
+    norm=True,
+    return_obj=False,
+    verbose=False,
+    **kwargs,
+):
     m = s
 
     # subset for common genes
@@ -389,8 +501,8 @@ def partial_pairwise_align_given_cost_matrix(sliceA, sliceB, M, s, alpha=0.1, ar
     # print('Filtered all slices for common genes. There are ' + str(len(common_genes)) + ' common genes.')
 
     # Calculate spatial distances
-    D_A = distance.cdist(sliceA.obsm['spatial'], sliceA.obsm['spatial'])
-    D_B = distance.cdist(sliceB.obsm['spatial'], sliceB.obsm['spatial'])
+    D_A = distance.cdist(sliceA.obsm["spatial"], sliceA.obsm["spatial"])
+    D_B = distance.cdist(sliceB.obsm["spatial"], sliceB.obsm["spatial"])
 
     # init distributions
     if a_distribution is None:
@@ -410,21 +522,30 @@ def partial_pairwise_align_given_cost_matrix(sliceA, sliceB, M, s, alpha=0.1, ar
         """
         Code for normalizing distance matrix
         """
-        D_A /= D_A[D_A>0].max()
+        D_A /= D_A[D_A > 0].max()
         D_A *= M.max()
-        D_B /= D_B[D_B>0].max()
+        D_B /= D_B[D_B > 0].max()
         D_B *= M.max()
         """
         Code for normalizing distance matrix ends
         """
 
     # Run Partial OT
-    pi, log = partial_fused_gromov_wasserstein(M, D_A, D_B, a, b, alpha=alpha, m=m, G0=G_init, loss_fun='square_loss', armijo=armijo, log=True, verbose=verbose)
+    pi, log = partial_fused_gromov_wasserstein(
+        M,
+        D_A,
+        D_B,
+        a,
+        b,
+        alpha=alpha,
+        m=m,
+        G0=G_init,
+        loss_fun="square_loss",
+        armijo=armijo,
+        log=True,
+        verbose=verbose,
+    )
 
     if return_obj:
-        return pi, log['partial_fgw_cost']
+        return pi, log["partial_fgw_cost"]
     return pi
-
-
-
-

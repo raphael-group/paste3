@@ -20,7 +20,7 @@ dependencies = [
     "anndata",
     "scanpy",
     "POT",
-    "numpy",
+    "numpy<2",
     "scipy",
     "scikit-learn",
     "IPython",

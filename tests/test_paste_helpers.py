@@ -169,10 +169,7 @@ def test_high_umi_gene_distance(slices):
 
 @pytest.mark.parametrize(
     "_use_ot, filename",
-    [
-        (True, 'spots_mapping_true.csv'),
-        (False, 'spots_mapping_false.csv')
-    ]
+    [(True, "spots_mapping_true.csv"), (False, "spots_mapping_false.csv")],
 )
 def test_match_spots_using_spatial_heuristic(slices, _use_ot, filename):
     # creating a copy of the original list

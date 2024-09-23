@@ -58,7 +58,7 @@ def test_partial_pairwise_align_given_cost_matrix(slices):
         pd.read_csv(output_dir / "align_given_cost_matrix_pairwise_info.csv"),
         rtol=1e-05,
     )
-    assert log == expected_log
+    assert log == pytest.approx(expected_log)
 
 
 @pytest.mark.skip

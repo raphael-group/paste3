@@ -34,7 +34,9 @@ jobs:
           environment-file: environment.yml
 
       - name: Install package
-        run: pip install .
+        # Note: editable install for the coverage step to pick up source
+        # correctly. (coverage run --source=src/paste3 -m pytest)
+        run: pip install -e .
 
       - name: Pre-commit checks
         run: pre-commit run --all-files

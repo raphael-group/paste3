@@ -3,10 +3,8 @@ name: Test Unpinned Dependencies
 on:
   push:
     branches: [ main ]
-  pull_request_target:
-    types: [ opened, edited]
+  pull_request:
     branches: [ main ]
-    paths: ['pyproject.toml', 'requirements.txt']
 
 jobs:
   build_wheels:

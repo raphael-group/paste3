@@ -1,6 +1,7 @@
 from pathlib import Path
 import numpy as np
 import pandas as pd
+import pytest
 from pandas.testing import assert_frame_equal
 from paste3.helper import (
     intersect,
@@ -166,17 +167,24 @@ def test_high_umi_gene_distance(slices):
     )
 
 
-def test_match_spots_using_spatial_heuristic(slices):
+@pytest.mark.parametrize(
+    "_use_ot, filename",
+    [
+        (True, 'spots_mapping_true.csv'),
+        (False, 'spots_mapping_false.csv')
+    ]
+)
+def test_match_spots_using_spatial_heuristic(slices, _use_ot, filename):
     # creating a copy of the original list
     slices = list(slices)
     filter_for_common_genes(slices)
 
     spots_mapping = match_spots_using_spatial_heuristic(
-        slices[0].X, slices[1].X, use_ot=True
+        slices[0].X, slices[1].X, use_ot=bool(_use_ot)
     )
     assert_frame_equal(
         pd.DataFrame(spots_mapping, columns=[str(i) for i in range(251)]),
-        pd.read_csv(output_dir / "spots_mapping.csv"),
+        pd.read_csv(output_dir / filename),
         check_names=False,
         check_dtype=False,
         rtol=1e-04,

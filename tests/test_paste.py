@@ -1,6 +1,6 @@
 import hashlib
+import sys
 from pathlib import Path
-
 import numpy as np
 import ot.backend
 import pandas as pd
@@ -36,7 +36,22 @@ def assert_checksum_equals(temp_dir, filename):
     )
 
 
-def test_pairwise_alignment(slices):
+def pytest_generate_tests(metafunc):
+    if "use_gpu" and "backend" in metafunc.fixturenames:
+        if sys.platform == "linux":
+            metafunc.parametrize(
+                "use_gpu, backend",
+                [(True, ot.backend.TorchBackend()), (False, ot.backend.NumpyBackend())],
+            )
+        else:
+            metafunc.parametrize(
+                "use_gpu, backend", [(False, ot.backend.NumpyBackend())]
+            )
+    if "gpu_verbose" in metafunc.fixturenames:
+        metafunc.parametrize("gpu_verbose", [True, False])
+
+
+def test_pairwise_alignment(slices, use_gpu, backend, gpu_verbose):
     temp_dir = Path(tempfile.mkdtemp())
     outcome = pairwise_align(
         slices[0],
@@ -46,6 +61,9 @@ def test_pairwise_alignment(slices):
         a_distribution=slices[0].obsm["weights"],
         b_distribution=slices[1].obsm["weights"],
         G_init=None,
+        use_gpu=use_gpu,
+        backend=backend,
+        gpu_verbose=gpu_verbose,
     )
     pd.DataFrame(
         outcome, index=slices[0].obs.index, columns=slices[1].obs.index
@@ -53,7 +71,7 @@ def test_pairwise_alignment(slices):
     assert_checksum_equals(temp_dir, "slices_1_2_pairwise.csv")
 
 
-def test_center_alignment(slices):
+def test_center_alignment(slices, use_gpu, backend, gpu_verbose):
     temp_dir = Path(tempfile.mkdtemp())
 
     # Make a copy of the list

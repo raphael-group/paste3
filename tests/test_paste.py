@@ -1,5 +1,5 @@
 import hashlib
-import sys
+import torch
 from pathlib import Path
 import numpy as np
 import ot.backend
@@ -38,7 +38,7 @@ def assert_checksum_equals(temp_dir, filename):
 
 def pytest_generate_tests(metafunc):
     if "use_gpu" and "backend" in metafunc.fixturenames:
-        if sys.platform == "linux":
+        if torch.cuda.is_available():
             metafunc.parametrize(
                 "use_gpu, backend",
                 [(True, ot.backend.TorchBackend()), (False, ot.backend.NumpyBackend())],

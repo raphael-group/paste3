@@ -24,7 +24,8 @@ dependencies = [
     "scipy",
     "scikit-learn",
     "IPython",
-    "statsmodels"
+    "statsmodels",
+    "torch"
 ]
 dynamic = ["version"]
 

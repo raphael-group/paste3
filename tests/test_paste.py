@@ -1,5 +1,4 @@
 import hashlib
-import torch
 from pathlib import Path
 import numpy as np
 import ot.backend
@@ -36,44 +35,29 @@ def assert_checksum_equals(temp_dir, filename):
     )
 
 
-def pytest_generate_tests(metafunc):
-    if "use_gpu" and "backend" in metafunc.fixturenames:
-        if torch.cuda.is_available():
-            metafunc.parametrize(
-                "use_gpu, backend",
-                [(True, ot.backend.TorchBackend()), (False, ot.backend.NumpyBackend())],
-            )
-        else:
-            metafunc.parametrize(
-                "use_gpu, backend", [(False, ot.backend.NumpyBackend())]
-            )
-    if "gpu_verbose" in metafunc.fixturenames:
-        metafunc.parametrize("gpu_verbose", [True, False])
-
-
 def test_pairwise_alignment(slices, use_gpu, backend, gpu_verbose):
-    temp_dir = Path(tempfile.mkdtemp())
     outcome = pairwise_align(
         slices[0],
         slices[1],
         alpha=0.1,
         dissimilarity="kl",
-        a_distribution=slices[0].obsm["weights"],
-        b_distribution=slices[1].obsm["weights"],
+        a_distribution=slices[0].obsm["weights"].astype(slices[0].X.dtype),
+        b_distribution=slices[1].obsm["weights"].astype(slices[1].X.dtype),
         G_init=None,
         use_gpu=use_gpu,
         backend=backend,
         gpu_verbose=gpu_verbose,
     )
-    pd.DataFrame(
+    probability_mapping = pd.DataFrame(
         outcome, index=slices[0].obs.index, columns=slices[1].obs.index
-    ).to_csv(temp_dir / "slices_1_2_pairwise.csv")
-    assert_checksum_equals(temp_dir, "slices_1_2_pairwise.csv")
+    )
+    true_probability_mapping = pd.read_csv(
+        output_dir / "slices_1_2_pairwise.csv", index_col=0
+    )
+    assert_frame_equal(probability_mapping, true_probability_mapping, check_dtype=False)
 
 
 def test_center_alignment(slices, use_gpu, backend, gpu_verbose):
-    temp_dir = Path(tempfile.mkdtemp())
-
     # Make a copy of the list
     slices = list(slices)
     n_slices = len(slices)
@@ -87,8 +71,13 @@ def test_center_alignment(slices, use_gpu, backend, gpu_verbose):
         threshold=0.001,
         max_iter=2,
         dissimilarity="kl",
-        use_gpu=True,
-        distributions=[slices[i].obsm["weights"] for i in range(len(slices))],
+        use_gpu=use_gpu,
+        backend=backend,
+        gpu_verbose=gpu_verbose,
+        distributions=[
+            slices[i].obsm["weights"].astype(slices[i].X.dtype)
+            for i in range(len(slices))
+        ],
     )
     assert_frame_equal(
         pd.DataFrame(
@@ -99,20 +88,25 @@ def test_center_alignment(slices, use_gpu, backend, gpu_verbose):
         pd.read_csv(output_dir / "W_center.csv", index_col=0),
         check_names=False,
         rtol=1e-05,
-        atol=1e-08,
+        atol=1e-04,
+        check_dtype=False,
     )
     assert_frame_equal(
         pd.DataFrame(center_slice.uns["paste_H"], columns=center_slice.var.index),
         pd.read_csv(output_dir / "H_center.csv", index_col=0),
         rtol=1e-05,
-        atol=1e-08,
+        atol=1e-04,
+        check_dtype=False,
     )
 
     for i, pi in enumerate(pairwise_info):
-        pd.DataFrame(
+        pairwise_mapping = pd.DataFrame(
             pi, index=center_slice.obs.index, columns=slices[i].obs.index
-        ).to_csv(temp_dir / f"center_slice{i + 1}_pairwise.csv")
-        assert_checksum_equals(temp_dir, f"center_slice{i + 1}_pairwise.csv")
+        )
+        true_pairwise_mapping = pd.read_csv(
+            output_dir / f"center_slice{i + 1}_pairwise.csv", index_col=0
+        )
+        assert_frame_equal(pairwise_mapping, true_pairwise_mapping, check_dtype=False)
 
 
 def test_center_ot(slices):

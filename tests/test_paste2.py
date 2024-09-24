@@ -61,12 +61,14 @@ def test_partial_pairwise_align_given_cost_matrix(slices):
     assert log == pytest.approx(expected_log)
 
 
-@pytest.mark.skip
 def test_partial_pairwise_align_histology(slices2):
-    # TODO: this function doesn't seem to be called anywhere and also seems to be incomplete
-
     pairwise_info, log = partial_pairwise_align_histology(
-        slices2[0], slices2[1], return_obj=True, dissimilarity="euclidean"
+        slices2[0], slices2[1], s=0.7, return_obj=True, dissimilarity="euclidean"
+    )
+    assert log == 78.30015827691841
+    assert_frame_equal(
+        pd.DataFrame(pairwise_info, columns=[str(i) for i in range(2877)]),
+        pd.read_csv(output_dir / "partial_pairwise_align_histology.csv"),
     )
 
 

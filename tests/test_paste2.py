@@ -40,6 +40,53 @@ def pytest_generate_tests(metafunc):
                 ("glmpca", "partial_pairwise_align_glmpca.csv"),
             ],
         )
+    if "armijo" in metafunc.fixturenames:
+        metafunc.parametrize(
+            "armijo, expected_log, filename",
+            [
+                (
+                    False,
+                    {
+                        "err": [0.047201842558232954],
+                        "loss": [
+                            52.31031712851437,
+                            35.35388862002473,
+                            30.84819243143108,
+                            30.770197475353303,
+                            30.7643461256797,
+                            30.76336403641352,
+                            30.76332791868975,
+                            30.762808654741757,
+                            30.762727812006336,
+                            30.762727812006336,
+                        ],
+                        "partial_fgw_cost": 30.762727812006336,
+                    },
+                    "partial_fused_gromov_wasserstein.csv",
+                ),
+                (
+                    True,
+                    {
+                        "err": [0.047201842558232954, 9.659795787581263e-08],
+                        "loss": [
+                            53.40351168112148,
+                            35.56234792074653,
+                            30.897730857089122,
+                            30.77217881677637,
+                            30.764588004718373,
+                            30.763380009717963,
+                            30.76332859918154,
+                            30.762818343959903,
+                            30.762728863994322,
+                            30.76272782254089,
+                            30.76272781211168,
+                        ],
+                        "partial_fgw_cost": 30.76272781211168,
+                    },
+                    "partial_fused_gromov_wasserstein_true.csv",
+                ),
+            ],
+        )
 
 
 def test_partial_pairwise_align(slices2, dissimilarity, filename):
@@ -99,7 +146,7 @@ def test_partial_pairwise_align_histology(slices2):
     )
 
 
-def test_partial_fused_gromov_wasserstein(slices):
+def test_partial_fused_gromov_wasserstein(slices, armijo, expected_log, filename):
     common_genes = intersect(slices[1].var.index, slices[2].var.index)
     sliceA = slices[1][:, common_genes]
     sliceB = slices[2][:, common_genes]
@@ -125,32 +172,17 @@ def test_partial_fused_gromov_wasserstein(slices):
         distance_b,
         np.ones((sliceA.shape[0],)) / sliceA.shape[0],
         np.ones((sliceB.shape[0],)) / sliceB.shape[0],
+        armijo=armijo,
         alpha=0.1,
         m=0.7,
         G0=None,
         loss_fun="square_loss",
         log=True,
     )
-    expected_log = {
-        "err": [0.047201842558232954],
-        "loss": [
-            52.31031712851437,
-            35.35388862002473,
-            30.84819243143108,
-            30.770197475353303,
-            30.7643461256797,
-            30.76336403641352,
-            30.76332791868975,
-            30.762808654741757,
-            30.762727812006336,
-            30.762727812006336,
-        ],
-        "partial_fgw_cost": 30.762727812006336,
-    }
 
     assert_frame_equal(
         pd.DataFrame(pairwise_info, columns=[str(i) for i in range(264)]),
-        pd.read_csv(output_dir / "partial_fused_gromov_wasserstein.csv"),
+        pd.read_csv(output_dir / filename),
         rtol=1e-05,
     )
 

@@ -3,10 +3,26 @@ import numpy as np
 import scanpy as sc
 import pytest
 from paste3.helper import intersect
+import torch
 import ot.backend
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
+
+
+def pytest_generate_tests(metafunc):
+    if "use_gpu" and "backend" in metafunc.fixturenames:
+        if torch.cuda.is_available():
+            metafunc.parametrize(
+                "use_gpu, backend",
+                [(True, ot.backend.TorchBackend()), (False, ot.backend.NumpyBackend())],
+            )
+        else:
+            metafunc.parametrize(
+                "use_gpu, backend", [(False, ot.backend.NumpyBackend())]
+            )
+    if "gpu_verbose" in metafunc.fixturenames:
+        metafunc.parametrize("gpu_verbose", [True, False])
 
 
 @pytest.fixture(scope="session")

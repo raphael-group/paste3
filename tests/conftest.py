@@ -21,8 +21,6 @@ def pytest_generate_tests(metafunc):
             metafunc.parametrize(
                 "use_gpu, backend", [(False, ot.backend.NumpyBackend())]
             )
-    if "gpu_verbose" in metafunc.fixturenames:
-        metafunc.parametrize("gpu_verbose", [True, False])
 
 
 @pytest.fixture(scope="session")

@@ -36,7 +36,7 @@ jobs:
       - name: Install package
         # Note: editable install for the coverage step to pick up source
         # correctly. (coverage run --source=src/paste3 -m pytest)
-        run: pip install -e .
+        run: pip install -e . --no-deps
 
       - name: Pre-commit checks
         run: pre-commit run --all-files

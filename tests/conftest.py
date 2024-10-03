@@ -11,7 +11,7 @@ input_dir = test_dir / "data/input"
 
 
 def pytest_generate_tests(metafunc):
-    if "use_gpu" and "backend" in metafunc.fixturenames:
+    if "use_gpu" in metafunc.fixturenames and "backend" in metafunc.fixturenames:
         if torch.cuda.is_available():
             metafunc.parametrize(
                 "use_gpu, backend",

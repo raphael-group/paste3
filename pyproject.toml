@@ -29,7 +29,8 @@ dependencies = [
     "spatialdata[all]",
     "spatialdata-io",
     "napari-spatialdata[all]",
-    "jupyterlab"
+    "jupyterlab",
+    "squidpy"
 ]
 dynamic = ["version"]
 
@@ -51,4 +52,14 @@ dev = [
     "coveralls",
     "ruff",
     "pre-commit",
+]
+
+docs = [
+    "sphinx==6.2.1",
+    "myst-parser",
+    "sphinx-autodoc-typehints",
+    "nbsphinx",
+    "sphinx-gallery",
+    "sphinx-rtd-theme",
+    "sphinx-autodoc-annotation"
 ]

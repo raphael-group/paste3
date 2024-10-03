@@ -20,15 +20,11 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Install Python dependencies
-        run: |
-          pip install sphinx==6.2.1 myst-parser sphinx-autodoc-typehints nbsphinx sphinx-gallery sphinx-rtd-theme sphinx-autodoc-annotation
-
       - uses: actions/checkout@v2
 
       - name: Install Package
         run: |
-         pip install .
+         pip install .[docs]
 
       - name: Install Pandoc
         run: sudo apt-get install -y pandoc

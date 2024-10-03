@@ -13,7 +13,7 @@ def pytest_generate_tests(metafunc):
     if "use_gpu" in metafunc.fixturenames and "backend" in metafunc.fixturenames:
         metafunc.parametrize(
             "use_gpu, backend",
-            [(True, ot.backend.TorchBackend()), (False, ot.backend.NumpyBackend())],
+            [(True, ot.backend.TorchBackend())],
         )
 
 

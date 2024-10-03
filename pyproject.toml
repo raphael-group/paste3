@@ -25,7 +25,11 @@ dependencies = [
     "scikit-learn",
     "IPython",
     "statsmodels",
-    "torch"
+    "torch",
+    "spatialdata[all]",
+    "spatialdata-io",
+    "napari-spatialdata[all]",
+    "jupyterlab"
 ]
 dynamic = ["version"]
 

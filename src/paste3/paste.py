@@ -391,6 +391,7 @@ def center_ot(
     G_inits=None,
     distributions=None,
     verbose=False,
+    numItermax=200,
 ):
     center_slice = AnnData(np.dot(W, H))
     center_slice.var.index = common_genes
@@ -409,6 +410,7 @@ def center_ot(
             alpha=alpha,
             dissimilarity=dissimilarity,
             norm=norm,
+            numItermax=numItermax,
             return_obj=True,
             G_init=G_inits[i],
             b_distribution=distributions[i],

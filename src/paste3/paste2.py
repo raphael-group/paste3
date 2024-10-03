@@ -259,6 +259,9 @@ def partial_pairwise_align(
     norm=True,
     return_obj=False,
     verbose=True,
+    maxIter=1000,
+    eps=1e-4,
+    optimizeTheta=True,
 ):
     """
     Calculates and returns optimal *partial* alignment of two slices.
@@ -275,6 +278,10 @@ def partial_pairwise_align(
     param: b_distribution - distribution of sliceB spots (1-d numpy array), otherwise default is uniform
     param: norm - scales spatial distances such that maximum spatial distance is equal to maximum gene expression dissimilarity
     param: return_obj - returns objective function value if True, nothing if False
+    param: verbose - whether to print glmpca progress
+    param maxIter - maximum number of iterations for glmpca
+    param eps - convergence threshold for glmpca
+    param optimizeTheta - whether to optimize overdispersion in glmpca
 
     return: pi - partial alignment of spots
     return: log['fgw_dist'] - objective function output of FGW-OT
@@ -314,7 +321,16 @@ def partial_pairwise_align(
     elif dissimilarity.lower() == "pca":
         M = pca_distance(sliceA, sliceB, 2000, 20)
     elif dissimilarity.lower() == "glmpca":
-        M = glmpca_distance(A_X, B_X, latent_dim=50, filter=True, verbose=verbose)
+        M = glmpca_distance(
+            A_X,
+            B_X,
+            latent_dim=50,
+            filter=True,
+            verbose=verbose,
+            maxIter=maxIter,
+            eps=eps,
+            optimizeTheta=optimizeTheta,
+        )
     else:
         print("ERROR")
         exit(1)

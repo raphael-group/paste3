@@ -1,20 +1,13 @@
 from pathlib import Path
 import numpy as np
 import scanpy as sc
+import torch
 import pytest
 from paste3.helper import intersect
 import ot.backend
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
-
-
-def pytest_generate_tests(metafunc):
-    if "use_gpu" in metafunc.fixturenames and "backend" in metafunc.fixturenames:
-        metafunc.parametrize(
-            "use_gpu, backend",
-            [(True, ot.backend.TorchBackend())],
-        )
 
 
 @pytest.fixture(scope="session")
@@ -76,3 +69,10 @@ def slices2():
         slices.append(_slice)
 
     return slices
+
+
+@pytest.fixture(scope="function", autouse=True)
+def seed():
+    np.random.seed(0)
+    torch.manual_seed(0)
+    torch.cuda.manual_seed(0)

@@ -37,12 +37,13 @@ package-dir = {"" = "src"}
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-sv"
+addopts = "-sv -n auto"
 
 [project.optional-dependencies]
 dev = [
     "build",
     "pytest",
+    "pytest-xdist",
     "coverage",
     "coveralls",
     "ruff",

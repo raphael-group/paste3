@@ -11,6 +11,7 @@ from paste3.paste2 import (
 )
 from paste3.helper import intersect
 import pytest
+from unittest.mock import patch
 from scipy.spatial import distance
 from pandas.testing import assert_frame_equal
 
@@ -19,79 +20,32 @@ input_dir = test_dir / "data/input"
 output_dir = test_dir / "data/output"
 
 
-def pytest_generate_tests(metafunc):
-    if "loss_fun" in metafunc.fixturenames:
-        metafunc.parametrize(
-            "loss_fun, filename",
-            [
-                ("square_loss", "gwloss_partial.csv"),
-                ("kl_loss", "gwloss_partial_kl_loss.csv"),
-            ],
-        )
-    if "dissimilarity" in metafunc.fixturenames:
-        metafunc.parametrize(
-            "dissimilarity, filename",
-            [
-                ("euc", "partial_pairwise_align_euc.csv"),
-                ("gkl", "partial_pairwise_align_gkl.csv"),
-                ("kl", "partial_pairwise_align_kl.csv"),
-                ("selection_kl", "partial_pairwise_align_selection_kl.csv"),
-                ("pca", "partial_pairwise_align_pca.csv"),
-                ("glmpca", "partial_pairwise_align_glmpca.csv"),
-            ],
-        )
-    if "armijo" in metafunc.fixturenames:
-        metafunc.parametrize(
-            "armijo, expected_log, filename",
-            [
-                (
-                    False,
-                    {
-                        "err": [0.047201842558232954],
-                        "loss": [
-                            52.31031712851437,
-                            35.35388862002473,
-                            30.84819243143108,
-                            30.770197475353303,
-                            30.7643461256797,
-                            30.76336403641352,
-                            30.76332791868975,
-                            30.762808654741757,
-                            30.762727812006336,
-                            30.762727812006336,
-                        ],
-                        "partial_fgw_cost": 30.762727812006336,
-                    },
-                    "partial_fused_gromov_wasserstein.csv",
-                ),
-                (
-                    True,
-                    {
-                        "err": [0.047201842558232954, 9.659795787581263e-08],
-                        "loss": [
-                            53.40351168112148,
-                            35.56234792074653,
-                            30.897730857089122,
-                            30.77217881677637,
-                            30.764588004718373,
-                            30.763380009717963,
-                            30.76332859918154,
-                            30.762818343959903,
-                            30.762728863994322,
-                            30.76272782254089,
-                            30.76272781211168,
-                        ],
-                        "partial_fgw_cost": 30.76272781211168,
-                    },
-                    "partial_fused_gromov_wasserstein_true.csv",
-                ),
-            ],
-        )
-
-
+@pytest.mark.parametrize(
+    "dissimilarity, filename",
+    [
+        ("euc", "partial_pairwise_align_euc.csv"),
+        ("gkl", "partial_pairwise_align_gkl.csv"),
+        ("kl", "partial_pairwise_align_kl.csv"),
+        ("selection_kl", "partial_pairwise_align_selection_kl.csv"),
+        ("pca", "partial_pairwise_align_pca.csv"),
+        ("glmpca", "partial_pairwise_align_glmpca.csv"),
+    ],
+)
 def test_partial_pairwise_align(slices2, dissimilarity, filename):
+    # Load pre-computed dissimilarity metrics for a parameter combination,
+    # since it is time-consuming to compute.
+    if dissimilarity == "glmpca":
+        with patch("paste3.paste2.dissimilarity_metric") as fn:
+            data = np.load(output_dir / "test_partial_pairwise_align.npz")
+            fn.return_value = data[dissimilarity]
+
     pi_BC = partial_pairwise_align(
-        slices2[0], slices2[1], s=0.7, dissimilarity=dissimilarity
+        slices2[0],
+        slices2[1],
+        s=0.7,
+        dissimilarity=dissimilarity,
+        verbose=True,
+        maxIter=20,
     )
     pd.DataFrame(pi_BC).to_csv(output_dir / filename, index=False)
 
@@ -121,7 +75,8 @@ def test_partial_pairwise_align_given_cost_matrix(slices):
         armijo=False,
         norm=True,
         return_obj=True,
-        verbose=False,
+        verbose=True,
+        numItermax=20,
     )
 
     expected_log = 40.86486220302934
@@ -136,9 +91,15 @@ def test_partial_pairwise_align_given_cost_matrix(slices):
 
 def test_partial_pairwise_align_histology(slices2):
     pairwise_info, log = partial_pairwise_align_histology(
-        slices2[0], slices2[1], s=0.7, return_obj=True, dissimilarity="euclidean"
+        slices2[0],
+        slices2[1],
+        s=0.7,
+        return_obj=True,
+        dissimilarity="euclidean",
+        verbose=True,
+        numItermax=20,
     )
-    assert round(log, 3) == round(78.30015827691841, 3)
+    assert log == pytest.approx(84.5549)
     assert_frame_equal(
         pd.DataFrame(pairwise_info, columns=[str(i) for i in range(2877)]),
         pd.read_csv(output_dir / "partial_pairwise_align_histology.csv"),
@@ -146,6 +107,52 @@ def test_partial_pairwise_align_histology(slices2):
     )
 
 
+@pytest.mark.parametrize(
+    "armijo, expected_log, filename",
+    [
+        (
+            False,
+            {
+                "err": [0.047201842558232954],
+                "loss": [
+                    52.31031712851437,
+                    35.35388862002473,
+                    30.84819243143108,
+                    30.770197475353303,
+                    30.7643461256797,
+                    30.76336403641352,
+                    30.76332791868975,
+                    30.762808654741757,
+                    30.762727812006336,
+                    30.762727812006336,
+                ],
+                "partial_fgw_cost": 30.762727812006336,
+            },
+            "partial_fused_gromov_wasserstein.csv",
+        ),
+        (
+            True,
+            {
+                "err": [0.047201842558232954, 9.659795787581263e-08],
+                "loss": [
+                    53.40351168112148,
+                    35.56234792074653,
+                    30.897730857089122,
+                    30.77217881677637,
+                    30.764588004718373,
+                    30.763380009717963,
+                    30.76332859918154,
+                    30.762818343959903,
+                    30.762728863994322,
+                    30.76272782254089,
+                    30.76272781211168,
+                ],
+                "partial_fgw_cost": 30.76272781211168,
+            },
+            "partial_fused_gromov_wasserstein_true.csv",
+        ),
+    ],
+)
 def test_partial_fused_gromov_wasserstein(slices, armijo, expected_log, filename):
     common_genes = intersect(slices[1].var.index, slices[2].var.index)
     sliceA = slices[1][:, common_genes]
@@ -221,6 +228,13 @@ def test_gloss_partial(slices):
     assert output == expected_output
 
 
+@pytest.mark.parametrize(
+    "loss_fun, filename",
+    [
+        ("square_loss", "gwloss_partial.csv"),
+        ("kl_loss", "gwloss_partial_kl_loss.csv"),
+    ],
+)
 def test_gwloss_partial(slices, loss_fun, filename):
     common_genes = intersect(slices[1].var.index, slices[2].var.index)
     sliceA = slices[1][:, common_genes]

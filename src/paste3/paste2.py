@@ -7,10 +7,8 @@ from paste3.helper import (
     intersect,
     to_dense_array,
     extract_data_matrix,
-    generalized_kl_divergence,
-    high_umi_gene_distance,
-    pca_distance,
     glmpca_distance,
+    dissimilarity_metric,
 )
 
 
@@ -304,36 +302,20 @@ def partial_pairwise_align(
         to_dense_array(extract_data_matrix(sliceA, use_rep)),
         to_dense_array(extract_data_matrix(sliceB, use_rep)),
     )
-    if dissimilarity.lower() == "euclidean" or dissimilarity.lower() == "euc":
-        M = distance.cdist(A_X, B_X)
-    elif dissimilarity.lower() == "gkl":
-        s_A = A_X + 0.01
-        s_B = B_X + 0.01
-        M = generalized_kl_divergence(s_A, s_B)
-        M /= M[M > 0].max()
-        M *= 10
-    elif dissimilarity.lower() == "kl":
-        s_A = A_X + 0.01
-        s_B = B_X + 0.01
-        M = kl_divergence(s_A, s_B)
-    elif dissimilarity.lower() == "selection_kl":
-        M = high_umi_gene_distance(A_X, B_X, 2000)
-    elif dissimilarity.lower() == "pca":
-        M = pca_distance(sliceA, sliceB, 2000, 20)
-    elif dissimilarity.lower() == "glmpca":
-        M = glmpca_distance(
-            A_X,
-            B_X,
-            latent_dim=50,
-            filter=True,
-            verbose=verbose,
-            maxIter=maxIter,
-            eps=eps,
-            optimizeTheta=optimizeTheta,
-        )
-    else:
-        print("ERROR")
-        exit(1)
+
+    M = dissimilarity_metric(
+        dissimilarity,
+        sliceA,
+        sliceB,
+        A_X,
+        B_X,
+        latent_dim=50,
+        filter=True,
+        verbose=verbose,
+        maxIter=maxIter,
+        eps=eps,
+        optimizeTheta=optimizeTheta,
+    )
 
     # init distributions
     if a_distribution is None:
@@ -375,6 +357,7 @@ def partial_pairwise_align(
         armijo=armijo,
         log=True,
         verbose=verbose,
+        numItermax=maxIter,
     )
 
     if return_obj:
@@ -396,6 +379,7 @@ def partial_pairwise_align_histology(
     norm=True,
     return_obj=False,
     verbose=False,
+    numItermax=1000,
     **kwargs,
 ):
     """
@@ -486,6 +470,7 @@ def partial_pairwise_align_histology(
         armijo=armijo,
         log=True,
         verbose=verbose,
+        numItermax=numItermax,
     )
 
     if return_obj:
@@ -506,6 +491,7 @@ def partial_pairwise_align_given_cost_matrix(
     norm=True,
     return_obj=False,
     verbose=False,
+    numItermax=1000,
     **kwargs,
 ):
     m = s
@@ -560,6 +546,7 @@ def partial_pairwise_align_given_cost_matrix(
         armijo=armijo,
         log=True,
         verbose=verbose,
+        numItermax=numItermax,
     )
 
     if return_obj:

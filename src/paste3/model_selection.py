@@ -144,95 +144,6 @@ def calculate_convex_hull_edge_inconsistency(sliceA, sliceB, pi):
     return measure_A, measure_B
 
 
-"""
-Main function.
-"""
-
-
-def select_overlap_fraction(sliceA, sliceB, alpha=0.1):
-    """
-    Estimates the overlap percentage of two ST slices.
-
-    param: sliceA - AnnData object
-    param: sliceB - AnnData object
-    param: alpha - Alignment tuning parameter. Note: 0 ≤ alpha ≤ 1
-
-    return: estimation of the overlap percentage between sliceA and sliceB
-    """
-    print("PASTE2 model selection procedure.")
-    overlap_to_check = [
-        0.99,
-        0.95,
-        0.9,
-        0.85,
-        0.8,
-        0.75,
-        0.7,
-        0.65,
-        0.6,
-        0.55,
-        0.5,
-        0.45,
-        0.4,
-        0.35,
-        0.3,
-        0.25,
-        0.2,
-        0.15,
-        0.1,
-        0.05,
-    ]
-    # subset for common genes
-    common_genes = intersect(sliceA.var.index, sliceB.var.index)
-    sliceA = sliceA[:, common_genes]
-    sliceB = sliceB[:, common_genes]
-    # Get transport cost matrix
-    A_X, B_X = (
-        to_dense_array(extract_data_matrix(sliceA, None)),
-        to_dense_array(extract_data_matrix(sliceB, None)),
-    )
-    M = glmpca_distance(A_X, B_X, latent_dim=50, filter=True, verbose=True)
-    # Get an alignment for each overlap percentage
-    m_to_pi = {}
-    for m in overlap_to_check:
-        print("Running PASTE2 with s = " + str(m) + "...")
-        pi, log = partial_pairwise_align_given_cost_matrix(
-            sliceA,
-            sliceB,
-            s=m,
-            M=M,
-            alpha=alpha,
-            armijo=False,
-            norm=True,
-            return_obj=True,
-            verbose=False,
-        )
-        m_to_pi[m] = pi
-    # Model selection based on edge inconsistency score
-    m_to_edge_inconsistency_A = []
-    m_to_edge_inconsistency_B = []
-    for m in overlap_to_check:
-        pi = m_to_pi[m]
-        sliceA_measure, sliceB_measure = calculate_convex_hull_edge_inconsistency(
-            sliceA, sliceB, pi
-        )
-        m_to_edge_inconsistency_A.append(sliceA_measure)
-        m_to_edge_inconsistency_B.append(sliceB_measure)
-
-    half_estimate_A = overlap_to_check[
-        m_to_edge_inconsistency_A.index(max(m_to_edge_inconsistency_A))
-    ]
-    half_estimate_B = overlap_to_check[
-        m_to_edge_inconsistency_B.index(max(m_to_edge_inconsistency_B))
-    ]
-
-    print(
-        "Estimation of overlap percentage is "
-        + str(min(2 * min(half_estimate_A, half_estimate_B), 1))
-    )
-    return min(2 * min(half_estimate_A, half_estimate_B), 1)
-
-
 def plot_edge_curve(m_list, source_list, target_list):
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
     ax1.plot(m_list, source_list)
@@ -252,7 +163,7 @@ def plot_edge_curve(m_list, source_list, target_list):
     plt.show()
 
 
-def select_overlap_fraction_plotting(sliceA, sliceB, alpha=0.1, show_plot=True):
+def select_overlap_fraction(sliceA, sliceB, alpha=0.1, show_plot=True, numItermax=1000):
     overlap_to_check = [
         0.99,
         0.95,
@@ -284,7 +195,7 @@ def select_overlap_fraction_plotting(sliceA, sliceB, alpha=0.1, show_plot=True):
         to_dense_array(extract_data_matrix(sliceA, None)),
         to_dense_array(extract_data_matrix(sliceB, None)),
     )
-    M = glmpca_distance(A_X, B_X, latent_dim=50, filter=True)
+    M = glmpca_distance(A_X, B_X, latent_dim=50, filter=True, maxIter=numItermax)
 
     m_to_pi = {}
     for m in overlap_to_check:
@@ -299,6 +210,7 @@ def select_overlap_fraction_plotting(sliceA, sliceB, alpha=0.1, show_plot=True):
             norm=True,
             return_obj=True,
             verbose=False,
+            numItermax=numItermax,
         )
         m_to_pi[m] = pi
 

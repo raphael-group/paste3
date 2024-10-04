@@ -82,7 +82,6 @@ def test_est_nb_theta():
 
 
 def test_glmpca():
-    np.random.seed(0)
     joint_matrix_T = np.genfromtxt(input_dir / "joint_matrix.csv", delimiter=",")
 
     res = glmpca(

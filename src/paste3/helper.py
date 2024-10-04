@@ -233,3 +233,29 @@ def kl_divergence_backend(X, Y):
     X_log_X = nx.reshape(X_log_X, (1, X_log_X.shape[0]))
     D = X_log_X.T - nx.dot(X, log_Y.T)
     return nx.to_numpy(D)
+
+
+def dissimilarity_metric(which, sliceA, sliceB, A, B, **kwargs):
+    match which:
+        case "euc" | "euclidean":
+            return scipy.spatial.distance.cdist(A, B)
+        case "gkl":
+            s_A = A + 0.01
+            s_B = B + 0.01
+            M = generalized_kl_divergence(s_A, s_B)
+            M /= M[M > 0].max()
+            M *= 10
+            return M
+        case "kl":
+            s_A = A + 0.01
+            s_B = B + 0.01
+            M = kl_divergence(s_A, s_B)
+            return M
+        case "selection_kl":
+            return high_umi_gene_distance(A, B, 2000)
+        case "pca":
+            return pca_distance(sliceA, sliceB, 2000, 20)
+        case "glmpca":
+            return glmpca_distance(A, B, **kwargs)
+        case _:
+            raise RuntimeError(f"Error: Invalid dissimilarity metric {which}")

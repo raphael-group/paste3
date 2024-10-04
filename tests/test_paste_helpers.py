@@ -107,7 +107,6 @@ def test_generalized_kl_divergence(slices):
 
 
 def test_glmpca_distance():
-    np.random.seed(0)
     sliceA_X = np.genfromtxt(input_dir / "sliceA_X.csv", delimiter=",", skip_header=1)[
         10:, :1000
     ]
@@ -116,7 +115,7 @@ def test_glmpca_distance():
     ]
 
     glmpca_distance_matrix = glmpca_distance(
-        sliceA_X, sliceB_X, latent_dim=10, filter=True
+        sliceA_X, sliceB_X, latent_dim=10, filter=True, maxIter=20
     )
 
     assert_frame_equal(

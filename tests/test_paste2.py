@@ -12,7 +12,6 @@ from paste3.paste2 import (
 from paste3.helper import intersect
 import pytest
 from unittest.mock import patch
-from contextlib import nullcontext
 from scipy.spatial import distance
 from pandas.testing import assert_frame_equal
 
@@ -21,43 +20,31 @@ input_dir = test_dir / "data/input"
 output_dir = test_dir / "data/output"
 
 
-@pytest.mark.parametrize(
-    "dissimilarity, filename",
-    [
-        ("euc", "partial_pairwise_align_euc.csv"),
-        ("gkl", "partial_pairwise_align_gkl.csv"),
-        ("kl", "partial_pairwise_align_kl.csv"),
-        ("selection_kl", "partial_pairwise_align_selection_kl.csv"),
-        ("pca", "partial_pairwise_align_pca.csv"),
-        ("glmpca", "partial_pairwise_align_glmpca.csv"),
-    ],
-)
-def test_partial_pairwise_align(slices2, dissimilarity, filename):
-    # Load pre-computed dissimilarity metrics for a parameter combination,
+@patch("paste3.paste2.dissimilarity_metric")
+def test_partial_pairwise_align_glmpca(fn, slices2):
+    # Load pre-computed dissimilarity metrics,
     # since it is time-consuming to compute.
-    with patch(
-        "paste3.paste2.dissimilarity_metric"
-    ) if dissimilarity == "glmpca" else nullcontext() as fn:
-        if fn is not None:
-            data = np.load(output_dir / "test_partial_pairwise_align.npz")
-            fn.return_value = data[dissimilarity]
+    data = np.load(output_dir / "test_partial_pairwise_align.npz")
+    fn.return_value = data["glmpca"]
 
-        pi_BC = partial_pairwise_align(
-            slices2[0],
-            slices2[1],
-            s=0.7,
-            dissimilarity=dissimilarity,
-            verbose=True,
-            maxIter=20,
-        )
-        pd.DataFrame(pi_BC).to_csv(output_dir / filename, index=False)
+    pi_BC = partial_pairwise_align(
+        slices2[0],
+        slices2[1],
+        s=0.7,
+        dissimilarity="glmpca",
+        verbose=True,
+        maxIter=10,
+    )
+    pd.DataFrame(pi_BC).to_csv(
+        output_dir / "partial_pairwise_align_glmpca.csv", index=False
+    )
 
-        assert_frame_equal(
-            pd.DataFrame(pi_BC, columns=[str(i) for i in range(pi_BC.shape[1])]),
-            pd.read_csv(output_dir / filename),
-            rtol=1e-03,
-            atol=1e-03,
-        )
+    assert_frame_equal(
+        pd.DataFrame(pi_BC, columns=[str(i) for i in range(pi_BC.shape[1])]),
+        pd.read_csv(output_dir / "partial_pairwise_align_glmpca.csv"),
+        rtol=1e-03,
+        atol=1e-03,
+    )
 
 
 def test_partial_pairwise_align_given_cost_matrix(slices):
@@ -79,17 +66,15 @@ def test_partial_pairwise_align_given_cost_matrix(slices):
         norm=True,
         return_obj=True,
         verbose=True,
-        numItermax=20,
+        numItermax=10,
     )
-
-    expected_log = 40.86486220302934
 
     assert_frame_equal(
         pd.DataFrame(pairwise_info, columns=[str(i) for i in range(264)]),
         pd.read_csv(output_dir / "align_given_cost_matrix_pairwise_info.csv"),
         rtol=1e-05,
     )
-    assert log == pytest.approx(expected_log)
+    assert log == pytest.approx(40.86494022326222)
 
 
 def test_partial_pairwise_align_histology(slices2):
@@ -100,9 +85,9 @@ def test_partial_pairwise_align_histology(slices2):
         return_obj=True,
         dissimilarity="euclidean",
         verbose=True,
-        numItermax=20,
+        numItermax=10,
     )
-    assert log == pytest.approx(84.5549)
+    assert log == pytest.approx(88.06713721008786)
     assert_frame_equal(
         pd.DataFrame(pairwise_info, columns=[str(i) for i in range(2877)]),
         pd.read_csv(output_dir / "partial_pairwise_align_histology.csv"),

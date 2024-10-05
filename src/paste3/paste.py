@@ -104,9 +104,6 @@ def pairwise_align(
     coordinatesB = sliceB.obsm["spatial"].copy()
     coordinatesB = nx.from_numpy(coordinatesB)
 
-    # if isinstance(nx, ot.backend.TorchBackend):
-    #     coordinatesA = coordinatesA.float()
-    #     coordinatesB = coordinatesB.float()
     D_A = ot.dist(coordinatesA, coordinatesA, metric="euclidean")
     D_B = ot.dist(coordinatesB, coordinatesB, metric="euclidean")
 

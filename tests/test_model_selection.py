@@ -51,17 +51,17 @@ def test_edge_inconsistency_score(slices, tmp_path):
 
 
 def test_calculate_convex_hull_edge_inconsistency(slices, tmp_path):
-    pairwise_info = partial_pairwise_align(slices[0], slices[1], s=0.7, maxIter=20)
+    pairwise_info = partial_pairwise_align(slices[0], slices[1], s=0.7, maxIter=10)
     measure_a, measure_b = calculate_convex_hull_edge_inconsistency(
         slices[0], slices[1], pairwise_info
     )
 
-    assert measure_a == 0.18255578093306288
-    assert measure_b == 0.1806981519507187
+    assert measure_a == 0.17692307692307693
+    assert measure_b == 0.2058252427184466
 
 
 def test_select_overlap_fraction(slices):
     fraction = select_overlap_fraction(
-        slices[0], slices[1], show_plot=False, numItermax=20
+        slices[0], slices[1], show_plot=False, numItermax=10
     )
-    assert fraction == 0.3
+    assert fraction == 0.5

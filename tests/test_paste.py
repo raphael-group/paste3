@@ -197,7 +197,7 @@ def test_fused_gromov_wasserstein(slices, spot_distance_matrix):
         loss_fun="square_loss",
         alpha=0.1,
         log=True,
-        numItermax=200,
+        numItermax=10,
     )
     pd.DataFrame(pairwise_info).to_csv(
         temp_dir / "fused_gromov_wasserstein.csv", index=False

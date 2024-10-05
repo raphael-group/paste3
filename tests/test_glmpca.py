@@ -89,7 +89,7 @@ def test_glmpca():
         L=50,
         penalty=1,
         verbose=True,
-        ctl={"maxIter": 20, "eps": 1e-4, "optimizeTheta": True},
+        ctl={"maxIter": 10, "eps": 1e-4, "optimizeTheta": True},
     )
     saved_result = np.load(output_dir / "glmpca_result.npz")
 

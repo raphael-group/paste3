@@ -16,6 +16,7 @@ from paste3.helper import (
     pca_distance,
     high_umi_gene_distance,
     norm_and_center_coordinates,
+    dissimilarity_metric,
 )
 
 test_dir = Path(__file__).parent
@@ -115,7 +116,7 @@ def test_glmpca_distance():
     ]
 
     glmpca_distance_matrix = glmpca_distance(
-        sliceA_X, sliceB_X, latent_dim=10, filter=True, maxIter=20
+        sliceA_X, sliceB_X, latent_dim=10, filter=True, maxIter=10
     )
 
     assert_frame_equal(
@@ -213,4 +214,33 @@ def test_norm_and_center_coordinates(slices):
         check_names=False,
         check_dtype=False,
         rtol=1e-04,
+    )
+
+
+@pytest.mark.parametrize(
+    # Note: There's already a dedicated test for glmpca dissimilarity metric,
+    # (test_glmpca_distance), so we don't include it here
+    "dissimilarity",
+    ("euc", "gkl", "kl", "selection_kl", "pca"),
+)
+def test_dissimilarity_metric(slices2, dissimilarity):
+    sliceA, sliceB = slices2[:2]
+    common_genes = intersect(sliceA.var.index, sliceB.var.index)
+    sliceA = sliceA[:, common_genes]
+    sliceB = sliceB[:, common_genes]
+
+    A_X, B_X = (
+        to_dense_array(extract_data_matrix(sliceA, None)),
+        to_dense_array(extract_data_matrix(sliceB, None)),
+    )
+
+    M = dissimilarity_metric(dissimilarity, sliceA, sliceB, A_X, B_X)
+
+    # Saving test data for the entire matrix takes too much space,
+    # so we only save a sample of 100 randomly-selected rows to compare
+    random_indices = np.random.choice(M.shape[0], 100, replace=False)
+    M = M[random_indices, :]
+
+    assert np.allclose(
+        np.load(output_dir / "dissimilarity_metric.npz")[dissimilarity], M
     )

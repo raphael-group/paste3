@@ -12,6 +12,7 @@ from paste3.paste2 import (
 from paste3.helper import intersect
 import pytest
 from unittest.mock import patch
+from contextlib import nullcontext
 from scipy.spatial import distance
 from pandas.testing import assert_frame_equal
 
@@ -34,27 +35,29 @@ output_dir = test_dir / "data/output"
 def test_partial_pairwise_align(slices2, dissimilarity, filename):
     # Load pre-computed dissimilarity metrics for a parameter combination,
     # since it is time-consuming to compute.
-    if dissimilarity == "glmpca":
-        with patch("paste3.paste2.dissimilarity_metric") as fn:
+    with patch(
+        "paste3.paste2.dissimilarity_metric"
+    ) if dissimilarity == "glmpca" else nullcontext() as fn:
+        if fn is not None:
             data = np.load(output_dir / "test_partial_pairwise_align.npz")
             fn.return_value = data[dissimilarity]
 
-    pi_BC = partial_pairwise_align(
-        slices2[0],
-        slices2[1],
-        s=0.7,
-        dissimilarity=dissimilarity,
-        verbose=True,
-        maxIter=20,
-    )
-    pd.DataFrame(pi_BC).to_csv(output_dir / filename, index=False)
+        pi_BC = partial_pairwise_align(
+            slices2[0],
+            slices2[1],
+            s=0.7,
+            dissimilarity=dissimilarity,
+            verbose=True,
+            maxIter=20,
+        )
+        pd.DataFrame(pi_BC).to_csv(output_dir / filename, index=False)
 
-    assert_frame_equal(
-        pd.DataFrame(pi_BC, columns=[str(i) for i in range(pi_BC.shape[1])]),
-        pd.read_csv(output_dir / filename),
-        rtol=1e-03,
-        atol=1e-03,
-    )
+        assert_frame_equal(
+            pd.DataFrame(pi_BC, columns=[str(i) for i in range(pi_BC.shape[1])]),
+            pd.read_csv(output_dir / filename),
+            rtol=1e-03,
+            atol=1e-03,
+        )
 
 
 def test_partial_pairwise_align_given_cost_matrix(slices):

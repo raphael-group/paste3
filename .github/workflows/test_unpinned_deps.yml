@@ -33,7 +33,7 @@ jobs:
       - name: Install Developer Dependencies
         run: pip install .[dev]
 
-      - name: Check Versions of Dependencies
+      - name: List dependencies
         run: pip freeze
 
       - name: Pytest

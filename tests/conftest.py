@@ -19,7 +19,7 @@ def slices():
         c_fpath = Path(f"{input_dir}/slice{i}_coor.csv")
 
         # Create ann data object of each slice and add other properties
-        _slice = sc.read_csv(s_fpath)
+        _slice = sc.read_csv(s_fpath, dtype="float64")
         _slice.obsm["spatial"] = np.genfromtxt(c_fpath, delimiter=",")
         _slice.obsm["weights"] = np.ones((_slice.shape[0],)) / _slice.shape[0]
         slices.append(_slice)

@@ -45,7 +45,7 @@ jobs:
         run: pip freeze
 
       - name: Pytest with coverage
-        run: coverage run --source=src/paste3 -m pytest
+        run: coverage run --source=src/paste3 -m pytest -n auto
 
       - name: Upload coverage to Coveralls
         if: matrix.os == 'ubuntu-latest'

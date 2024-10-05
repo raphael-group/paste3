@@ -37,7 +37,7 @@ package-dir = {"" = "src"}
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-sv -n auto"
+addopts = "-sv"
 
 [project.optional-dependencies]
 dev = [

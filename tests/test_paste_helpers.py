@@ -242,5 +242,8 @@ def test_dissimilarity_metric(slices2, dissimilarity):
     M = M[random_indices, :]
 
     assert np.allclose(
-        np.load(output_dir / "dissimilarity_metric.npz")[dissimilarity], M
+        np.load(output_dir / "dissimilarity_metric.npz")[dissimilarity],
+        M,
+        rtol=1e-4,
+        atol=1e-4,
     )

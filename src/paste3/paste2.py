@@ -124,6 +124,47 @@ def partial_fused_gromov_wasserstein(
             " equal to min(|p|_1, |q|_1)."
         )
 
+    return conditional_gradient(
+        p,
+        q,
+        M,
+        C1,
+        C2,
+        alpha,
+        m,
+        G0,
+        loss_fun,
+        armijo,
+        log,
+        verbose,
+        numItermax,
+        stopThr,
+        stopThr2,
+    )
+
+
+def conditional_gradient(
+    p,
+    q,
+    M,
+    C1,
+    C2,
+    alpha,
+    m,
+    G0=None,
+    loss_fun="square_loss",
+    armijo=False,
+    log=False,
+    verbose=False,
+    numItermax=1000,
+    stopThr=1e-9,
+    stopThr2=1e-9,
+    f=None,
+    df=None,
+    lp_solver=None,
+    reg2=None,
+    line_search=None,
+):
     if G0 is None:
         G0 = np.outer(p, q)
 

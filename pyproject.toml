@@ -43,6 +43,7 @@ addopts = "-sv"
 dev = [
     "build",
     "pytest",
+    "pytest-xdist",
     "coverage",
     "coveralls",
     "ruff",

@@ -7,10 +7,8 @@ from paste3.helper import (
     intersect,
     to_dense_array,
     extract_data_matrix,
-    generalized_kl_divergence,
-    high_umi_gene_distance,
-    pca_distance,
     glmpca_distance,
+    dissimilarity_metric,
 )
 
 
@@ -259,6 +257,9 @@ def partial_pairwise_align(
     norm=True,
     return_obj=False,
     verbose=True,
+    maxIter=1000,
+    eps=1e-4,
+    optimizeTheta=True,
 ):
     """
     Calculates and returns optimal *partial* alignment of two slices.
@@ -275,6 +276,10 @@ def partial_pairwise_align(
     param: b_distribution - distribution of sliceB spots (1-d numpy array), otherwise default is uniform
     param: norm - scales spatial distances such that maximum spatial distance is equal to maximum gene expression dissimilarity
     param: return_obj - returns objective function value if True, nothing if False
+    param: verbose - whether to print glmpca progress
+    param maxIter - maximum number of iterations for glmpca
+    param eps - convergence threshold for glmpca
+    param optimizeTheta - whether to optimize overdispersion in glmpca
 
     return: pi - partial alignment of spots
     return: log['fgw_dist'] - objective function output of FGW-OT
@@ -297,27 +302,20 @@ def partial_pairwise_align(
         to_dense_array(extract_data_matrix(sliceA, use_rep)),
         to_dense_array(extract_data_matrix(sliceB, use_rep)),
     )
-    if dissimilarity.lower() == "euclidean" or dissimilarity.lower() == "euc":
-        M = distance.cdist(A_X, B_X)
-    elif dissimilarity.lower() == "gkl":
-        s_A = A_X + 0.01
-        s_B = B_X + 0.01
-        M = generalized_kl_divergence(s_A, s_B)
-        M /= M[M > 0].max()
-        M *= 10
-    elif dissimilarity.lower() == "kl":
-        s_A = A_X + 0.01
-        s_B = B_X + 0.01
-        M = kl_divergence(s_A, s_B)
-    elif dissimilarity.lower() == "selection_kl":
-        M = high_umi_gene_distance(A_X, B_X, 2000)
-    elif dissimilarity.lower() == "pca":
-        M = pca_distance(sliceA, sliceB, 2000, 20)
-    elif dissimilarity.lower() == "glmpca":
-        M = glmpca_distance(A_X, B_X, latent_dim=50, filter=True, verbose=verbose)
-    else:
-        print("ERROR")
-        exit(1)
+
+    M = dissimilarity_metric(
+        dissimilarity,
+        sliceA,
+        sliceB,
+        A_X,
+        B_X,
+        latent_dim=50,
+        filter=True,
+        verbose=verbose,
+        maxIter=maxIter,
+        eps=eps,
+        optimizeTheta=optimizeTheta,
+    )
 
     # init distributions
     if a_distribution is None:
@@ -359,6 +357,7 @@ def partial_pairwise_align(
         armijo=armijo,
         log=True,
         verbose=verbose,
+        numItermax=maxIter,
     )
 
     if return_obj:
@@ -380,6 +379,7 @@ def partial_pairwise_align_histology(
     norm=True,
     return_obj=False,
     verbose=False,
+    numItermax=1000,
     **kwargs,
 ):
     """
@@ -470,6 +470,7 @@ def partial_pairwise_align_histology(
         armijo=armijo,
         log=True,
         verbose=verbose,
+        numItermax=numItermax,
     )
 
     if return_obj:
@@ -490,6 +491,7 @@ def partial_pairwise_align_given_cost_matrix(
     norm=True,
     return_obj=False,
     verbose=False,
+    numItermax=1000,
     **kwargs,
 ):
     m = s
@@ -544,6 +546,7 @@ def partial_pairwise_align_given_cost_matrix(
         armijo=armijo,
         log=True,
         verbose=verbose,
+        numItermax=numItermax,
     )
 
     if return_obj:

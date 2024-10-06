@@ -50,12 +50,25 @@ def generalized_kl_divergence(X, Y):
     return np.asarray(D)
 
 
-def glmpca_distance(X, Y, latent_dim=50, filter=True, verbose=True):
+def glmpca_distance(
+    X,
+    Y,
+    latent_dim=50,
+    filter=True,
+    verbose=True,
+    maxIter=1000,
+    eps=1e-4,
+    optimizeTheta=True,
+):
     """
     param: X - np array with dim (n_samples by n_features)
     param: Y - np array with dim (m_samples by n_features)
     param: latent_dim - number of latent dimensions in glm-pca
     param: filter - whether to first select genes with highest UMI counts
+    param: verbose - whether to print glmpca progress
+    param maxIter - maximum number of iterations for glmpca
+    param eps - convergence threshold for glmpca
+    param optimizeTheta - whether to optimize overdispersion in glmpca
     """
     assert X.shape[1] == Y.shape[1], "X and Y do not have the same number of features."
 
@@ -66,7 +79,13 @@ def glmpca_distance(X, Y, latent_dim=50, filter=True, verbose=True):
         joint_matrix = joint_matrix[:, top_indices]
 
     print("Starting GLM-PCA...")
-    res = glmpca(joint_matrix.T, latent_dim, penalty=1, verbose=verbose)
+    res = glmpca(
+        joint_matrix.T,
+        latent_dim,
+        penalty=1,
+        verbose=verbose,
+        ctl={"maxIter": maxIter, "eps": eps, "optimizeTheta": optimizeTheta},
+    )
     # res = glmpca(joint_matrix.T, latent_dim, fam='nb', penalty=1, verbose=True)
     reduced_joint_matrix = res["factors"]
     # print("GLM-PCA finished with joint matrix shape " + str(reduced_joint_matrix.shape))
@@ -214,3 +233,29 @@ def kl_divergence_backend(X, Y):
     X_log_X = nx.reshape(X_log_X, (1, X_log_X.shape[0]))
     D = X_log_X.T - nx.dot(X, log_Y.T)
     return nx.to_numpy(D)
+
+
+def dissimilarity_metric(which, sliceA, sliceB, A, B, **kwargs):
+    match which:
+        case "euc" | "euclidean":
+            return scipy.spatial.distance.cdist(A, B)
+        case "gkl":
+            s_A = A + 0.01
+            s_B = B + 0.01
+            M = generalized_kl_divergence(s_A, s_B)
+            M /= M[M > 0].max()
+            M *= 10
+            return M
+        case "kl":
+            s_A = A + 0.01
+            s_B = B + 0.01
+            M = kl_divergence(s_A, s_B)
+            return M
+        case "selection_kl":
+            return high_umi_gene_distance(A, B, 2000)
+        case "pca":
+            return pca_distance(sliceA, sliceB, 2000, 20)
+        case "glmpca":
+            return glmpca_distance(A, B, **kwargs)
+        case _:
+            raise RuntimeError(f"Error: Invalid dissimilarity metric {which}")

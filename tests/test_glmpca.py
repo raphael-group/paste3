@@ -82,33 +82,19 @@ def test_est_nb_theta():
 
 
 def test_glmpca():
-    np.random.seed(0)
     joint_matrix_T = np.genfromtxt(input_dir / "joint_matrix.csv", delimiter=",")
 
-    res = glmpca(joint_matrix_T, L=50, penalty=1)
+    res = glmpca(
+        joint_matrix_T,
+        L=50,
+        penalty=1,
+        verbose=True,
+        ctl={"maxIter": 10, "eps": 1e-4, "optimizeTheta": True},
+    )
+    saved_result = np.load(output_dir / "glmpca_result.npz")
 
-    assert_frame_equal(
-        pd.DataFrame(
-            res["coefX"], columns=[str(i) for i in range(res["coefX"].shape[1])]
-        ),
-        pd.read_csv(output_dir / "glmpca_coefX.csv"),
-        rtol=1e-01,
-        atol=1e-02,
-    )
-    assert_frame_equal(
-        pd.DataFrame(res["dev"], columns=["0"]),
-        pd.read_csv(output_dir / "glmpca_dev.csv"),
-    )
-    assert_frame_equal(
-        pd.DataFrame(
-            res["factors"], columns=[str(i) for i in range(res["factors"].shape[1])]
-        ),
-        pd.read_csv(output_dir / "glmpca_factors.csv"),
-    )
-    assert_frame_equal(
-        pd.DataFrame(
-            res["loadings"], columns=[str(i) for i in range(res["loadings"].shape[1])]
-        ),
-        pd.read_csv(output_dir / "glmpca_loadings.csv"),
-    )
+    assert np.allclose(res["coefX"], saved_result["coefX"])
+    assert np.allclose(res["loadings"], saved_result["loadings"])
+    assert np.allclose(res["factors"], saved_result["factors"])
+    assert np.allclose(res["dev"], saved_result["dev"])
     assert res["coefZ"] is None

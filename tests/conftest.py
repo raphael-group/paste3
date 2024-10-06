@@ -1,28 +1,13 @@
 from pathlib import Path
 import numpy as np
 import scanpy as sc
+import torch
 import pytest
 from paste3.helper import intersect
-import torch
 import ot.backend
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
-
-
-def pytest_generate_tests(metafunc):
-    if "use_gpu" and "backend" in metafunc.fixturenames:
-        if torch.cuda.is_available():
-            metafunc.parametrize(
-                "use_gpu, backend",
-                [(True, ot.backend.TorchBackend()), (False, ot.backend.NumpyBackend())],
-            )
-        else:
-            metafunc.parametrize(
-                "use_gpu, backend", [(False, ot.backend.NumpyBackend())]
-            )
-    if "gpu_verbose" in metafunc.fixturenames:
-        metafunc.parametrize("gpu_verbose", [True, False])
 
 
 @pytest.fixture(scope="session")
@@ -34,7 +19,7 @@ def slices():
         c_fpath = Path(f"{input_dir}/slice{i}_coor.csv")
 
         # Create ann data object of each slice and add other properties
-        _slice = sc.read_csv(s_fpath)
+        _slice = sc.read_csv(s_fpath, dtype="float64")
         _slice.obsm["spatial"] = np.genfromtxt(c_fpath, delimiter=",")
         _slice.obsm["weights"] = np.ones((_slice.shape[0],)) / _slice.shape[0]
         slices.append(_slice)
@@ -84,3 +69,10 @@ def slices2():
         slices.append(_slice)
 
     return slices
+
+
+@pytest.fixture(scope="function", autouse=True)
+def seed():
+    np.random.seed(0)
+    torch.manual_seed(0)
+    torch.cuda.manual_seed(0)

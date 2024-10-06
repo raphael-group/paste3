@@ -104,9 +104,6 @@ def pairwise_align(
     coordinatesB = sliceB.obsm["spatial"].copy()
     coordinatesB = nx.from_numpy(coordinatesB)
 
-    if isinstance(nx, ot.backend.TorchBackend):
-        coordinatesA = coordinatesA.float()
-        coordinatesB = coordinatesB.float()
     D_A = ot.dist(coordinatesA, coordinatesA, metric="euclidean")
     D_B = ot.dist(coordinatesB, coordinatesB, metric="euclidean")
 
@@ -132,9 +129,6 @@ def pairwise_align(
         M = kl_divergence_backend(s_A, s_B)
         M = nx.from_numpy(M)
 
-    if isinstance(nx, ot.backend.TorchBackend) and use_gpu:
-        M = M.cuda()
-
     # init distributions
     if a_distribution is None:
         a = nx.ones((sliceA.shape[0],)) / sliceA.shape[0]
@@ -146,9 +140,13 @@ def pairwise_align(
     else:
         b = nx.from_numpy(b_distribution)
 
-    if isinstance(nx, ot.backend.TorchBackend) and use_gpu:
-        a = a.cuda()
-        b = b.cuda()
+    if isinstance(nx, ot.backend.TorchBackend):
+        a = a.double()
+        b = b.double()
+        if use_gpu:
+            M = M.cuda()
+            a = a.cuda()
+            b = b.cuda()
 
     if norm:
         D_A /= nx.min(D_A[D_A > 0])
@@ -158,7 +156,6 @@ def pairwise_align(
     if G_init is not None:
         G_init = nx.from_numpy(G_init)
         if isinstance(nx, ot.backend.TorchBackend):
-            G_init = G_init.float()
             if use_gpu:
                 G_init.cuda()
     pi, logw = my_fused_gromov_wasserstein(
@@ -391,6 +388,7 @@ def center_ot(
     G_inits=None,
     distributions=None,
     verbose=False,
+    numItermax=200,
 ):
     center_slice = AnnData(np.dot(W, H))
     center_slice.var.index = common_genes
@@ -409,6 +407,7 @@ def center_ot(
             alpha=alpha,
             dissimilarity=dissimilarity,
             norm=norm,
+            numItermax=numItermax,
             return_obj=True,
             G_init=G_inits[i],
             b_distribution=distributions[i],

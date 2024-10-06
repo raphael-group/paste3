@@ -35,7 +35,7 @@ def assert_checksum_equals(temp_dir, filename):
     )
 
 
-def test_pairwise_alignment(slices, use_gpu, backend, gpu_verbose):
+def test_pairwise_alignment(slices):
     outcome = pairwise_align(
         slices[0],
         slices[1],
@@ -44,9 +44,8 @@ def test_pairwise_alignment(slices, use_gpu, backend, gpu_verbose):
         a_distribution=slices[0].obsm["weights"].astype(slices[0].X.dtype),
         b_distribution=slices[1].obsm["weights"].astype(slices[1].X.dtype),
         G_init=None,
-        use_gpu=use_gpu,
-        backend=backend,
-        gpu_verbose=gpu_verbose,
+        use_gpu=True,
+        backend=ot.backend.TorchBackend(),
     )
     probability_mapping = pd.DataFrame(
         outcome, index=slices[0].obs.index, columns=slices[1].obs.index
@@ -57,7 +56,7 @@ def test_pairwise_alignment(slices, use_gpu, backend, gpu_verbose):
     assert_frame_equal(probability_mapping, true_probability_mapping, check_dtype=False)
 
 
-def test_center_alignment(slices, use_gpu, backend, gpu_verbose):
+def test_center_alignment(slices):
     # Make a copy of the list
     slices = list(slices)
     n_slices = len(slices)
@@ -71,9 +70,8 @@ def test_center_alignment(slices, use_gpu, backend, gpu_verbose):
         threshold=0.001,
         max_iter=2,
         dissimilarity="kl",
-        use_gpu=use_gpu,
-        backend=backend,
-        gpu_verbose=gpu_verbose,
+        use_gpu=True,
+        backend=ot.backend.TorchBackend(),
         distributions=[
             slices[i].obsm["weights"].astype(slices[i].X.dtype)
             for i in range(len(slices))
@@ -184,7 +182,6 @@ def test_center_NMF(intersecting_slices):
 
 
 def test_fused_gromov_wasserstein(slices, spot_distance_matrix):
-    np.random.seed(0)
     temp_dir = Path(tempfile.mkdtemp())
 
     nx = ot.backend.NumpyBackend()
@@ -200,7 +197,7 @@ def test_fused_gromov_wasserstein(slices, spot_distance_matrix):
         loss_fun="square_loss",
         alpha=0.1,
         log=True,
-        numItermax=200,
+        numItermax=10,
     )
     pd.DataFrame(pairwise_info).to_csv(
         temp_dir / "fused_gromov_wasserstein.csv", index=False

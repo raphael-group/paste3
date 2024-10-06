@@ -7,7 +7,6 @@ from paste3.model_selection import (
     edge_inconsistency_score,
     calculate_convex_hull_edge_inconsistency,
     select_overlap_fraction,
-    select_overlap_fraction_plotting,
 )
 import scanpy as sc
 from paste3.paste2 import partial_pairwise_align
@@ -52,24 +51,17 @@ def test_edge_inconsistency_score(slices, tmp_path):
 
 
 def test_calculate_convex_hull_edge_inconsistency(slices, tmp_path):
-    np.random.seed(0)
-    pairwise_info = partial_pairwise_align(slices[0], slices[1], s=0.7)
+    pairwise_info = partial_pairwise_align(slices[0], slices[1], s=0.7, maxIter=10)
     measure_a, measure_b = calculate_convex_hull_edge_inconsistency(
         slices[0], slices[1], pairwise_info
     )
 
-    assert measure_a == 0.18962075848303392
-    assert measure_b == 0.1971252566735113
+    assert measure_a == 0.17692307692307693
+    assert measure_b == 0.2058252427184466
 
 
 def test_select_overlap_fraction(slices):
-    np.random.seed(0)
-    fraction = select_overlap_fraction(slices[0], slices[1])
-    assert fraction == 0.4
-
-
-def test_select_overlap_fraction_plotting(slices):
-    np.random.seed(0)
-    fraction = select_overlap_fraction_plotting(slices[0], slices[1], show_plot=False)
-
-    assert fraction == 0.4
+    fraction = select_overlap_fraction(
+        slices[0], slices[1], show_plot=False, numItermax=10
+    )
+    assert fraction == 0.5

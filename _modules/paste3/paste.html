@@ -180,9 +180,6 @@
     <span class="n">coordinatesB</span> <span class="o">=</span> <span class="n">sliceB</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="n">coordinatesB</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">coordinatesB</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">):</span>
-        <span class="n">coordinatesA</span> <span class="o">=</span> <span class="n">coordinatesA</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
-        <span class="n">coordinatesB</span> <span class="o">=</span> <span class="n">coordinatesB</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
     <span class="n">D_A</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">coordinatesA</span><span class="p">,</span> <span class="n">coordinatesA</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;euclidean&quot;</span><span class="p">)</span>
     <span class="n">D_B</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">coordinatesB</span><span class="p">,</span> <span class="n">coordinatesB</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;euclidean&quot;</span><span class="p">)</span>
 
@@ -208,9 +205,6 @@
         <span class="n">M</span> <span class="o">=</span> <span class="n">kl_divergence_backend</span><span class="p">(</span><span class="n">s_A</span><span class="p">,</span> <span class="n">s_B</span><span class="p">)</span>
         <span class="n">M</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">)</span> <span class="ow">and</span> <span class="n">use_gpu</span><span class="p">:</span>
-        <span class="n">M</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
-
     <span class="c1"># init distributions</span>
     <span class="k">if</span> <span class="n">a_distribution</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">a</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">sliceA</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],))</span> <span class="o">/</span> <span class="n">sliceA</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -222,9 +216,13 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">b</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">b_distribution</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">)</span> <span class="ow">and</span> <span class="n">use_gpu</span><span class="p">:</span>
-        <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
-        <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">use_gpu</span><span class="p">:</span>
+            <span class="n">M</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="n">norm</span><span class="p">:</span>
         <span class="n">D_A</span> <span class="o">/=</span> <span class="n">nx</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">D_A</span><span class="p">[</span><span class="n">D_A</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span>
@@ -234,7 +232,6 @@
     <span class="k">if</span> <span class="n">G_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">G_init</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">G_init</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">):</span>
-            <span class="n">G_init</span> <span class="o">=</span> <span class="n">G_init</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">use_gpu</span><span class="p">:</span>
                 <span class="n">G_init</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
     <span class="n">pi</span><span class="p">,</span> <span class="n">logw</span> <span class="o">=</span> <span class="n">my_fused_gromov_wasserstein</span><span class="p">(</span>
@@ -467,6 +464,7 @@
     <span class="n">G_inits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">distributions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">numItermax</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="n">center_slice</span> <span class="o">=</span> <span class="n">AnnData</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">))</span>
     <span class="n">center_slice</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">common_genes</span>
@@ -485,6 +483,7 @@
             <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
             <span class="n">dissimilarity</span><span class="o">=</span><span class="n">dissimilarity</span><span class="p">,</span>
             <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span>
+            <span class="n">numItermax</span><span class="o">=</span><span class="n">numItermax</span><span class="p">,</span>
             <span class="n">return_obj</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">G_init</span><span class="o">=</span><span class="n">G_inits</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
             <span class="n">b_distribution</span><span class="o">=</span><span class="n">distributions</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>

@@ -80,16 +80,13 @@ def gwgrad_partial(C1, C2, T, loss_fun="square_loss"):
         def h2(b):
             return np.log(b + 1e-15)
 
-    # cC1 = np.dot(C1 ** 2 / 2, np.dot(T, np.ones(C2.shape[0]).reshape(-1, 1)))
     A = np.dot(f1(C1), np.dot(T, np.ones(C2.shape[0]).reshape(-1, 1)))
 
-    # cC2 = np.dot(np.dot(np.ones(C1.shape[0]).reshape(1, -1), T), C2 ** 2 / 2)
     B = np.dot(
         np.dot(np.ones(C1.shape[0]).reshape(1, -1), T), f2(C2).T
     )  # does f2(C2) here need transpose?
 
     constC = A + B
-    # C = -np.dot(C1, T).dot(C2.T)
     C = -np.dot(h1(C1), T).dot(h2(C2).T)
     tens = constC + C
     return tens * 2
@@ -118,7 +115,6 @@ def partial_fused_gromov_wasserstein(
     stopThr2=1e-9,
 ):
     if m is None:
-        # m = np.min((np.sum(p), np.sum(q)))
         raise ValueError("Parameter m is not provided.")
     elif m < 0:
         raise ValueError("Problem infeasible. Parameter m should be greater" " than 0.")
@@ -151,9 +147,7 @@ def partial_fused_gromov_wasserstein(
             + "-" * 48
         )
         print("{:5d}|{:8e}|{:8e}|{:8e}".format(cpt, f_val, 0, 0))
-        # print_fgwloss_partial(alpha, M, C1, C2, G0, loss_fun)
 
-    # while err > tol and cpt < numItermax:
     while cpt < numItermax:
         Gprev = np.copy(G0)
         old_fval = f_val
@@ -179,12 +173,6 @@ def partial_fused_gromov_wasserstein(
             err = np.linalg.norm(G0 - Gprev)
             if log:
                 log["err"].append(err)
-            # if verbose:
-            #     if cpt % 200 == 0:
-            #         print('{:5s}|{:12s}|{:12s}'.format(
-            #             'It.', 'Err', 'Loss') + '\n' + '-' * 31)
-            #         print('{:5d}|{:8e}|{:8e}'.format(cpt, err,
-            #                                          fgwloss_partial(alpha, M, C1, C2, G0, loss_fun)))
 
         deltaG = G0 - Gprev
 
@@ -193,12 +181,7 @@ def partial_fused_gromov_wasserstein(
             b = (1 - alpha) * wloss(M, deltaG) + 2 * alpha * np.sum(
                 gwgrad_partial(C1, C2, deltaG, loss_fun) * 0.5 * Gprev
             )
-            # c = (1 - alpha) * wloss(M, Gprev) + alpha * gwloss_partial(C1, C2, Gprev, loss_fun)
-            # c = fgwloss_partial(alpha, M, C1, C2, Gprev, loss_fun)
-
             gamma = ot.optim.solve_1d_linesearch_quad(a, b)
-            # gamma = ot.optim.solve_1d_linesearch_quad(a, b, c)
-            # f_val = a * gamma ** 2 + b * gamma + c
         else:
 
             def f(x, alpha, M, C1, C2, lossfunc):
@@ -210,7 +193,6 @@ def partial_fused_gromov_wasserstein(
             old_val = fgwloss_partial(alpha, M, C1, C2, xk, loss_fun)
             args = (alpha, M, C1, C2, loss_fun)
             gamma, fc, fa = ot.optim.line_search_armijo(f, xk, pk, gfk, old_val, args)
-            # f_val = f(xk + gamma * pk, alpha, M, C1, C2, loss_fun)
 
         if gamma == 0:
             cpt = numItermax
@@ -218,7 +200,6 @@ def partial_fused_gromov_wasserstein(
         f_val = fgwloss_partial(alpha, M, C1, C2, G0, loss_fun)
         cpt += 1
 
-        # TODO: better stopping criteria?
         abs_delta_fval = abs(f_val - old_fval)
         relative_delta_fval = abs_delta_fval / abs(f_val)
         if relative_delta_fval < stopThr or abs_delta_fval < stopThr2:
@@ -226,15 +207,11 @@ def partial_fused_gromov_wasserstein(
         if log:
             log["loss"].append(f_val)
         if verbose:
-            # if cpt % 20 == 0:
-            #     print('{:5s}|{:12s}|{:8s}|{:8s}'.format(
-            #         'It.', 'Loss', 'Relative loss', 'Absolute loss') + '\n' + '-' * 48)
             print(
                 "{:5d}|{:8e}|{:8e}|{:8e}".format(
                     cpt, f_val, relative_delta_fval, abs_delta_fval
                 )
             )
-            # print_fgwloss_partial(alpha, M, C1, C2, G0, loss_fun)
 
     if log:
         log["partial_fgw_cost"] = fgwloss_partial(alpha, M, C1, C2, G0, loss_fun)
@@ -291,7 +268,6 @@ def partial_pairwise_align(
     common_genes = intersect(sliceA.var.index, sliceB.var.index)
     sliceA = sliceA[:, common_genes]
     sliceB = sliceB[:, common_genes]
-    # print('Filtered all slices for common genes. There are ' + str(len(common_genes)) + ' common genes.')
 
     # Calculate spatial distances
     D_A = distance.cdist(sliceA.obsm["spatial"], sliceA.obsm["spatial"])
@@ -394,7 +370,6 @@ def partial_pairwise_align_histology(
     common_genes = intersect(sliceA.var.index, sliceB.var.index)
     sliceA = sliceA[:, common_genes]
     sliceB = sliceB[:, common_genes]
-    # print('Filtered all slices for common genes. There are ' + str(len(common_genes)) + ' common genes.')
 
     # Calculate spatial distances
     D_A = distance.cdist(sliceA.obsm["spatial"], sliceA.obsm["spatial"])
@@ -418,16 +393,11 @@ def partial_pairwise_align_histology(
         exit(1)
 
     # Calculate RGB dissimilarity
-    # sliceA_rgb = (sliceA.obsm['rgb'] - np.mean(sliceA.obsm['rgb'], axis=0)) / np.std(sliceA.obsm['rgb'], axis=0)
-    # sliceB_rgb = (sliceB.obsm['rgb'] - np.mean(sliceB.obsm['rgb'], axis=0)) / np.std(sliceB.obsm['rgb'], axis=0)
     M_rgb = distance.cdist(sliceA.obsm["rgb"], sliceB.obsm["rgb"])
-    # M_rgb = distance.cdist(sliceA_rgb, sliceB_rgb)
 
     # Scale M_exp and M_rgb, obtain M by taking half from each
     M_rgb /= M_rgb[M_rgb > 0].max()
     M_rgb *= M_exp.max()
-    # M_exp /= M_exp[M_exp > 0].max()
-    # M_rgb /= M_rgb[M_rgb > 0].max()
     M = 0.5 * M_exp + 0.5 * M_rgb
 
     # init distributions

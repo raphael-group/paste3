@@ -609,7 +609,7 @@ def solve_gromov_linesearch(
         International Conference on Machine Learning (ICML). 2019.
     """
     if nx is None:
-        G, deltaG, C1, C2, M = ot.utils.list_to_array(G, deltaG, C1, C2, M)
+        G, deltaG, C1, C2 = ot.utils.list_to_array(G, deltaG, C1, C2)
 
         if isinstance(M, int) or isinstance(M, float):
             nx = ot.backend.get_backend(G, deltaG, C1, C2)

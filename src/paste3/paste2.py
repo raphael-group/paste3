@@ -138,6 +138,8 @@ def partial_fused_gromov_wasserstein(
     if log:
         log = {"err": [], "loss": []}
     f_val = fgwloss_partial(alpha, M, C1, C2, G0, loss_fun)
+    if log:
+        log["loss"].append(f_val)
     if verbose:
         print(
             "{:5s}|{:12s}|{:8s}|{:8s}".format(
@@ -173,7 +175,7 @@ def partial_fused_gromov_wasserstein(
             err = np.linalg.norm(G0 - Gprev)
             if log:
                 log["err"].append(err)
-
+        cpt += 1
         deltaG = G0 - Gprev
 
         if not armijo:
@@ -198,7 +200,6 @@ def partial_fused_gromov_wasserstein(
             cpt = numItermax
         G0 = Gprev + gamma * deltaG
         f_val = fgwloss_partial(alpha, M, C1, C2, G0, loss_fun)
-        cpt += 1
 
         abs_delta_fval = abs(f_val - old_fval)
         relative_delta_fval = abs_delta_fval / abs(f_val)

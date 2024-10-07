@@ -1,7 +1,7 @@
 import numpy as np
 import ot
 from scipy.spatial import distance
-
+from ot.lp import emd
 from paste3.helper import (
     kl_divergence,
     intersect,
@@ -96,6 +96,18 @@ def fgwgrad_partial(alpha, M, C1, C2, T, loss_fun="square_loss"):
     return (1 - alpha) * M + alpha * gwgrad_partial(C1, C2, T, loss_fun)
 
 
+def line_search_partial(reg, M, G, C1, C2, deltaG, loss_fun="square_loss"):
+    dot = np.dot(np.dot(C1, deltaG), C2.T)
+    a = reg * np.sum(dot * deltaG)
+    b = (1 - reg) * np.sum(M * deltaG) + 2 * reg * np.sum(
+        gwgrad_partial(C1, C2, deltaG, loss_fun) * 0.5 * G
+    )
+    alpha = ot.optim.solve_1d_linesearch_quad(a, b)
+    G = G + alpha * deltaG
+    cost_G = fgwloss_partial(reg, M, C1, C2, G, loss_fun)
+    return alpha, a, cost_G
+
+
 def partial_fused_gromov_wasserstein(
     M,
     C1,
@@ -113,6 +125,7 @@ def partial_fused_gromov_wasserstein(
     tol=1e-7,
     stopThr=1e-9,
     stopThr2=1e-9,
+    numItermaxEmd=100000,
 ):
     if m is None:
         raise ValueError("Parameter m is not provided.")
@@ -124,142 +137,80 @@ def partial_fused_gromov_wasserstein(
             " equal to min(|p|_1, |q|_1)."
         )
 
-    return conditional_gradient(
+    if log:
+        _log = {"err": []}
+    count = 0
+    dummy = 1
+
+    def f(G):
+        p = np.sum(G, axis=1).reshape(-1, 1)
+        q = np.sum(G, axis=0).reshape(1, -1)
+        constC, hC1, hC2 = ot.gromov.init_matrix(C1, C2, p, q, loss_fun)
+        return ot.gromov.gwloss(constC, hC1, hC2, G)
+
+    def df(G):
+        p = np.sum(G, axis=1).reshape(-1, 1)
+        q = np.sum(G, axis=0).reshape(1, -1)
+        constC, hC1, hC2 = ot.gromov.init_matrix(C1, C2, p, q, loss_fun)
+        return ot.gromov.gwggrad(constC, hC1, hC2, G)
+
+    def line_search(cost, G, deltaG, Mi, cost_G, **kwargs):
+        nonlocal count
+        if log:
+            # keep track of error only on every 10th iteration
+            if count % 10 == 0:
+                _log["err"].append(np.linalg.norm(deltaG))
+        count += 1
+
+        if armijo:
+            return ot.optim.line_search_armijo(cost, G, deltaG, Mi, cost_G)
+        else:
+            return line_search_partial(
+                alpha, M, G, C1, C2, deltaG, loss_fun="square_loss"
+            )
+
+    def lp_solver(a, b, Mi, **kwargs):
+        dummy = kwargs.get("dummy") if kwargs.get("dummy") else 1
+
+        _a = np.append(a, [(np.sum(b) - m) / dummy] * dummy)
+        _b = np.append(b, [(np.sum(a) - m) / dummy] * dummy)
+
+        _emd = np.pad(Mi, [(0, dummy)] * 2, mode="constant")
+        _emd[-dummy:, -dummy:] = np.max(Mi) * 1e2
+
+        Gc, innerlog_ = emd(_a, _b, _emd, numItermaxEmd, log=True)
+        if innerlog_.get("warning"):
+            raise ValueError(
+                "Error in EMD resolution: Increase the number of dummy points."
+            )
+        return Gc[: len(a), : len(b)], innerlog_
+
+    return_val = ot.optim.generic_conditional_gradient(
         p,
         q,
-        M,
-        C1,
-        C2,
+        (1 - alpha) * M,
+        f,
+        df,
         alpha,
-        m,
+        None,
+        lp_solver,
+        line_search,
         G0,
-        loss_fun,
-        armijo,
-        log,
-        verbose,
         numItermax,
         stopThr,
         stopThr2,
+        verbose,
+        log,
+        nb_dummies=dummy,
     )
 
-
-def conditional_gradient(
-    p,
-    q,
-    M,
-    C1,
-    C2,
-    alpha,
-    m,
-    G0=None,
-    loss_fun="square_loss",
-    armijo=False,
-    log=False,
-    verbose=False,
-    numItermax=1000,
-    stopThr=1e-9,
-    stopThr2=1e-9,
-    f=None,
-    df=None,
-    lp_solver=None,
-    reg2=None,
-    line_search=None,
-):
-    if G0 is None:
-        G0 = np.outer(p, q)
-
-    nb_dummies = 1
-    dim_G_extended = (len(p) + nb_dummies, len(q) + nb_dummies)
-    q_extended = np.append(q, [(np.sum(p) - m) / nb_dummies] * nb_dummies)
-    p_extended = np.append(p, [(np.sum(q) - m) / nb_dummies] * nb_dummies)
-
-    cpt = 0
-    err = 1
-
     if log:
-        log = {"err": [], "loss": []}
-    f_val = fgwloss_partial(alpha, M, C1, C2, G0, loss_fun)
-    if log:
-        log["loss"].append(f_val)
-    if verbose:
-        print(
-            "{:5s}|{:12s}|{:8s}|{:8s}".format(
-                "It.", "Loss", "Relative loss", "Absolute loss"
-            )
-            + "\n"
-            + "-" * 48
-        )
-        print("{:5d}|{:8e}|{:8e}|{:8e}".format(cpt, f_val, 0, 0))
-
-    while cpt < numItermax:
-        Gprev = np.copy(G0)
-        old_fval = f_val
-
-        gradF = fgwgrad_partial(alpha, M, C1, C2, G0, loss_fun)
-        gradF_emd = np.zeros(dim_G_extended)
-        gradF_emd[: len(p), : len(q)] = gradF
-        gradF_emd[-nb_dummies:, -nb_dummies:] = np.max(gradF) * 1e2
-        gradF_emd = np.asarray(gradF_emd, dtype=np.float64)
-
-        Gc, logemd = ot.lp.emd(
-            p_extended, q_extended, gradF_emd, numItermax=1000000, log=True
-        )
-        if logemd["warning"] is not None:
-            raise ValueError(
-                "Error in the EMD resolution: try to increase the"
-                " number of dummy points"
-            )
-
-        G0 = Gc[: len(p), : len(q)]
-
-        if cpt % 10 == 0:  # to speed up the computations
-            err = np.linalg.norm(G0 - Gprev)
-            if log:
-                log["err"].append(err)
-        cpt += 1
-        deltaG = G0 - Gprev
-
-        if not armijo:
-            a = alpha * gwloss_partial(C1, C2, deltaG, loss_fun)
-            b = (1 - alpha) * wloss(M, deltaG) + 2 * alpha * np.sum(
-                gwgrad_partial(C1, C2, deltaG, loss_fun) * 0.5 * Gprev
-            )
-            gamma = ot.optim.solve_1d_linesearch_quad(a, b)
-        else:
-
-            def f(x, alpha, M, C1, C2, lossfunc):
-                return fgwloss_partial(alpha, M, C1, C2, x, lossfunc)
-
-            xk = Gprev
-            pk = deltaG
-            gfk = fgwgrad_partial(alpha, M, C1, C2, xk, loss_fun)
-            old_val = fgwloss_partial(alpha, M, C1, C2, xk, loss_fun)
-            args = (alpha, M, C1, C2, loss_fun)
-            gamma, fc, fa = ot.optim.line_search_armijo(f, xk, pk, gfk, old_val, args)
-
-        if gamma == 0:
-            cpt = numItermax
-        G0 = Gprev + gamma * deltaG
-        f_val = fgwloss_partial(alpha, M, C1, C2, G0, loss_fun)
-
-        abs_delta_fval = abs(f_val - old_fval)
-        relative_delta_fval = abs_delta_fval / abs(f_val)
-        if relative_delta_fval < stopThr or abs_delta_fval < stopThr2:
-            cpt = numItermax
-        if log:
-            log["loss"].append(f_val)
-        if verbose:
-            print(
-                "{:5d}|{:8e}|{:8e}|{:8e}".format(
-                    cpt, f_val, relative_delta_fval, abs_delta_fval
-                )
-            )
-
-    if log:
-        log["partial_fgw_cost"] = fgwloss_partial(alpha, M, C1, C2, G0, loss_fun)
-        return G0[: len(p), : len(q)], log
+        res, log = return_val
+        log["partial_fgw_cost"] = log["loss"][-1]
+        log["err"] = _log["err"]
+        return res, log
     else:
-        return G0[: len(p), : len(q)]
+        return return_val
 
 
 def partial_pairwise_align(

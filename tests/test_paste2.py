@@ -35,9 +35,6 @@ def test_partial_pairwise_align_glmpca(fn, slices2):
         verbose=True,
         maxIter=10,
     )
-    pd.DataFrame(pi_BC).to_csv(
-        output_dir / "partial_pairwise_align_glmpca.csv", index=False
-    )
 
     assert_frame_equal(
         pd.DataFrame(pi_BC, columns=[str(i) for i in range(pi_BC.shape[1])]),
@@ -169,11 +166,11 @@ def test_partial_fused_gromov_wasserstein(slices, armijo, expected_log, filename
         distance_b,
         np.ones((sliceA.shape[0],)) / sliceA.shape[0],
         np.ones((sliceB.shape[0],)) / sliceB.shape[0],
-        armijo=armijo,
         alpha=0.1,
         m=0.7,
         G0=None,
         loss_fun="square_loss",
+        armijo=armijo,
         log=True,
     )
 
@@ -214,7 +211,7 @@ def test_gloss_partial(slices):
 
     output = gwloss_partial(distance_a, distance_b, G0)
 
-    expected_output = 1135.0163192178504
+    expected_output = pytest.approx(1135.0163192178504)
     assert output == expected_output
 
 

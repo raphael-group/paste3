@@ -13,8 +13,14 @@ from paste3.helper import (
 
 
 def gwloss_partial(C1, C2, T, loss_fun="square_loss"):
-    g = gwgrad_partial(C1, C2, T, loss_fun) * 0.5
-    return np.sum(g * T)
+    constC, hC1, hC2 = ot.gromov.init_matrix(
+        C1,
+        C2,
+        np.sum(T, axis=1).reshape(-1, 1),
+        np.sum(T, axis=0).reshape(1, -1),
+        loss_fun,
+    )
+    return ot.gromov.gwloss(constC, hC1, hC2, T)
 
 
 def wloss(M, T):
@@ -31,65 +37,14 @@ def print_fgwloss_partial(alpha, M, C1, C2, T, loss_fun="square_loss"):
 
 
 def gwgrad_partial(C1, C2, T, loss_fun="square_loss"):
-    """Compute the GW gradient, as one term in the FGW gradient.
-
-    Note: we can not use the trick in Peyre16 as the marginals may not sum to 1.
-
-    Parameters
-    ----------
-    C1: array of shape (n_p,n_p)
-        intra-source cost matrix
-
-    C2: array of shape (n_q,n_q)
-        intra-target cost matrix
-
-    T : array of shape(n_p, n_q)
-        Transport matrix
-
-    loss_fun
-
-    Returns
-    -------
-    numpy.array of shape (n_p, n_q)
-        gradient
-    """
-    if loss_fun == "square_loss":
-
-        def f1(a):
-            return a**2
-
-        def f2(b):
-            return b**2
-
-        def h1(a):
-            return a
-
-        def h2(b):
-            return 2 * b
-    elif loss_fun == "kl_loss":
-
-        def f1(a):
-            return a * np.log(a + 1e-15) - a
-
-        def f2(b):
-            return b
-
-        def h1(a):
-            return a
-
-        def h2(b):
-            return np.log(b + 1e-15)
-
-    A = np.dot(f1(C1), np.dot(T, np.ones(C2.shape[0]).reshape(-1, 1)))
-
-    B = np.dot(
-        np.dot(np.ones(C1.shape[0]).reshape(1, -1), T), f2(C2).T
-    )  # does f2(C2) here need transpose?
-
-    constC = A + B
-    C = -np.dot(h1(C1), T).dot(h2(C2).T)
-    tens = constC + C
-    return tens * 2
+    constC, hC1, hC2 = ot.gromov.init_matrix(
+        C1,
+        C2,
+        np.sum(T, axis=1).reshape(-1, 1),
+        np.sum(T, axis=0).reshape(1, -1),
+        loss_fun,
+    )
+    return ot.gromov.gwggrad(constC, hC1, hC2, T)
 
 
 def fgwgrad_partial(alpha, M, C1, C2, T, loss_fun="square_loss"):
@@ -97,14 +52,22 @@ def fgwgrad_partial(alpha, M, C1, C2, T, loss_fun="square_loss"):
 
 
 def line_search_partial(reg, M, G, C1, C2, deltaG, loss_fun="square_loss"):
+    constC, hC1, hC2 = ot.gromov.init_matrix(
+        C1,
+        C2,
+        np.sum(deltaG, axis=1).reshape(-1, 1),
+        np.sum(deltaG, axis=0).reshape(1, -1),
+        loss_fun,
+    )
+
     dot = np.dot(np.dot(C1, deltaG), C2.T)
     a = reg * np.sum(dot * deltaG)
     b = (1 - reg) * np.sum(M * deltaG) + 2 * reg * np.sum(
-        gwgrad_partial(C1, C2, deltaG, loss_fun) * 0.5 * G
+        ot.gromov.gwggrad(constC, hC1, hC2, deltaG) * 0.5 * G
     )
     alpha = ot.optim.solve_1d_linesearch_quad(a, b)
     G = G + alpha * deltaG
-    cost_G = fgwloss_partial(reg, M, C1, C2, G, loss_fun)
+    cost_G = (1 - reg) * wloss(M, G) + reg * gwloss_partial(C1, C2, G, loss_fun)
     return alpha, a, cost_G
 
 
@@ -144,15 +107,23 @@ def partial_fused_gromov_wasserstein(
     _q = np.append(q, [(np.sum(q) - m) / dummy] * dummy)
 
     def f(G):
-        p = np.sum(G, axis=1).reshape(-1, 1)
-        q = np.sum(G, axis=0).reshape(1, -1)
-        constC, hC1, hC2 = ot.gromov.init_matrix(C1, C2, p, q, loss_fun)
+        constC, hC1, hC2 = ot.gromov.init_matrix(
+            C1,
+            C2,
+            np.sum(G, axis=1).reshape(-1, 1),
+            np.sum(G, axis=0).reshape(1, -1),
+            loss_fun,
+        )
         return ot.gromov.gwloss(constC, hC1, hC2, G)
 
     def df(G):
-        p = np.sum(G, axis=1).reshape(-1, 1)
-        q = np.sum(G, axis=0).reshape(1, -1)
-        constC, hC1, hC2 = ot.gromov.init_matrix(C1, C2, p, q, loss_fun)
+        constC, hC1, hC2 = ot.gromov.init_matrix(
+            C1,
+            C2,
+            np.sum(G, axis=1).reshape(-1, 1),
+            np.sum(G, axis=0).reshape(1, -1),
+            loss_fun,
+        )
         return ot.gromov.gwggrad(constC, hC1, hC2, G)
 
     def line_search(cost, G, deltaG, Mi, cost_G, **kwargs):

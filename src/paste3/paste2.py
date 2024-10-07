@@ -195,7 +195,6 @@ def partial_fused_gromov_wasserstein(
         stopThr2,
         verbose,
         log,
-        nb_dummies=dummy,
     )
 
     if log:

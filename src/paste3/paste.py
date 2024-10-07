@@ -2,6 +2,7 @@ from typing import List, Tuple, Optional
 import numpy as np
 from anndata import AnnData
 import ot
+from ot.lp import emd
 from sklearn.decomposition import NMF
 from paste3.helper import (
     intersect,
@@ -476,6 +477,7 @@ def my_fused_gromov_wasserstein(
     tol_rel=1e-9,
     tol_abs=1e-9,
     use_gpu=False,
+    numItermaxEmd=100000,
     **kwargs,
 ):
     """
@@ -518,15 +520,20 @@ def my_fused_gromov_wasserstein(
                 G, deltaG, cost_G, C1, C2, M=0.0, reg=1.0, nx=nx, **kwargs
             )
 
-    return_val = ot.optim.cg(
+    def lp_solver(a, b, M, **kwargs):
+        return emd(a, b, M, numItermaxEmd, log=True)
+
+    return_val = ot.optim.generic_conditional_gradient(
         p,
         q,
         (1 - alpha) * M,
-        alpha,
         f,
         df,
-        G0,
+        alpha,
+        None,
+        lp_solver,
         line_search,
+        G0,
         log=log,
         numItermax=numItermax,
         stopThr=tol_rel,

@@ -508,58 +508,41 @@ def my_fused_gromov_wasserstein(
     if loss_fun == "kl_loss":
         armijo = True  # there is no closed form line-search with KL
 
-    if armijo:
-
-        def line_search(cost, G, deltaG, Mi, cost_G, **kwargs):
+    def line_search(cost, G, deltaG, Mi, cost_G, **kwargs):
+        if armijo:
             return ot.optim.line_search_armijo(
                 cost, G, deltaG, Mi, cost_G, nx=nx, **kwargs
             )
-    else:
-
-        def line_search(cost, G, deltaG, Mi, cost_G, **kwargs):
+        else:
             return solve_gromov_linesearch(
                 G, deltaG, cost_G, C1, C2, M=0.0, reg=1.0, nx=nx, **kwargs
             )
 
+    return_val = ot.optim.cg(
+        p,
+        q,
+        (1 - alpha) * M,
+        alpha,
+        f,
+        df,
+        G0,
+        line_search,
+        log=log,
+        numItermax=numItermax,
+        stopThr=tol_rel,
+        stopThr2=tol_abs,
+        **kwargs,
+    )
+
     if log:
-        res, log = ot.optim.cg(
-            p,
-            q,
-            (1 - alpha) * M,
-            alpha,
-            f,
-            df,
-            G0,
-            line_search,
-            log=True,
-            numItermax=numItermax,
-            stopThr=tol_rel,
-            stopThr2=tol_abs,
-            **kwargs,
-        )
+        res, log = return_val
 
-        fgw_dist = log["loss"][-1]
-
-        log["fgw_dist"] = fgw_dist
+        log["fgw_dist"] = log["loss"][-1]
         log["u"] = log["u"]
         log["v"] = log["v"]
         return res, log
-
     else:
-        return ot.optim.cg(
-            p,
-            q,
-            (1 - alpha) * M,
-            alpha,
-            f,
-            df,
-            G0,
-            line_search,
-            numItermax=numItermax,
-            stopThr=tol_rel,
-            stopThr2=tol_abs,
-            **kwargs,
-        )
+        return return_val
 
 
 def solve_gromov_linesearch(

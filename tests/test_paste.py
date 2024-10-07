@@ -193,9 +193,9 @@ def test_fused_gromov_wasserstein(slices, spot_distance_matrix):
         spot_distance_matrix[1],
         p=nx.ones((254,)) / 254,
         q=nx.ones((251,)) / 251,
-        G_init=None,
-        loss_fun="square_loss",
         alpha=0.1,
+        G0=None,
+        loss_fun="square_loss",
         log=True,
         numItermax=10,
     )

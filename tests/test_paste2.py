@@ -5,7 +5,6 @@ from paste3.paste2 import (
     partial_pairwise_align,
     partial_pairwise_align_given_cost_matrix,
     partial_pairwise_align_histology,
-    partial_fused_gromov_wasserstein,
     gwgrad_partial,
     gwloss_partial,
 )
@@ -14,6 +13,7 @@ import pytest
 from unittest.mock import patch
 from scipy.spatial import distance
 from pandas.testing import assert_frame_equal
+from paste3.paste import my_fused_gromov_wasserstein
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
@@ -160,7 +160,7 @@ def test_partial_fused_gromov_wasserstein(slices, armijo, expected_log, filename
     distance_b /= distance_b[distance_b > 0].max()
     distance_b *= glmpca_distance_matrix.max()
 
-    pairwise_info, log = partial_fused_gromov_wasserstein(
+    pairwise_info, log = my_fused_gromov_wasserstein(
         glmpca_distance_matrix,
         distance_a,
         distance_b,

@@ -1,7 +1,6 @@
 import numpy as np
 import ot
 from scipy.spatial import distance
-from ot.lp import emd
 from paste3.helper import (
     kl_divergence,
     intersect,
@@ -10,6 +9,7 @@ from paste3.helper import (
     glmpca_distance,
     dissimilarity_metric,
 )
+from paste3.paste import my_fused_gromov_wasserstein
 
 
 def gwloss_partial(C1, C2, T, loss_fun="square_loss"):
@@ -49,139 +49,6 @@ def gwgrad_partial(C1, C2, T, loss_fun="square_loss"):
 
 def fgwgrad_partial(alpha, M, C1, C2, T, loss_fun="square_loss"):
     return (1 - alpha) * M + alpha * gwgrad_partial(C1, C2, T, loss_fun)
-
-
-def line_search_partial(reg, M, G, C1, C2, deltaG, loss_fun="square_loss"):
-    constC, hC1, hC2 = ot.gromov.init_matrix(
-        C1,
-        C2,
-        np.sum(deltaG, axis=1).reshape(-1, 1),
-        np.sum(deltaG, axis=0).reshape(1, -1),
-        loss_fun,
-    )
-
-    dot = np.dot(np.dot(C1, deltaG), C2.T)
-    a = reg * np.sum(dot * deltaG)
-    b = (1 - reg) * np.sum(M * deltaG) + 2 * reg * np.sum(
-        ot.gromov.gwggrad(constC, hC1, hC2, deltaG) * 0.5 * G
-    )
-    alpha = ot.optim.solve_1d_linesearch_quad(a, b)
-    G = G + alpha * deltaG
-    constC, hC1, hC2 = ot.gromov.init_matrix(
-        C1,
-        C2,
-        np.sum(G, axis=1).reshape(-1, 1),
-        np.sum(G, axis=0).reshape(1, -1),
-        loss_fun,
-    )
-    cost_G = (1 - reg) * np.sum(M * G) + reg * ot.gromov.gwloss(constC, hC1, hC2, G)
-    return alpha, a, cost_G
-
-
-def partial_fused_gromov_wasserstein(
-    M,
-    C1,
-    C2,
-    p,
-    q,
-    alpha,
-    m=None,
-    G0=None,
-    loss_fun="square_loss",
-    armijo=False,
-    log=False,
-    verbose=False,
-    numItermax=1000,
-    stopThr=1e-9,
-    stopThr2=1e-9,
-    numItermaxEmd=1000000,
-):
-    if m is None:
-        raise ValueError("Parameter m is not provided.")
-    elif m < 0:
-        raise ValueError("Problem infeasible. Parameter m should be greater" " than 0.")
-    elif m > np.min((np.sum(p), np.sum(q))):
-        raise ValueError(
-            "Problem infeasible. Parameter m should lower or"
-            " equal to min(|p|_1, |q|_1)."
-        )
-
-    if log:
-        _log = {"err": []}
-    count = 0
-    dummy = 1
-    _p = np.append(p, [(np.sum(q) - m) / dummy] * dummy)
-    _q = np.append(q, [(np.sum(q) - m) / dummy] * dummy)
-
-    def f(G):
-        constC, hC1, hC2 = ot.gromov.init_matrix(
-            C1,
-            C2,
-            np.sum(G, axis=1).reshape(-1, 1),
-            np.sum(G, axis=0).reshape(1, -1),
-            loss_fun,
-        )
-        return ot.gromov.gwloss(constC, hC1, hC2, G)
-
-    def df(G):
-        constC, hC1, hC2 = ot.gromov.init_matrix(
-            C1,
-            C2,
-            np.sum(G, axis=1).reshape(-1, 1),
-            np.sum(G, axis=0).reshape(1, -1),
-            loss_fun,
-        )
-        return ot.gromov.gwggrad(constC, hC1, hC2, G)
-
-    def line_search(cost, G, deltaG, Mi, cost_G, **kwargs):
-        nonlocal count
-        if log:
-            # keep track of error only on every 10th iteration
-            if count % 10 == 0:
-                _log["err"].append(np.linalg.norm(deltaG))
-        count += 1
-
-        if armijo:
-            return ot.optim.line_search_armijo(cost, G, deltaG, Mi, cost_G)
-        else:
-            return line_search_partial(alpha, M, G, C1, C2, deltaG, loss_fun=loss_fun)
-
-    def lp_solver(a, b, Mi, **kwargs):
-        _emd = np.pad(Mi, [(0, dummy)] * 2, mode="constant")
-        _emd[-dummy:, -dummy:] = np.max(Mi) * 1e2
-
-        Gc, innerlog_ = emd(_p, _q, _emd, numItermaxEmd, log=True)
-        if innerlog_.get("warning"):
-            raise ValueError(
-                "Error in EMD resolution: Increase the number of dummy points."
-            )
-        return Gc[: len(a), : len(b)], innerlog_
-
-    return_val = ot.optim.generic_conditional_gradient(
-        p,
-        q,
-        (1 - alpha) * M,
-        f,
-        df,
-        alpha,
-        None,
-        lp_solver,
-        line_search,
-        G0,
-        numItermax,
-        stopThr,
-        stopThr2,
-        verbose,
-        log,
-    )
-
-    if log:
-        res, log = return_val
-        log["partial_fgw_cost"] = log["loss"][-1]
-        log["err"] = _log["err"]
-        return res, log
-    else:
-        return return_val
 
 
 def partial_pairwise_align(
@@ -284,7 +151,7 @@ def partial_pairwise_align(
         """
         Code for normalizing distance matrix ends
         """
-    pi, log = partial_fused_gromov_wasserstein(
+    pi, log = my_fused_gromov_wasserstein(
         M,
         D_A,
         D_B,
@@ -391,7 +258,7 @@ def partial_pairwise_align_histology(
         """
 
     # Run OT
-    pi, log = partial_fused_gromov_wasserstein(
+    pi, log = my_fused_gromov_wasserstein(
         M,
         D_A,
         D_B,
@@ -467,7 +334,7 @@ def partial_pairwise_align_given_cost_matrix(
         """
 
     # Run Partial OT
-    pi, log = partial_fused_gromov_wasserstein(
+    pi, log = my_fused_gromov_wasserstein(
         M,
         D_A,
         D_B,

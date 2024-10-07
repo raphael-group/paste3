@@ -165,13 +165,13 @@ def pairwise_align(
         D_B,
         a,
         b,
-        G_init=G_init,
-        loss_fun="square_loss",
         alpha=alpha,
+        G0=G_init,
+        loss_fun="square_loss",
         log=True,
         numItermax=numItermax,
-        verbose=verbose,
         use_gpu=use_gpu,
+        verbose=verbose,
     )
     pi = nx.to_numpy(pi)
     obj = nx.to_numpy(logw["fgw_dist"])
@@ -468,9 +468,10 @@ def my_fused_gromov_wasserstein(
     C2,
     p,
     q,
-    G_init=None,
-    loss_fun="square_loss",
     alpha=0.5,
+    m=None,
+    G0=None,
+    loss_fun="square_loss",
     armijo=False,
     log=False,
     numItermax=200,
@@ -486,42 +487,91 @@ def my_fused_gromov_wasserstein(
 
     For more info, see: https://pythonot.github.io/gen_modules/ot.gromov.html
     """
-
     p, q = ot.utils.list_to_array(p, q)
+    nx = ot.backend.get_backend(p, q, C1, C2, M)
 
-    p0, q0, C10, C20, M0 = p, q, C1, C2, M
-    nx = ot.backend.get_backend(p0, q0, C10, C20, M0)
+    if m is not None:
+        if m < 0:
+            raise ValueError(
+                "Problem infeasible. Parameter m should be greater" " than 0."
+            )
+        elif m > np.min((np.sum(p), np.sum(q))):
+            raise ValueError(
+                "Problem infeasible. Parameter m should lower or"
+                " equal to min(|p|_1, |q|_1)."
+            )
 
-    constC, hC1, hC2 = ot.gromov.init_matrix(C1, C2, p, q, loss_fun)
+        if log:
+            _log = {"err": []}
+        count = 0
+        dummy = 1
+        _p = np.append(p, [(np.sum(q) - m) / dummy] * dummy)
+        _q = np.append(q, [(np.sum(q) - m) / dummy] * dummy)
 
-    if G_init is None:
-        G0 = p[:, None] * q[None, :]
-    else:
-        G0 = (1 / nx.sum(G_init)) * G_init
+    if G0 is not None:
+        G0 = (1 / nx.sum(G0)) * G0
         if use_gpu:
             G0 = G0.cuda()
 
     def f(G):
+        constC, hC1, hC2 = ot.gromov.init_matrix(
+            C1,
+            C2,
+            nx.sum(G, axis=1).reshape(-1, 1),
+            nx.sum(G, axis=0).reshape(1, -1),
+            loss_fun,
+        )
         return ot.gromov.gwloss(constC, hC1, hC2, G)
 
     def df(G):
+        constC, hC1, hC2 = ot.gromov.init_matrix(
+            C1,
+            C2,
+            nx.sum(G, axis=1).reshape(-1, 1),
+            nx.sum(G, axis=0).reshape(1, -1),
+            loss_fun,
+        )
         return ot.gromov.gwggrad(constC, hC1, hC2, G)
 
     if loss_fun == "kl_loss":
         armijo = True  # there is no closed form line-search with KL
 
     def line_search(cost, G, deltaG, Mi, cost_G, **kwargs):
+        if m:
+            nonlocal count
+            if log:
+                # keep track of error only on every 10th iteration
+                if count % 10 == 0:
+                    _log["err"].append(np.linalg.norm(deltaG))
+            count += 1
+
         if armijo:
             return ot.optim.line_search_armijo(
                 cost, G, deltaG, Mi, cost_G, nx=nx, **kwargs
             )
         else:
-            return solve_gromov_linesearch(
-                G, deltaG, cost_G, C1, C2, M=0.0, reg=1.0, nx=nx, **kwargs
-            )
+            if m:
+                return line_search_partial(
+                    alpha, M, G, C1, C2, deltaG, loss_fun=loss_fun
+                )
+            else:
+                return solve_gromov_linesearch(
+                    G, deltaG, cost_G, C1, C2, M=0.0, reg=1.0, nx=nx, **kwargs
+                )
 
     def lp_solver(a, b, M, **kwargs):
-        return emd(a, b, M, numItermaxEmd, log=True)
+        if m:
+            _emd = np.pad(M, [(0, dummy)] * 2, mode="constant")
+            _emd[-dummy:, -dummy:] = np.max(M) * 1e2
+
+            Gc, innerlog_ = emd(_p, _q, _emd, 1000000, log=True)
+            if innerlog_.get("warning"):
+                raise ValueError(
+                    "Error in EMD resolution: Increase the number of dummy points."
+                )
+            return Gc[: len(a), : len(b)], innerlog_
+        else:
+            return emd(a, b, M, numItermaxEmd, log=True)
 
     return_val = ot.optim.generic_conditional_gradient(
         p,
@@ -543,10 +593,13 @@ def my_fused_gromov_wasserstein(
 
     if log:
         res, log = return_val
-
-        log["fgw_dist"] = log["loss"][-1]
-        log["u"] = log["u"]
-        log["v"] = log["v"]
+        if m:
+            log["partial_fgw_cost"] = log["loss"][-1]
+            log["err"] = _log["err"]
+        else:
+            log["fgw_dist"] = log["loss"][-1]
+            log["u"] = log["u"]
+            log["v"] = log["v"]
         return res, log
     else:
         return return_val
@@ -620,3 +673,30 @@ def solve_gromov_linesearch(
     cost_G = cost_G + a * (alpha**2) + b * alpha
 
     return alpha, 1, cost_G
+
+
+def line_search_partial(reg, M, G, C1, C2, deltaG, loss_fun="square_loss"):
+    constC, hC1, hC2 = ot.gromov.init_matrix(
+        C1,
+        C2,
+        np.sum(deltaG, axis=1).reshape(-1, 1),
+        np.sum(deltaG, axis=0).reshape(1, -1),
+        loss_fun,
+    )
+
+    dot = np.dot(np.dot(C1, deltaG), C2.T)
+    a = reg * np.sum(dot * deltaG)
+    b = (1 - reg) * np.sum(M * deltaG) + 2 * reg * np.sum(
+        ot.gromov.gwggrad(constC, hC1, hC2, deltaG) * 0.5 * G
+    )
+    alpha = ot.optim.solve_1d_linesearch_quad(a, b)
+    G = G + alpha * deltaG
+    constC, hC1, hC2 = ot.gromov.init_matrix(
+        C1,
+        C2,
+        np.sum(G, axis=1).reshape(-1, 1),
+        np.sum(G, axis=0).reshape(1, -1),
+        loss_fun,
+    )
+    cost_G = (1 - reg) * np.sum(M * G) + reg * ot.gromov.gwloss(constC, hC1, hC2, G)
+    return alpha, a, cost_G

@@ -67,7 +67,14 @@ def line_search_partial(reg, M, G, C1, C2, deltaG, loss_fun="square_loss"):
     )
     alpha = ot.optim.solve_1d_linesearch_quad(a, b)
     G = G + alpha * deltaG
-    cost_G = (1 - reg) * wloss(M, G) + reg * gwloss_partial(C1, C2, G, loss_fun)
+    constC, hC1, hC2 = ot.gromov.init_matrix(
+        C1,
+        C2,
+        np.sum(G, axis=1).reshape(-1, 1),
+        np.sum(G, axis=0).reshape(1, -1),
+        loss_fun,
+    )
+    cost_G = (1 - reg) * np.sum(M * G) + reg * ot.gromov.gwloss(constC, hC1, hC2, G)
     return alpha, a, cost_G
 
 

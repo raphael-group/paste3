@@ -1,9 +1,6 @@
 from pathlib import Path
 import pandas as pd
 import numpy as np
-from paste3.paste2 import (
-    partial_pairwise_align_histology,
-)
 from paste3.helper import intersect
 import pytest
 from unittest.mock import patch
@@ -67,16 +64,20 @@ def test_partial_pairwise_align_given_cost_matrix(slices):
 
 
 def test_partial_pairwise_align_histology(slices2):
-    pairwise_info, log = partial_pairwise_align_histology(
+    pairwise_info, log = pairwise_align(
         slices2[0],
         slices2[1],
         s=0.7,
+        alpha=0.1,
         return_obj=True,
         dissimilarity="euclidean",
+        norm=True,
         verbose=True,
         numItermax=10,
+        maxIter=10,
+        is_histology=True,
     )
-    assert log == pytest.approx(88.06713721008786)
+    assert log["partial_fgw_cost"] == pytest.approx(88.06713721008786)
     assert_frame_equal(
         pd.DataFrame(pairwise_info, columns=[str(i) for i in range(2877)]),
         pd.read_csv(output_dir / "partial_pairwise_align_histology.csv"),

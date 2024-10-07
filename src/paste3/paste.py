@@ -3,6 +3,7 @@ import numpy as np
 from anndata import AnnData
 import ot
 from ot.lp import emd
+from scipy.spatial import distance
 from sklearn.decomposition import NMF
 from paste3.helper import (
     intersect,
@@ -33,6 +34,7 @@ def pairwise_align(
     maxIter=1000,
     optimizeTheta=True,
     eps=1e-4,
+    is_histology: bool = False,
     armijo=False,
     **kwargs,
 ) -> Tuple[np.ndarray, Optional[int]]:
@@ -143,6 +145,16 @@ def pairwise_align(
             optimizeTheta=optimizeTheta,
         )
     M = nx.from_numpy(M)
+
+    if is_histology:
+        # Calculate RGB dissimilarity
+        M_rgb = distance.cdist(sliceA.obsm["rgb"], sliceB.obsm["rgb"])
+
+        # Scale M_exp and M_rgb, obtain M by taking half from each
+        M_rgb /= M_rgb[M_rgb > 0].max()
+        M_rgb *= M.max()
+        M = 0.5 * M + 0.5 * M_rgb
+        np.savetxt("M_1.csv", M, delimiter=",")
 
     # init distributions
     if a_distribution is None:

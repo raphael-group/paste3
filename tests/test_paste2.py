@@ -2,7 +2,6 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from paste3.paste2 import (
-    partial_pairwise_align,
     partial_pairwise_align_given_cost_matrix,
     partial_pairwise_align_histology,
     gwgrad_partial,
@@ -13,27 +12,22 @@ import pytest
 from unittest.mock import patch
 from scipy.spatial import distance
 from pandas.testing import assert_frame_equal
-from paste3.paste import my_fused_gromov_wasserstein
+from paste3.paste import my_fused_gromov_wasserstein, pairwise_align
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
 output_dir = test_dir / "data/output"
 
 
-@patch("paste3.paste2.dissimilarity_metric")
+@patch("paste3.paste.dissimilarity_metric")
 def test_partial_pairwise_align_glmpca(fn, slices2):
     # Load pre-computed dissimilarity metrics,
     # since it is time-consuming to compute.
     data = np.load(output_dir / "test_partial_pairwise_align.npz")
     fn.return_value = data["glmpca"]
 
-    pi_BC = partial_pairwise_align(
-        slices2[0],
-        slices2[1],
-        s=0.7,
-        dissimilarity="glmpca",
-        verbose=True,
-        maxIter=10,
+    pi_BC = pairwise_align(
+        slices2[0], slices2[1], s=0.7, dissimilarity="glmpca", verbose=True, maxIter=10
     )
 
     assert_frame_equal(

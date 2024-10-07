@@ -90,7 +90,7 @@ def main(args):
             pi = pairwise_align(
                 slices[i],
                 slices[i + 1],
-                args.alpha,
+                alpha=args.alpha,
                 dissimilarity=args.cost,
                 a_distribution=slices[i].obsm["weights"],
                 b_distribution=slices[i + 1].obsm["weights"],

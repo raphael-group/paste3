@@ -9,7 +9,7 @@ from paste3.model_selection import (
     select_overlap_fraction,
 )
 import scanpy as sc
-from paste3.paste2 import partial_pairwise_align
+from paste3.paste import pairwise_align
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
@@ -51,11 +51,12 @@ def test_edge_inconsistency_score(slices, tmp_path):
 
 
 def test_calculate_convex_hull_edge_inconsistency(slices, tmp_path):
-    pairwise_info = partial_pairwise_align(slices[0], slices[1], s=0.7, maxIter=10)
+    pairwise_info = pairwise_align(
+        slices[0], slices[1], dissimilarity="glmpca", s=0.7, norm=True, maxIter=10
+    )
     measure_a, measure_b = calculate_convex_hull_edge_inconsistency(
         slices[0], slices[1], pairwise_info
     )
-
     assert measure_a == 0.17692307692307693
     assert measure_b == 0.2058252427184466
 

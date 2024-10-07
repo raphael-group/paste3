@@ -7,7 +7,6 @@ from paste3.helper import (
     to_dense_array,
     extract_data_matrix,
     glmpca_distance,
-    dissimilarity_metric,
 )
 from paste3.paste import my_fused_gromov_wasserstein
 
@@ -23,19 +22,6 @@ def gwloss_partial(C1, C2, T, loss_fun="square_loss"):
     return ot.gromov.gwloss(constC, hC1, hC2, T)
 
 
-def wloss(M, T):
-    return np.sum(M * T)
-
-
-def fgwloss_partial(alpha, M, C1, C2, T, loss_fun="square_loss"):
-    return (1 - alpha) * wloss(M, T) + alpha * gwloss_partial(C1, C2, T, loss_fun)
-
-
-def print_fgwloss_partial(alpha, M, C1, C2, T, loss_fun="square_loss"):
-    print("W term is: " + str((1 - alpha) * wloss(M, T)))
-    print("GW term is: " + str(alpha * gwloss_partial(C1, C2, T, loss_fun)))
-
-
 def gwgrad_partial(C1, C2, T, loss_fun="square_loss"):
     constC, hC1, hC2 = ot.gromov.init_matrix(
         C1,
@@ -45,131 +31,6 @@ def gwgrad_partial(C1, C2, T, loss_fun="square_loss"):
         loss_fun,
     )
     return ot.gromov.gwggrad(constC, hC1, hC2, T)
-
-
-def fgwgrad_partial(alpha, M, C1, C2, T, loss_fun="square_loss"):
-    return (1 - alpha) * M + alpha * gwgrad_partial(C1, C2, T, loss_fun)
-
-
-def partial_pairwise_align(
-    sliceA,
-    sliceB,
-    s,
-    alpha=0.1,
-    armijo=False,
-    dissimilarity="glmpca",
-    use_rep=None,
-    G_init=None,
-    a_distribution=None,
-    b_distribution=None,
-    norm=True,
-    return_obj=False,
-    verbose=True,
-    maxIter=1000,
-    eps=1e-4,
-    optimizeTheta=True,
-):
-    """
-    Calculates and returns optimal *partial* alignment of two slices.
-
-    param: sliceA - AnnData object
-    param: sliceB - AnnData object
-    param: s - Amount of mass to transport; Overlap percentage between the two slices. Note: 0 ≤ s ≤ 1
-    param: alpha - Alignment tuning parameter. Note: 0 ≤ alpha ≤ 1
-    param: armijo - Whether or not to use armijo (approximate) line search during conditional gradient optimization of Partial-FGW. Default is to use exact line search.
-    param: dissimilarity - Expression dissimilarity measure: 'kl' or 'euclidean' or 'glmpca'. Default is glmpca.
-    param: use_rep - If none, uses slice.X to calculate dissimilarity between spots, otherwise uses the representation given by slice.obsm[use_rep]
-    param: G_init - initial mapping to be used in Partial-FGW OT, otherwise default is uniform mapping
-    param: a_distribution - distribution of sliceA spots (1-d numpy array), otherwise default is uniform
-    param: b_distribution - distribution of sliceB spots (1-d numpy array), otherwise default is uniform
-    param: norm - scales spatial distances such that maximum spatial distance is equal to maximum gene expression dissimilarity
-    param: return_obj - returns objective function value if True, nothing if False
-    param: verbose - whether to print glmpca progress
-    param maxIter - maximum number of iterations for glmpca
-    param eps - convergence threshold for glmpca
-    param optimizeTheta - whether to optimize overdispersion in glmpca
-
-    return: pi - partial alignment of spots
-    return: log['fgw_dist'] - objective function output of FGW-OT
-    """
-    m = s
-    print("PASTE2 starts...")
-
-    # subset for common genes
-    common_genes = intersect(sliceA.var.index, sliceB.var.index)
-    sliceA = sliceA[:, common_genes]
-    sliceB = sliceB[:, common_genes]
-
-    # Calculate spatial distances
-    D_A = distance.cdist(sliceA.obsm["spatial"], sliceA.obsm["spatial"])
-    D_B = distance.cdist(sliceB.obsm["spatial"], sliceB.obsm["spatial"])
-
-    # Calculate expression dissimilarity
-    A_X, B_X = (
-        to_dense_array(extract_data_matrix(sliceA, use_rep)),
-        to_dense_array(extract_data_matrix(sliceB, use_rep)),
-    )
-
-    M = dissimilarity_metric(
-        dissimilarity,
-        sliceA,
-        sliceB,
-        A_X,
-        B_X,
-        latent_dim=50,
-        filter=True,
-        verbose=verbose,
-        maxIter=maxIter,
-        eps=eps,
-        optimizeTheta=optimizeTheta,
-    )
-
-    # init distributions
-    if a_distribution is None:
-        a = np.ones((sliceA.shape[0],)) / sliceA.shape[0]
-    else:
-        a = a_distribution
-
-    if b_distribution is None:
-        b = np.ones((sliceB.shape[0],)) / sliceB.shape[0]
-    else:
-        b = b_distribution
-
-    if norm:
-        D_A /= D_A[D_A > 0].min().min()
-        D_B /= D_B[D_B > 0].min().min()
-
-        """
-        Code for normalizing distance matrix
-        """
-        D_A /= D_A[D_A > 0].max()
-        # D_A *= 10
-        D_A *= M.max()
-        D_B /= D_B[D_B > 0].max()
-        # D_B *= 10
-        D_B *= M.max()
-        """
-        Code for normalizing distance matrix ends
-        """
-    pi, log = my_fused_gromov_wasserstein(
-        M,
-        D_A,
-        D_B,
-        a,
-        b,
-        alpha=alpha,
-        m=m,
-        G0=G_init,
-        loss_fun="square_loss",
-        armijo=armijo,
-        log=True,
-        verbose=verbose,
-        numItermax=maxIter,
-    )
-
-    if return_obj:
-        return pi, log["partial_fgw_cost"]
-    return pi
 
 
 def partial_pairwise_align_histology(

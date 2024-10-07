@@ -6,15 +6,16 @@ from ot.lp import emd
 from sklearn.decomposition import NMF
 from paste3.helper import (
     intersect,
-    kl_divergence_backend,
     to_dense_array,
     extract_data_matrix,
+    dissimilarity_metric,
 )
 
 
 def pairwise_align(
     sliceA: AnnData,
     sliceB: AnnData,
+    s: float = None,
     alpha: float = 0.1,
     dissimilarity: str = "kl",
     use_rep: Optional[str] = None,
@@ -28,6 +29,10 @@ def pairwise_align(
     return_obj: bool = False,
     verbose: bool = False,
     gpu_verbose: bool = True,
+    maxIter=1000,
+    optimizeTheta=True,
+    eps=1e-4,
+    armijo=False,
     **kwargs,
 ) -> Tuple[np.ndarray, Optional[int]]:
     """
@@ -92,8 +97,8 @@ def pairwise_align(
     sliceB = sliceB[:, common_genes]
 
     # check if slices are valid
-    for s in [sliceA, sliceB]:
-        if not len(s):
+    for slice in [sliceA, sliceB]:
+        if not len(slice):
             raise ValueError(f"Found empty `AnnData`:\n{sliceA}.")
 
     # Backend
@@ -122,13 +127,20 @@ def pairwise_align(
         A_X = A_X.cuda()
         B_X = B_X.cuda()
 
-    if dissimilarity.lower() == "euclidean" or dissimilarity.lower() == "euc":
-        M = ot.dist(A_X, B_X)
-    else:
-        s_A = A_X + 0.01
-        s_B = B_X + 0.01
-        M = kl_divergence_backend(s_A, s_B)
-        M = nx.from_numpy(M)
+    M = dissimilarity_metric(
+        dissimilarity,
+        sliceA,
+        sliceB,
+        A_X,
+        B_X,
+        latent_dim=50,
+        filter=True,
+        verbose=verbose,
+        maxIter=maxIter,
+        eps=eps,
+        optimizeTheta=optimizeTheta,
+    )
+    M = nx.from_numpy(M)
 
     # init distributions
     if a_distribution is None:
@@ -152,6 +164,11 @@ def pairwise_align(
     if norm:
         D_A /= nx.min(D_A[D_A > 0])
         D_B /= nx.min(D_B[D_B > 0])
+        if slice:
+            D_A /= D_A[D_A > 0].max()
+            D_A *= M.max()
+            D_B /= D_B[D_B > 0].max()
+            D_B *= M.max()
 
     # Run OT
     if G_init is not None:
@@ -159,27 +176,29 @@ def pairwise_align(
         if isinstance(nx, ot.backend.TorchBackend):
             if use_gpu:
                 G_init.cuda()
-    pi, logw = my_fused_gromov_wasserstein(
+    pi, log = my_fused_gromov_wasserstein(
         M,
         D_A,
         D_B,
         a,
         b,
         alpha=alpha,
+        m=s,
         G0=G_init,
         loss_fun="square_loss",
         log=True,
-        numItermax=numItermax,
+        numItermax=maxIter if s else numItermax,
         use_gpu=use_gpu,
         verbose=verbose,
     )
-    pi = nx.to_numpy(pi)
-    obj = nx.to_numpy(logw["fgw_dist"])
-    if isinstance(backend, ot.backend.TorchBackend) and use_gpu:
-        torch.cuda.empty_cache()
+    if not s:
+        pi = nx.to_numpy(pi)
+        log = nx.to_numpy(log["fgw_dist"])
+        if isinstance(backend, ot.backend.TorchBackend) and use_gpu:
+            torch.cuda.empty_cache()
 
     if return_obj:
-        return pi, obj
+        return pi, log
     return pi
 
 

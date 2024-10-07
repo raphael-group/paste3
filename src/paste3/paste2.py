@@ -1,5 +1,4 @@
 import numpy as np
-import ot
 from scipy.spatial import distance
 from paste3.helper import (
     kl_divergence,
@@ -9,28 +8,6 @@ from paste3.helper import (
     glmpca_distance,
 )
 from paste3.paste import my_fused_gromov_wasserstein
-
-
-def gwloss_partial(C1, C2, T, loss_fun="square_loss"):
-    constC, hC1, hC2 = ot.gromov.init_matrix(
-        C1,
-        C2,
-        np.sum(T, axis=1).reshape(-1, 1),
-        np.sum(T, axis=0).reshape(1, -1),
-        loss_fun,
-    )
-    return ot.gromov.gwloss(constC, hC1, hC2, T)
-
-
-def gwgrad_partial(C1, C2, T, loss_fun="square_loss"):
-    constC, hC1, hC2 = ot.gromov.init_matrix(
-        C1,
-        C2,
-        np.sum(T, axis=1).reshape(-1, 1),
-        np.sum(T, axis=0).reshape(1, -1),
-        loss_fun,
-    )
-    return ot.gromov.gwggrad(constC, hC1, hC2, T)
 
 
 def partial_pairwise_align_histology(

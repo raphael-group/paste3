@@ -4,8 +4,6 @@ import numpy as np
 from paste3.paste2 import (
     partial_pairwise_align_given_cost_matrix,
     partial_pairwise_align_histology,
-    gwgrad_partial,
-    gwloss_partial,
 )
 from paste3.helper import intersect
 import pytest
@@ -176,74 +174,3 @@ def test_partial_fused_gromov_wasserstein(slices, armijo, expected_log, filename
 
     for k, v in expected_log.items():
         assert np.allclose(log[k], v, rtol=1e-05)
-
-
-def test_gloss_partial(slices):
-    common_genes = intersect(slices[1].var.index, slices[2].var.index)
-    sliceA = slices[1][:, common_genes]
-    sliceB = slices[2][:, common_genes]
-
-    distance_a = distance.cdist(sliceA.obsm["spatial"], sliceA.obsm["spatial"])
-    distance_b = distance.cdist(sliceB.obsm["spatial"], sliceB.obsm["spatial"])
-
-    distance_a /= distance_a[distance_a > 0].min().min()
-    distance_b /= distance_b[distance_b > 0].min().min()
-
-    glmpca_distance_matrix = np.genfromtxt(
-        input_dir / "glmpca_distance_matrix.csv", delimiter=",", skip_header=1
-    )
-
-    distance_a /= distance_a[distance_a > 0].max()
-    distance_a *= glmpca_distance_matrix.max()
-    distance_b /= distance_b[distance_b > 0].max()
-    distance_b *= glmpca_distance_matrix.max()
-
-    G0 = np.outer(
-        np.ones((sliceA.shape[0],)) / sliceA.shape[0],
-        np.ones((sliceB.shape[0],)) / sliceB.shape[0],
-    )
-
-    output = gwloss_partial(distance_a, distance_b, G0)
-
-    expected_output = pytest.approx(1135.0163192178504)
-    assert output == expected_output
-
-
-@pytest.mark.parametrize(
-    "loss_fun, filename",
-    [
-        ("square_loss", "gwloss_partial.csv"),
-        ("kl_loss", "gwloss_partial_kl_loss.csv"),
-    ],
-)
-def test_gwloss_partial(slices, loss_fun, filename):
-    common_genes = intersect(slices[1].var.index, slices[2].var.index)
-    sliceA = slices[1][:, common_genes]
-    sliceB = slices[2][:, common_genes]
-
-    distance_a = distance.cdist(sliceA.obsm["spatial"], sliceA.obsm["spatial"])
-    distance_b = distance.cdist(sliceB.obsm["spatial"], sliceB.obsm["spatial"])
-
-    distance_a /= distance_a[distance_a > 0].min().min()
-    distance_b /= distance_b[distance_b > 0].min().min()
-
-    glmpca_distance_matrix = np.genfromtxt(
-        input_dir / "glmpca_distance_matrix.csv", delimiter=",", skip_header=1
-    )
-
-    distance_a /= distance_a[distance_a > 0].max()
-    distance_a *= glmpca_distance_matrix.max()
-    distance_b /= distance_b[distance_b > 0].max()
-    distance_b *= glmpca_distance_matrix.max()
-
-    G0 = np.outer(
-        np.ones((sliceA.shape[0],)) / sliceA.shape[0],
-        np.ones((sliceB.shape[0],)) / sliceB.shape[0],
-    )
-
-    output = gwgrad_partial(distance_a, distance_b, G0, loss_fun=loss_fun)
-
-    assert_frame_equal(
-        pd.DataFrame(output, columns=[str(i) for i in range(264)]),
-        pd.read_csv(output_dir / filename),
-    )

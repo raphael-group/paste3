@@ -122,10 +122,9 @@ def partial_fused_gromov_wasserstein(
     log=False,
     verbose=False,
     numItermax=1000,
-    tol=1e-7,
     stopThr=1e-9,
     stopThr2=1e-9,
-    numItermaxEmd=100000,
+    numItermaxEmd=1000000,
 ):
     if m is None:
         raise ValueError("Parameter m is not provided.")
@@ -141,6 +140,8 @@ def partial_fused_gromov_wasserstein(
         _log = {"err": []}
     count = 0
     dummy = 1
+    _p = np.append(p, [(np.sum(q) - m) / dummy] * dummy)
+    _q = np.append(q, [(np.sum(q) - m) / dummy] * dummy)
 
     def f(G):
         p = np.sum(G, axis=1).reshape(-1, 1)
@@ -165,20 +166,13 @@ def partial_fused_gromov_wasserstein(
         if armijo:
             return ot.optim.line_search_armijo(cost, G, deltaG, Mi, cost_G)
         else:
-            return line_search_partial(
-                alpha, M, G, C1, C2, deltaG, loss_fun="square_loss"
-            )
+            return line_search_partial(alpha, M, G, C1, C2, deltaG, loss_fun=loss_fun)
 
     def lp_solver(a, b, Mi, **kwargs):
-        dummy = kwargs.get("dummy") if kwargs.get("dummy") else 1
-
-        _a = np.append(a, [(np.sum(b) - m) / dummy] * dummy)
-        _b = np.append(b, [(np.sum(a) - m) / dummy] * dummy)
-
         _emd = np.pad(Mi, [(0, dummy)] * 2, mode="constant")
         _emd[-dummy:, -dummy:] = np.max(Mi) * 1e2
 
-        Gc, innerlog_ = emd(_a, _b, _emd, numItermaxEmd, log=True)
+        Gc, innerlog_ = emd(_p, _q, _emd, numItermaxEmd, log=True)
         if innerlog_.get("warning"):
             raise ValueError(
                 "Error in EMD resolution: Increase the number of dummy points."

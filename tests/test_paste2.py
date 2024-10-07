@@ -2,7 +2,6 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from paste3.paste2 import (
-    partial_pairwise_align_given_cost_matrix,
     partial_pairwise_align_histology,
 )
 from paste3.helper import intersect
@@ -45,7 +44,7 @@ def test_partial_pairwise_align_given_cost_matrix(slices):
         input_dir / "glmpca_distance_matrix.csv", delimiter=",", skip_header=1
     )
 
-    pairwise_info, log = partial_pairwise_align_given_cost_matrix(
+    pairwise_info, log = pairwise_align(
         sliceA,
         sliceB,
         s=0.85,
@@ -56,6 +55,7 @@ def test_partial_pairwise_align_given_cost_matrix(slices):
         return_obj=True,
         verbose=True,
         numItermax=10,
+        maxIter=10,
     )
 
     assert_frame_equal(
@@ -63,7 +63,7 @@ def test_partial_pairwise_align_given_cost_matrix(slices):
         pd.read_csv(output_dir / "align_given_cost_matrix_pairwise_info.csv"),
         rtol=1e-05,
     )
-    assert log == pytest.approx(40.86494022326222)
+    assert log["partial_fgw_cost"] == pytest.approx(40.86494022326222)
 
 
 def test_partial_pairwise_align_histology(slices2):

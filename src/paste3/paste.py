@@ -16,6 +16,7 @@ def pairwise_align(
     sliceA: AnnData,
     sliceB: AnnData,
     s: float = None,
+    M=None,
     alpha: float = 0.1,
     dissimilarity: str = "kl",
     use_rep: Optional[str] = None,
@@ -127,19 +128,20 @@ def pairwise_align(
         A_X = A_X.cuda()
         B_X = B_X.cuda()
 
-    M = dissimilarity_metric(
-        dissimilarity,
-        sliceA,
-        sliceB,
-        A_X,
-        B_X,
-        latent_dim=50,
-        filter=True,
-        verbose=verbose,
-        maxIter=maxIter,
-        eps=eps,
-        optimizeTheta=optimizeTheta,
-    )
+    if M is None:
+        M = dissimilarity_metric(
+            dissimilarity,
+            sliceA,
+            sliceB,
+            A_X,
+            B_X,
+            latent_dim=50,
+            filter=True,
+            verbose=verbose,
+            maxIter=maxIter,
+            eps=eps,
+            optimizeTheta=optimizeTheta,
+        )
     M = nx.from_numpy(M)
 
     # init distributions
@@ -164,7 +166,7 @@ def pairwise_align(
     if norm:
         D_A /= nx.min(D_A[D_A > 0])
         D_B /= nx.min(D_B[D_B > 0])
-        if slice:
+        if s:
             D_A /= D_A[D_A > 0].max()
             D_A *= M.max()
             D_B /= D_B[D_B > 0].max()

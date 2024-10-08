@@ -2,18 +2,22 @@ from typing import List, Tuple, Optional
 import numpy as np
 from anndata import AnnData
 import ot
+from ot.lp import emd
+from scipy.spatial import distance
 from sklearn.decomposition import NMF
 from paste3.helper import (
     intersect,
-    kl_divergence_backend,
     to_dense_array,
     extract_data_matrix,
+    dissimilarity_metric,
 )
 
 
 def pairwise_align(
     sliceA: AnnData,
     sliceB: AnnData,
+    s: float = None,
+    M=None,
     alpha: float = 0.1,
     dissimilarity: str = "kl",
     use_rep: Optional[str] = None,
@@ -27,6 +31,11 @@ def pairwise_align(
     return_obj: bool = False,
     verbose: bool = False,
     gpu_verbose: bool = True,
+    maxIter=1000,
+    optimizeTheta=True,
+    eps=1e-4,
+    is_histology: bool = False,
+    armijo=False,
     **kwargs,
 ) -> Tuple[np.ndarray, Optional[int]]:
     """
@@ -91,8 +100,8 @@ def pairwise_align(
     sliceB = sliceB[:, common_genes]
 
     # check if slices are valid
-    for s in [sliceA, sliceB]:
-        if not len(s):
+    for slice in [sliceA, sliceB]:
+        if not len(slice):
             raise ValueError(f"Found empty `AnnData`:\n{sliceA}.")
 
     # Backend
@@ -121,13 +130,31 @@ def pairwise_align(
         A_X = A_X.cuda()
         B_X = B_X.cuda()
 
-    if dissimilarity.lower() == "euclidean" or dissimilarity.lower() == "euc":
-        M = ot.dist(A_X, B_X)
-    else:
-        s_A = A_X + 0.01
-        s_B = B_X + 0.01
-        M = kl_divergence_backend(s_A, s_B)
-        M = nx.from_numpy(M)
+    if M is None:
+        M = dissimilarity_metric(
+            dissimilarity,
+            sliceA,
+            sliceB,
+            A_X,
+            B_X,
+            latent_dim=50,
+            filter=True,
+            verbose=verbose,
+            maxIter=maxIter,
+            eps=eps,
+            optimizeTheta=optimizeTheta,
+        )
+    M = nx.from_numpy(M)
+
+    if is_histology:
+        # Calculate RGB dissimilarity
+        M_rgb = distance.cdist(sliceA.obsm["rgb"], sliceB.obsm["rgb"])
+
+        # Scale M_exp and M_rgb, obtain M by taking half from each
+        M_rgb /= M_rgb[M_rgb > 0].max()
+        M_rgb *= M.max()
+        M = 0.5 * M + 0.5 * M_rgb
+        np.savetxt("M_1.csv", M, delimiter=",")
 
     # init distributions
     if a_distribution is None:
@@ -151,6 +178,11 @@ def pairwise_align(
     if norm:
         D_A /= nx.min(D_A[D_A > 0])
         D_B /= nx.min(D_B[D_B > 0])
+        if s:
+            D_A /= D_A[D_A > 0].max()
+            D_A *= M.max()
+            D_B /= D_B[D_B > 0].max()
+            D_B *= M.max()
 
     # Run OT
     if G_init is not None:
@@ -158,27 +190,29 @@ def pairwise_align(
         if isinstance(nx, ot.backend.TorchBackend):
             if use_gpu:
                 G_init.cuda()
-    pi, logw = my_fused_gromov_wasserstein(
+    pi, log = my_fused_gromov_wasserstein(
         M,
         D_A,
         D_B,
         a,
         b,
-        G_init=G_init,
-        loss_fun="square_loss",
         alpha=alpha,
+        m=s,
+        G0=G_init,
+        loss_fun="square_loss",
         log=True,
-        numItermax=numItermax,
-        verbose=verbose,
+        numItermax=maxIter if s else numItermax,
         use_gpu=use_gpu,
+        verbose=verbose,
     )
-    pi = nx.to_numpy(pi)
-    obj = nx.to_numpy(logw["fgw_dist"])
-    if isinstance(backend, ot.backend.TorchBackend) and use_gpu:
-        torch.cuda.empty_cache()
+    if not s:
+        pi = nx.to_numpy(pi)
+        log = nx.to_numpy(log["fgw_dist"])
+        if isinstance(backend, ot.backend.TorchBackend) and use_gpu:
+            torch.cuda.empty_cache()
 
     if return_obj:
-        return pi, obj
+        return pi, log
     return pi
 
 
@@ -467,15 +501,17 @@ def my_fused_gromov_wasserstein(
     C2,
     p,
     q,
-    G_init=None,
-    loss_fun="square_loss",
     alpha=0.5,
+    m=None,
+    G0=None,
+    loss_fun="square_loss",
     armijo=False,
     log=False,
     numItermax=200,
     tol_rel=1e-9,
     tol_abs=1e-9,
     use_gpu=False,
+    numItermaxEmd=100000,
     **kwargs,
 ):
     """
@@ -484,82 +520,122 @@ def my_fused_gromov_wasserstein(
 
     For more info, see: https://pythonot.github.io/gen_modules/ot.gromov.html
     """
-
     p, q = ot.utils.list_to_array(p, q)
+    nx = ot.backend.get_backend(p, q, C1, C2, M)
 
-    p0, q0, C10, C20, M0 = p, q, C1, C2, M
-    nx = ot.backend.get_backend(p0, q0, C10, C20, M0)
+    if m is not None:
+        if m < 0:
+            raise ValueError(
+                "Problem infeasible. Parameter m should be greater" " than 0."
+            )
+        elif m > np.min((np.sum(p), np.sum(q))):
+            raise ValueError(
+                "Problem infeasible. Parameter m should lower or"
+                " equal to min(|p|_1, |q|_1)."
+            )
 
-    constC, hC1, hC2 = ot.gromov.init_matrix(C1, C2, p, q, loss_fun)
+        if log:
+            _log = {"err": []}
+        count = 0
+        dummy = 1
+        _p = np.append(p, [(np.sum(q) - m) / dummy] * dummy)
+        _q = np.append(q, [(np.sum(q) - m) / dummy] * dummy)
 
-    if G_init is None:
-        G0 = p[:, None] * q[None, :]
-    else:
-        G0 = (1 / nx.sum(G_init)) * G_init
+    if G0 is not None:
+        G0 = (1 / nx.sum(G0)) * G0
         if use_gpu:
             G0 = G0.cuda()
 
     def f(G):
+        constC, hC1, hC2 = ot.gromov.init_matrix(
+            C1,
+            C2,
+            nx.sum(G, axis=1).reshape(-1, 1),
+            nx.sum(G, axis=0).reshape(1, -1),
+            loss_fun,
+        )
         return ot.gromov.gwloss(constC, hC1, hC2, G)
 
     def df(G):
+        constC, hC1, hC2 = ot.gromov.init_matrix(
+            C1,
+            C2,
+            nx.sum(G, axis=1).reshape(-1, 1),
+            nx.sum(G, axis=0).reshape(1, -1),
+            loss_fun,
+        )
         return ot.gromov.gwggrad(constC, hC1, hC2, G)
 
     if loss_fun == "kl_loss":
         armijo = True  # there is no closed form line-search with KL
 
-    if armijo:
+    def line_search(cost, G, deltaG, Mi, cost_G, **kwargs):
+        if m:
+            nonlocal count
+            if log:
+                # keep track of error only on every 10th iteration
+                if count % 10 == 0:
+                    _log["err"].append(np.linalg.norm(deltaG))
+            count += 1
 
-        def line_search(cost, G, deltaG, Mi, cost_G, **kwargs):
+        if armijo:
             return ot.optim.line_search_armijo(
                 cost, G, deltaG, Mi, cost_G, nx=nx, **kwargs
             )
-    else:
+        else:
+            if m:
+                return line_search_partial(
+                    alpha, M, G, C1, C2, deltaG, loss_fun=loss_fun
+                )
+            else:
+                return solve_gromov_linesearch(
+                    G, deltaG, cost_G, C1, C2, M=0.0, reg=1.0, nx=nx, **kwargs
+                )
 
-        def line_search(cost, G, deltaG, Mi, cost_G, **kwargs):
-            return solve_gromov_linesearch(
-                G, deltaG, cost_G, C1, C2, M=0.0, reg=1.0, nx=nx, **kwargs
-            )
+    def lp_solver(a, b, M, **kwargs):
+        if m:
+            _M = np.pad(M, [(0, dummy)] * 2, mode="constant")
+            _M[-dummy:, -dummy:] = np.max(M) * 1e2
+
+            Gc, innerlog_ = emd(_p, _q, _M, 1000000, log=True)
+            if innerlog_.get("warning"):
+                raise ValueError(
+                    "Error in EMD resolution: Increase the number of dummy points."
+                )
+            return Gc[: len(a), : len(b)], innerlog_
+        else:
+            return emd(a, b, M, numItermaxEmd, log=True)
+
+    return_val = ot.optim.generic_conditional_gradient(
+        p,
+        q,
+        (1 - alpha) * M,
+        f,
+        df,
+        alpha,
+        None,
+        lp_solver,
+        line_search,
+        G0,
+        log=log,
+        numItermax=numItermax,
+        stopThr=tol_rel,
+        stopThr2=tol_abs,
+        **kwargs,
+    )
 
     if log:
-        res, log = ot.optim.cg(
-            p,
-            q,
-            (1 - alpha) * M,
-            alpha,
-            f,
-            df,
-            G0,
-            line_search,
-            log=True,
-            numItermax=numItermax,
-            stopThr=tol_rel,
-            stopThr2=tol_abs,
-            **kwargs,
-        )
-
-        fgw_dist = log["loss"][-1]
-
-        log["fgw_dist"] = fgw_dist
-        log["u"] = log["u"]
-        log["v"] = log["v"]
+        res, log = return_val
+        if m:
+            log["partial_fgw_cost"] = log["loss"][-1]
+            log["err"] = _log["err"]
+        else:
+            log["fgw_dist"] = log["loss"][-1]
+            log["u"] = log["u"]
+            log["v"] = log["v"]
         return res, log
-
     else:
-        return ot.optim.cg(
-            p,
-            q,
-            (1 - alpha) * M,
-            alpha,
-            f,
-            df,
-            G0,
-            line_search,
-            numItermax=numItermax,
-            stopThr=tol_rel,
-            stopThr2=tol_abs,
-            **kwargs,
-        )
+        return return_val
 
 
 def solve_gromov_linesearch(
@@ -609,7 +685,7 @@ def solve_gromov_linesearch(
         International Conference on Machine Learning (ICML). 2019.
     """
     if nx is None:
-        G, deltaG, C1, C2, M = ot.utils.list_to_array(G, deltaG, C1, C2, M)
+        G, deltaG, C1, C2 = ot.utils.list_to_array(G, deltaG, C1, C2)
 
         if isinstance(M, int) or isinstance(M, float):
             nx = ot.backend.get_backend(G, deltaG, C1, C2)
@@ -630,3 +706,30 @@ def solve_gromov_linesearch(
     cost_G = cost_G + a * (alpha**2) + b * alpha
 
     return alpha, 1, cost_G
+
+
+def line_search_partial(reg, M, G, C1, C2, deltaG, loss_fun="square_loss"):
+    constC, hC1, hC2 = ot.gromov.init_matrix(
+        C1,
+        C2,
+        np.sum(deltaG, axis=1).reshape(-1, 1),
+        np.sum(deltaG, axis=0).reshape(1, -1),
+        loss_fun,
+    )
+
+    dot = np.dot(np.dot(C1, deltaG), C2.T)
+    a = reg * np.sum(dot * deltaG)
+    b = (1 - reg) * np.sum(M * deltaG) + 2 * reg * np.sum(
+        ot.gromov.gwggrad(constC, hC1, hC2, deltaG) * 0.5 * G
+    )
+    alpha = ot.optim.solve_1d_linesearch_quad(a, b)
+    G = G + alpha * deltaG
+    constC, hC1, hC2 = ot.gromov.init_matrix(
+        C1,
+        C2,
+        np.sum(G, axis=1).reshape(-1, 1),
+        np.sum(G, axis=0).reshape(1, -1),
+        loss_fun,
+    )
+    cost_G = (1 - reg) * np.sum(M * G) + reg * ot.gromov.gwloss(constC, hC1, hC2, G)
+    return alpha, a, cost_G

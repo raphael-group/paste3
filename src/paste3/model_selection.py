@@ -12,7 +12,7 @@ from paste3.helper import (
     extract_data_matrix,
     glmpca_distance,
 )
-from paste3.paste2 import partial_pairwise_align_given_cost_matrix
+from paste3.paste import pairwise_align
 
 
 """
@@ -200,7 +200,7 @@ def select_overlap_fraction(sliceA, sliceB, alpha=0.1, show_plot=True, numIterma
     m_to_pi = {}
     for m in overlap_to_check:
         print("Running PASTE2 with s = " + str(m) + "...")
-        pi, log = partial_pairwise_align_given_cost_matrix(
+        pi, log = pairwise_align(
             sliceA,
             sliceB,
             s=m,
@@ -211,6 +211,7 @@ def select_overlap_fraction(sliceA, sliceB, alpha=0.1, show_plot=True, numIterma
             return_obj=True,
             verbose=False,
             numItermax=numItermax,
+            maxIter=numItermax,
         )
         m_to_pi[m] = pi
 

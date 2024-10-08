@@ -4,7 +4,6 @@ import numpy as np
 import ot.backend
 import pandas as pd
 import tempfile
-
 from paste3.paste import (
     pairwise_align,
     center_align,
@@ -13,6 +12,7 @@ from paste3.paste import (
     center_NMF,
     my_fused_gromov_wasserstein,
     solve_gromov_linesearch,
+    line_search_partial,
 )
 from pandas.testing import assert_frame_equal
 
@@ -193,9 +193,9 @@ def test_fused_gromov_wasserstein(slices, spot_distance_matrix):
         spot_distance_matrix[1],
         p=nx.ones((254,)) / 254,
         q=nx.ones((251,)) / 251,
-        G_init=None,
-        loss_fun="square_loss",
         alpha=0.1,
+        G0=None,
+        loss_fun="square_loss",
         log=True,
         numItermax=10,
     )
@@ -225,3 +225,21 @@ def test_gromov_linesearch(slices, spot_distance_matrix):
     assert alpha == 1.0
     assert fc == 1
     assert round(cost_G, 5) == -11.20545
+
+
+def test_line_search_partial(slices, spot_distance_matrix):
+    G = 1.509115054931788e-05 * np.ones((251, 264))
+    deltaG = np.genfromtxt(input_dir / "deltaG.csv", delimiter=",")
+    M = np.genfromtxt(input_dir / "euc_dissimilarity.csv", delimiter=",")
+
+    alpha, a, cost_G = line_search_partial(
+        reg=0.1,
+        M=M,
+        G=G,
+        C1=spot_distance_matrix[1],
+        C2=spot_distance_matrix[2],
+        deltaG=deltaG,
+    )
+    assert alpha == 1.0
+    assert a == 0.4858849047237918
+    assert cost_G == 102.6333512778727

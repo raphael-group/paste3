@@ -153,7 +153,7 @@ def to_dense_array(X):
     return np.array(X.todense()) if isinstance(X, scipy.sparse.csr.spmatrix) else X
 
 
-def extract_data_matrix(adata, rep):
+def extract_data_matrix(adata, rep=None):
     return adata.X if rep is None else adata.obsm[rep]
 
 

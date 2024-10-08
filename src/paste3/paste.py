@@ -594,10 +594,10 @@ def my_fused_gromov_wasserstein(
 
     def lp_solver(a, b, M, **kwargs):
         if m:
-            _emd = np.pad(M, [(0, dummy)] * 2, mode="constant")
-            _emd[-dummy:, -dummy:] = np.max(M) * 1e2
+            _M = np.pad(M, [(0, dummy)] * 2, mode="constant")
+            _M[-dummy:, -dummy:] = np.max(M) * 1e2
 
-            Gc, innerlog_ = emd(_p, _q, _emd, 1000000, log=True)
+            Gc, innerlog_ = emd(_p, _q, _M, 1000000, log=True)
             if innerlog_.get("warning"):
                 raise ValueError(
                     "Error in EMD resolution: Increase the number of dummy points."

@@ -14,6 +14,7 @@ def stack_slices_pairwise(
     pis: List[np.ndarray],
     output_params: bool = False,
     matrix: bool = False,
+    is_partial: bool = False,
 ) -> Tuple[List[AnnData], Optional[List[float]], Optional[List[np.ndarray]]]:
     """
     Align spatial coordinates of sequential pairwise slices.
@@ -28,6 +29,7 @@ def stack_slices_pairwise(
         output_params: If ``True``, addtionally return angles of rotation (theta) and translations for each slice.
         matrix: If ``True`` and output_params is also ``True``, the rotation is
             return as a matrix instead of an angle for each slice.
+        is_partial: Boolean of whether this is partial pairwise analysis or a total one
 
     Returns:
         - List of slices with aligned spatial coordinates.
@@ -44,38 +46,36 @@ def stack_slices_pairwise(
     new_coor = []
     thetas = []
     translations = []
-    if not output_params:
-        S1, S2 = generalized_procrustes_analysis(
-            slices[0].obsm["spatial"], slices[1].obsm["spatial"], pis[0]
-        )
-    else:
-        S1, S2, theta, tX, tY = generalized_procrustes_analysis(
-            slices[0].obsm["spatial"],
-            slices[1].obsm["spatial"],
-            pis[0],
-            output_params=output_params,
-            matrix=matrix,
-        )
+    result = generalized_procrustes_analysis(
+        slices[0].obsm["spatial"],
+        slices[1].obsm["spatial"],
+        pis[0],
+        is_partial=is_partial,
+        output_params=output_params,
+    )
+    if output_params:
+        S1, S2, theta, tX, tY = result
         thetas.append(theta)
         translations.append(tX)
         translations.append(tY)
+    else:
+        S1, S2 = result
     new_coor.append(S1)
     new_coor.append(S2)
     for i in range(1, len(slices) - 1):
-        if not output_params:
-            x, y = generalized_procrustes_analysis(
-                new_coor[i], slices[i + 1].obsm["spatial"], pis[i]
-            )
-        else:
-            x, y, theta, tX, tY = generalized_procrustes_analysis(
-                new_coor[i],
-                slices[i + 1].obsm["spatial"],
-                pis[i],
-                output_params=output_params,
-                matrix=matrix,
-            )
+        result = generalized_procrustes_analysis(
+            new_coor[i],
+            slices[i + 1].obsm["spatial"],
+            pis[i],
+            is_partial=is_partial,
+            output_params=output_params,
+        )
+        if output_params:
+            x, y, theta, tX, tY = result
             thetas.append(theta)
             translations.append(tY)
+        else:
+            x, y = result
         new_coor.append(y)
 
     new_slices = []

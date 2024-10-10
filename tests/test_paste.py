@@ -12,7 +12,6 @@ from paste3.paste import (
     center_NMF,
     my_fused_gromov_wasserstein,
     solve_gromov_linesearch,
-    line_search_partial,
 )
 from pandas.testing import assert_frame_equal
 
@@ -231,15 +230,19 @@ def test_line_search_partial(slices, spot_distance_matrix):
     G = 1.509115054931788e-05 * np.ones((251, 264))
     deltaG = np.genfromtxt(input_dir / "deltaG.csv", delimiter=",")
     M = np.genfromtxt(input_dir / "euc_dissimilarity.csv", delimiter=",")
+    cost_G = 132.5410764763686
 
-    alpha, a, cost_G = line_search_partial(
+    alpha, a, cost_G = solve_gromov_linesearch(
         reg=0.1,
-        M=M,
+        M=(1 - 0.1) * M,
         G=G,
         C1=spot_distance_matrix[1],
         C2=spot_distance_matrix[2],
         deltaG=deltaG,
+        cost_G=cost_G,
+        m=1,
     )
     assert alpha == 1.0
-    assert a == 0.4858849047237918
-    assert cost_G == 102.6333512778727
+    # This value isn't used anywhere
+    assert a == 1
+    assert np.isclose(cost_G, 102.6333512778727, atol=1e-13)

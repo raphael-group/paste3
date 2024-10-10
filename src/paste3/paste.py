@@ -154,7 +154,6 @@ def pairwise_align(
         M_rgb /= M_rgb[M_rgb > 0].max()
         M_rgb *= M.max()
         M = 0.5 * M + 0.5 * M_rgb
-        np.savetxt("M_1.csv", M, delimiter=",")
 
     # init distributions
     if a_distribution is None:
@@ -204,6 +203,7 @@ def pairwise_align(
         numItermax=maxIter if s else numItermax,
         use_gpu=use_gpu,
         verbose=verbose,
+        armijo=armijo,
     )
     if not s:
         pi = nx.to_numpy(pi)
@@ -583,14 +583,19 @@ def my_fused_gromov_wasserstein(
                 cost, G, deltaG, Mi, cost_G, nx=nx, **kwargs
             )
         else:
-            if m:
-                return line_search_partial(
-                    alpha, M, G, C1, C2, deltaG, loss_fun=loss_fun
-                )
-            else:
-                return solve_gromov_linesearch(
-                    G, deltaG, cost_G, C1, C2, M=0.0, reg=1.0, nx=nx, **kwargs
-                )
+            return solve_gromov_linesearch(
+                G,
+                deltaG,
+                cost_G,
+                C1,
+                C2,
+                M=(1 - alpha) * M if m else 0.0,
+                reg=alpha if m else 1.0,
+                m=m,
+                loss_fun=loss_fun,
+                nx=nx,
+                **kwargs,
+            )
 
     def lp_solver(a, b, M, **kwargs):
         if m:
@@ -639,7 +644,19 @@ def my_fused_gromov_wasserstein(
 
 
 def solve_gromov_linesearch(
-    G, deltaG, cost_G, C1, C2, M, reg, alpha_min=None, alpha_max=None, nx=None, **kwargs
+    G,
+    deltaG,
+    cost_G,
+    C1,
+    C2,
+    M,
+    reg,
+    m=None,
+    loss_fun="square_loss",
+    alpha_min=None,
+    alpha_max=None,
+    nx=None,
+    **kwargs,
 ):
     """
     Solve the linesearch in the FW iterations
@@ -691,12 +708,25 @@ def solve_gromov_linesearch(
             nx = ot.backend.get_backend(G, deltaG, C1, C2)
         else:
             nx = ot.backend.get_backend(G, deltaG, C1, C2, M)
+    if m is None:
+        dot = nx.dot(nx.dot(C1, deltaG), C2.T)
+        a = -2 * reg * nx.sum(dot * deltaG)
+        b = nx.sum(M * deltaG) - 2 * reg * (
+            nx.sum(dot * G) + nx.sum(nx.dot(nx.dot(C1, G), C2.T) * deltaG)
+        )
+    else:
+        constC, hC1, hC2 = ot.gromov.init_matrix(
+            C1,
+            C2,
+            np.sum(deltaG, axis=1).reshape(-1, 1),
+            np.sum(deltaG, axis=0).reshape(1, -1),
+            loss_fun,
+        )
 
-    dot = nx.dot(nx.dot(C1, deltaG), C2.T)
-    a = -2 * reg * nx.sum(dot * deltaG)
-    b = nx.sum(M * deltaG) - 2 * reg * (
-        nx.sum(dot * G) + nx.sum(nx.dot(nx.dot(C1, G), C2.T) * deltaG)
-    )
+        a = reg * ot.gromov.gwloss(constC, hC1, hC2, deltaG)
+        b = np.sum(M * deltaG) + 2 * reg * np.sum(
+            ot.gromov.gwggrad(constC, hC1, hC2, deltaG) * 0.5 * G
+        )
 
     alpha = ot.optim.solve_1d_linesearch_quad(a, b)
     if alpha_min is not None or alpha_max is not None:
@@ -706,30 +736,3 @@ def solve_gromov_linesearch(
     cost_G = cost_G + a * (alpha**2) + b * alpha
 
     return alpha, 1, cost_G
-
-
-def line_search_partial(reg, M, G, C1, C2, deltaG, loss_fun="square_loss"):
-    constC, hC1, hC2 = ot.gromov.init_matrix(
-        C1,
-        C2,
-        np.sum(deltaG, axis=1).reshape(-1, 1),
-        np.sum(deltaG, axis=0).reshape(1, -1),
-        loss_fun,
-    )
-
-    dot = np.dot(np.dot(C1, deltaG), C2.T)
-    a = reg * np.sum(dot * deltaG)
-    b = (1 - reg) * np.sum(M * deltaG) + 2 * reg * np.sum(
-        ot.gromov.gwggrad(constC, hC1, hC2, deltaG) * 0.5 * G
-    )
-    alpha = ot.optim.solve_1d_linesearch_quad(a, b)
-    G = G + alpha * deltaG
-    constC, hC1, hC2 = ot.gromov.init_matrix(
-        C1,
-        C2,
-        np.sum(G, axis=1).reshape(-1, 1),
-        np.sum(G, axis=0).reshape(1, -1),
-        loss_fun,
-    )
-    cost_G = (1 - reg) * np.sum(M * G) + reg * ot.gromov.gwloss(constC, hC1, hC2, G)
-    return alpha, a, cost_G

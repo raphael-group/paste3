@@ -76,6 +76,10 @@ def stack_slices_pairwise(
             translations.append(tY)
         else:
             x, y = result
+
+        if is_partial:
+            shift = new_coor[i][0, :] - x[0, :]
+            y = y + shift
         new_coor.append(y)
 
     new_slices = []
@@ -231,43 +235,3 @@ def generalized_procrustes_analysis(
         return X, Y, R, tX, tY
     else:
         return X, Y
-
-
-def partial_stack_slices_pairwise(slices, pis):
-    """
-    Projecting all slices onto the same 2D coordinate system.
-
-    In other words, project:
-
-        slices[0] --> slices[1] --> slices[2] --> ...
-
-    param: slices - list of slices (AnnData Object)
-    param: pis - list of pi (partial_pairwise_align output) between consecutive slices
-
-    Return: new_slices - list of slices (AnnData Object) with new spatial coordinates.
-    """
-
-    assert (
-        len(slices) == len(pis) + 1
-    ), "'slices' should have length one more than 'pis'. Please double check."
-    assert len(slices) > 1, "You should have at least 2 layers."
-
-    new_coor = []
-    S1, S2 = generalized_procrustes_analysis(
-        slices[0].obsm["spatial"], slices[1].obsm["spatial"], pis[0], is_partial=True
-    )
-    new_coor.append(S1)
-    new_coor.append(S2)
-    for i in range(1, len(slices) - 1):
-        x, y = generalized_procrustes_analysis(
-            new_coor[i], slices[i + 1].obsm["spatial"], pis[i], is_partial=True
-        )
-        shift = new_coor[i][0, :] - x[0, :]
-        y = y + shift
-        new_coor.append(y)
-    new_slices = []
-    for i in range(len(slices)):
-        s = slices[i].copy()
-        s.obsm["spatial"] = new_coor[i]
-        new_slices.append(s)
-    return new_slices

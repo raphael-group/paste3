@@ -6,7 +6,6 @@ from paste3.visualization import (
     stack_slices_pairwise,
     stack_slices_center,
     generalized_procrustes_analysis,
-    partial_stack_slices_pairwise,
 )
 from pandas.testing import assert_frame_equal
 
@@ -155,7 +154,7 @@ def test_partial_stack_slices_pairwise(slices):
         for i in range(1, n_slices)
     ]
 
-    new_slices = partial_stack_slices_pairwise(slices, pairwise_info)
+    new_slices = stack_slices_pairwise(slices, pairwise_info, is_partial=True)
 
     for i, slice in enumerate(new_slices, start=1):
         assert_frame_equal(

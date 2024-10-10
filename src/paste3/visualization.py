@@ -14,6 +14,7 @@ def stack_slices_pairwise(
     pis: List[np.ndarray],
     output_params: bool = False,
     matrix: bool = False,
+    is_partial: bool = False,
 ) -> Tuple[List[AnnData], Optional[List[float]], Optional[List[np.ndarray]]]:
     """
     Align spatial coordinates of sequential pairwise slices.
@@ -28,6 +29,7 @@ def stack_slices_pairwise(
         output_params: If ``True``, addtionally return angles of rotation (theta) and translations for each slice.
         matrix: If ``True`` and output_params is also ``True``, the rotation is
             return as a matrix instead of an angle for each slice.
+        is_partial: Boolean of whether this is partial pairwise analysis or a total one
 
     Returns:
         - List of slices with aligned spatial coordinates.
@@ -44,38 +46,40 @@ def stack_slices_pairwise(
     new_coor = []
     thetas = []
     translations = []
-    if not output_params:
-        S1, S2 = generalized_procrustes_analysis(
-            slices[0].obsm["spatial"], slices[1].obsm["spatial"], pis[0]
-        )
-    else:
-        S1, S2, theta, tX, tY = generalized_procrustes_analysis(
-            slices[0].obsm["spatial"],
-            slices[1].obsm["spatial"],
-            pis[0],
-            output_params=output_params,
-            matrix=matrix,
-        )
+    result = generalized_procrustes_analysis(
+        slices[0].obsm["spatial"],
+        slices[1].obsm["spatial"],
+        pis[0],
+        is_partial=is_partial,
+        output_params=output_params,
+    )
+    if output_params:
+        S1, S2, theta, tX, tY = result
         thetas.append(theta)
         translations.append(tX)
         translations.append(tY)
+    else:
+        S1, S2 = result
     new_coor.append(S1)
     new_coor.append(S2)
     for i in range(1, len(slices) - 1):
-        if not output_params:
-            x, y = generalized_procrustes_analysis(
-                new_coor[i], slices[i + 1].obsm["spatial"], pis[i]
-            )
-        else:
-            x, y, theta, tX, tY = generalized_procrustes_analysis(
-                new_coor[i],
-                slices[i + 1].obsm["spatial"],
-                pis[i],
-                output_params=output_params,
-                matrix=matrix,
-            )
+        result = generalized_procrustes_analysis(
+            new_coor[i],
+            slices[i + 1].obsm["spatial"],
+            pis[i],
+            is_partial=is_partial,
+            output_params=output_params,
+        )
+        if output_params:
+            x, y, theta, tX, tY = result
             thetas.append(theta)
             translations.append(tY)
+        else:
+            x, y = result
+
+        if is_partial:
+            shift = new_coor[i][0, :] - x[0, :]
+            y = y + shift
         new_coor.append(y)
 
     new_slices = []
@@ -191,7 +195,9 @@ def plot_slice(
         ax.axis("off")
 
 
-def generalized_procrustes_analysis(X, Y, pi, output_params=False, matrix=False):
+def generalized_procrustes_analysis(
+    X, Y, pi, output_params=False, matrix=False, is_partial=False
+):
     """
     Finds and applies optimal rotation between spatial coordinates of two layers (may also do a reflection).
 
@@ -201,6 +207,7 @@ def generalized_procrustes_analysis(X, Y, pi, output_params=False, matrix=False)
         pi: mapping between the two layers output by PASTE
         output_params: Boolean of whether to return rotation angle and translations along with spatial coordiantes.
         matrix: Boolean of whether to return the rotation as a matrix or an angle.
+        is_partial: Boolean of whether this is partial pairwise analysis or a total one
 
 
     Returns:
@@ -212,6 +219,10 @@ def generalized_procrustes_analysis(X, Y, pi, output_params=False, matrix=False)
     tY = pi.sum(axis=0).dot(Y)
     X = X - tX
     Y = Y - tY
+    if is_partial:
+        m = np.sum(pi)
+        X = X * (1.0 / m)
+        Y = Y * (1.0 / m)
     H = Y.T.dot(pi.T.dot(X))
     U, S, Vt = np.linalg.svd(H)
     R = Vt.T.dot(U.T)
@@ -224,63 +235,3 @@ def generalized_procrustes_analysis(X, Y, pi, output_params=False, matrix=False)
         return X, Y, R, tX, tY
     else:
         return X, Y
-
-
-def partial_stack_slices_pairwise(slices, pis):
-    """
-    Projecting all slices onto the same 2D coordinate system.
-
-    In other words, project:
-
-        slices[0] --> slices[1] --> slices[2] --> ...
-
-    param: slices - list of slices (AnnData Object)
-    param: pis - list of pi (partial_pairwise_align output) between consecutive slices
-
-    Return: new_slices - list of slices (AnnData Object) with new spatial coordinates.
-    """
-
-    assert (
-        len(slices) == len(pis) + 1
-    ), "'slices' should have length one more than 'pis'. Please double check."
-    assert len(slices) > 1, "You should have at least 2 layers."
-
-    new_coor = []
-    S1, S2 = partial_procrustes_analysis(
-        slices[0].obsm["spatial"], slices[1].obsm["spatial"], pis[0]
-    )
-    new_coor.append(S1)
-    new_coor.append(S2)
-    for i in range(1, len(slices) - 1):
-        x, y = partial_procrustes_analysis(
-            new_coor[i], slices[i + 1].obsm["spatial"], pis[i]
-        )
-        shift = new_coor[i][0, :] - x[0, :]
-        y = y + shift
-        new_coor.append(y)
-    new_slices = []
-    for i in range(len(slices)):
-        s = slices[i].copy()
-        s.obsm["spatial"] = new_coor[i]
-        new_slices.append(s)
-    return new_slices
-
-
-def partial_procrustes_analysis(X, Y, pi):
-    """
-    Finds and applies optimal rotation between spatial coordinates of two slices given a partial alignment matrix.
-
-    param: X - np array of spatial coordinates (e.g.: sliceA.obs['spatial'])
-    param: Y - np array of spatial coordinates (e.g.: sliceB.obs['spatial'])
-    param: pi - alignment matrix between the two slices output by PASTE2
-
-    Return: projected spatial coordinates of X, Y
-    """
-    m = np.sum(pi)
-    Z = (X - pi.sum(axis=1).dot(X) * (1.0 / m)).T
-    W = (Y - pi.sum(axis=0).dot(Y) * (1.0 / m)).T
-    H = W.dot(pi.T.dot(Z.T))
-    U, S, Vt = np.linalg.svd(H)
-    R = Vt.T.dot(U.T)
-    W = R.dot(W)
-    return Z.T, W.T

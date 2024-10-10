@@ -191,7 +191,9 @@ def plot_slice(
         ax.axis("off")
 
 
-def generalized_procrustes_analysis(X, Y, pi, output_params=False, matrix=False):
+def generalized_procrustes_analysis(
+    X, Y, pi, output_params=False, matrix=False, is_partial=False
+):
     """
     Finds and applies optimal rotation between spatial coordinates of two layers (may also do a reflection).
 
@@ -201,6 +203,7 @@ def generalized_procrustes_analysis(X, Y, pi, output_params=False, matrix=False)
         pi: mapping between the two layers output by PASTE
         output_params: Boolean of whether to return rotation angle and translations along with spatial coordiantes.
         matrix: Boolean of whether to return the rotation as a matrix or an angle.
+        is_partial: Boolean of whether this is partial pairwise analysis or a total one
 
 
     Returns:
@@ -212,6 +215,10 @@ def generalized_procrustes_analysis(X, Y, pi, output_params=False, matrix=False)
     tY = pi.sum(axis=0).dot(Y)
     X = X - tX
     Y = Y - tY
+    if is_partial:
+        m = np.sum(pi)
+        X = X * (1.0 / m)
+        Y = Y * (1.0 / m)
     H = Y.T.dot(pi.T.dot(X))
     U, S, Vt = np.linalg.svd(H)
     R = Vt.T.dot(U.T)
@@ -246,14 +253,14 @@ def partial_stack_slices_pairwise(slices, pis):
     assert len(slices) > 1, "You should have at least 2 layers."
 
     new_coor = []
-    S1, S2 = partial_procrustes_analysis(
-        slices[0].obsm["spatial"], slices[1].obsm["spatial"], pis[0]
+    S1, S2 = generalized_procrustes_analysis(
+        slices[0].obsm["spatial"], slices[1].obsm["spatial"], pis[0], is_partial=True
     )
     new_coor.append(S1)
     new_coor.append(S2)
     for i in range(1, len(slices) - 1):
-        x, y = partial_procrustes_analysis(
-            new_coor[i], slices[i + 1].obsm["spatial"], pis[i]
+        x, y = generalized_procrustes_analysis(
+            new_coor[i], slices[i + 1].obsm["spatial"], pis[i], is_partial=True
         )
         shift = new_coor[i][0, :] - x[0, :]
         y = y + shift
@@ -264,23 +271,3 @@ def partial_stack_slices_pairwise(slices, pis):
         s.obsm["spatial"] = new_coor[i]
         new_slices.append(s)
     return new_slices
-
-
-def partial_procrustes_analysis(X, Y, pi):
-    """
-    Finds and applies optimal rotation between spatial coordinates of two slices given a partial alignment matrix.
-
-    param: X - np array of spatial coordinates (e.g.: sliceA.obs['spatial'])
-    param: Y - np array of spatial coordinates (e.g.: sliceB.obs['spatial'])
-    param: pi - alignment matrix between the two slices output by PASTE2
-
-    Return: projected spatial coordinates of X, Y
-    """
-    m = np.sum(pi)
-    Z = (X - pi.sum(axis=1).dot(X) * (1.0 / m)).T
-    W = (Y - pi.sum(axis=0).dot(Y) * (1.0 / m)).T
-    H = W.dot(pi.T.dot(Z.T))
-    U, S, Vt = np.linalg.svd(H)
-    R = Vt.T.dot(U.T)
-    W = R.dot(W)
-    return Z.T, W.T

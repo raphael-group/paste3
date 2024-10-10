@@ -12,18 +12,6 @@ PASTE Alignment
     paste.pairwise_align
     paste.center_align
 
-PASTE2 Alignment
-~~~~~~~~~~~~~~~~~~
-
-.. autosummary::
-   :toctree: api
-
-    paste2.partial_pairwise_align_given_cost_matrix
-    paste2.partial_pairwise_align_histology
-    paste2.partial_pairwise_align
-    paste2.partial_fused_gromov_wasserstein
-    paste2.gwgrad_partial
-
 Visualization
 ~~~~~~~~~~~~~
 

@@ -2,7 +2,7 @@ name: Test Unpinned Dependencies
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, test_ci]
   pull_request:
     branches: [ main ]
 

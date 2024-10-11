@@ -98,8 +98,6 @@ def test_partial_pairwise_align(slices2, dissimilarity, filename):
     assert_frame_equal(
         pd.DataFrame(pi_BC, columns=[str(i) for i in range(pi_BC.shape[1])]),
         pd.read_csv(output_dir / filename),
-        rtol=1e-03,
-        atol=1e-03,
     )
 
 

@@ -21,8 +21,6 @@ Visualization
     visualization.stack_slices_pairwise
     visualization.stack_slices_center
     visualization.plot_slice
-    visualization.partial_stack_slices_pairwise
-    visualization.partial_procrustes_analysis
 
 Model Selection
 ~~~~~~~~~~~~~~~~

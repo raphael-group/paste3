@@ -6,8 +6,6 @@ from paste3.visualization import (
     stack_slices_pairwise,
     stack_slices_center,
     generalized_procrustes_analysis,
-    partial_stack_slices_pairwise,
-    partial_procrustes_analysis,
 )
 from pandas.testing import assert_frame_equal
 
@@ -156,7 +154,7 @@ def test_partial_stack_slices_pairwise(slices):
         for i in range(1, n_slices)
     ]
 
-    new_slices = partial_stack_slices_pairwise(slices, pairwise_info)
+    new_slices = stack_slices_pairwise(slices, pairwise_info, is_partial=True)
 
     for i, slice in enumerate(new_slices, start=1):
         assert_frame_equal(
@@ -172,10 +170,11 @@ def test_partial_procrustes_analysis(slices):
         input_dir / "center_slice1_pairwise.csv", delimiter=","
     )
 
-    aligned_center, aligned_slice = partial_procrustes_analysis(
+    aligned_center, aligned_slice = generalized_procrustes_analysis(
         center_slice.obsm["spatial"],
         slices[0].obsm["spatial"],
         pairwise_info,
+        is_partial=True,
     )
 
     assert_frame_equal(

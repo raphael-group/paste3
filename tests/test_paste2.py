@@ -21,15 +21,16 @@ def test_partial_pairwise_align_glmpca(fn, slices2):
     fn.return_value = data["glmpca"]
 
     pi_BC = pairwise_align(
-        slices2[0], slices2[1], s=0.7, dissimilarity="glmpca", verbose=True, maxIter=10
+        slices2[0],
+        slices2[1],
+        s=0.7,
+        dissimilarity="glmpca",
+        norm=True,
+        verbose=True,
+        maxIter=10,
     )
 
-    assert_frame_equal(
-        pd.DataFrame(pi_BC, columns=[str(i) for i in range(pi_BC.shape[1])]),
-        pd.read_csv(output_dir / "partial_pairwise_align_glmpca.csv"),
-        rtol=1e-03,
-        atol=1e-03,
-    )
+    assert np.allclose(pi_BC, data["pi_BC"])
 
 
 def test_partial_pairwise_align_given_cost_matrix(slices):

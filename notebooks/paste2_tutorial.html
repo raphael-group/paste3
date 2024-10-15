@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="python">
 <head>
@@ -11,18 +13,14 @@
       <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="../_static/jquery.js"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -57,7 +55,6 @@
 <li class="toctree-l2"><a class="reference internal" href="#Read-in-Spatial-Transcriptomics-slices-as-AnnData-objects">Read in Spatial Transcriptomics slices as AnnData objects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Compute-partial-pairwise-alignment-using-PASTE2">Compute partial pairwise alignment using PASTE2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Project-all-slices-onto-the-same-coordiante-system-according-to-the-alignment">Project all slices onto the same coordiante system according to the alignment</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Let-me-know-if-PASTE2-runs-on-your-machine!-If-you-run-into-any-problem-don't-hesitate-to-reach-out-at-xl5434&#64;princeton.edu.-I-will-respond-as-quickly-as-possible.">Let me know if PASTE2 runs on your machine! If you run into any problem don’t hesitate to reach out at xl5434&#64;princeton.edu. I will respond as quickly as possible.</a></li>
 </ul>
 </li>
 </ul>
@@ -107,7 +104,7 @@
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">paste3</span> <span class="kn">import</span> <span class="n">paste2</span><span class="p">,</span> <span class="n">visualization</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">paste3</span> <span class="kn">import</span> <span class="n">paste</span><span class="p">,</span> <span class="n">visualization</span>
 </pre></div>
 </div>
 </div>
@@ -717,6 +714,26 @@ array([[ 5769,  2807],
 WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns[&#39;spatial&#39;]`
 WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns[&#39;spatial&#39;]`
 WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns[&#39;spatial&#39;]`
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/squidpy/pl/_spatial_utils.py:981: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
+  _cax = scatter(
+/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/squidpy/pl/_spatial_utils.py:981: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
+  _cax = scatter(
+/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/squidpy/pl/_spatial_utils.py:981: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
+  _cax = scatter(
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
 WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns[&#39;spatial&#39;]`
 </pre></div></div>
 </div>
@@ -725,29 +742,9 @@ WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-/Users/aa9078/miniconda3/envs/paste/lib/python3.12/site-packages/squidpy/pl/_spatial_utils.py:981: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
-  _cax = scatter(
-/Users/aa9078/miniconda3/envs/paste/lib/python3.12/site-packages/squidpy/pl/_spatial_utils.py:981: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
-  _cax = scatter(
-/Users/aa9078/miniconda3/envs/paste/lib/python3.12/site-packages/squidpy/pl/_spatial_utils.py:981: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
-  _cax = scatter(
-/Users/aa9078/miniconda3/envs/paste/lib/python3.12/site-packages/squidpy/pl/_spatial_utils.py:981: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
+/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/squidpy/pl/_spatial_utils.py:981: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
   _cax = scatter(
 </pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_paste2_tutorial_12_2.png" src="../_images/notebooks_paste2_tutorial_12_2.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_paste2_tutorial_12_3.png" src="../_images/notebooks_paste2_tutorial_12_3.png" />
-</div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
@@ -756,11 +753,25 @@ WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns
 <img alt="../_images/notebooks_paste2_tutorial_12_4.png" src="../_images/notebooks_paste2_tutorial_12_4.png" />
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <img alt="../_images/notebooks_paste2_tutorial_12_5.png" src="../_images/notebooks_paste2_tutorial_12_5.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste2_tutorial_12_6.png" src="../_images/notebooks_paste2_tutorial_12_6.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste2_tutorial_12_7.png" src="../_images/notebooks_paste2_tutorial_12_7.png" />
 </div>
 </div>
 </section>
@@ -768,12 +779,13 @@ WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns
 <h1>Compute partial pairwise alignment using PASTE2<a class="headerlink" href="#Compute-partial-pairwise-alignment-using-PASTE2" title="Permalink to this heading"></a></h1>
 <p>Give a pair of partially overlapping slices, we can use PASTE2.partial_pairwise_align( ) to find an alignment matrix. To call the function, you need to input the AnnData objects of the two slices, as well as a parameter s, which indicates the overlap percentage of the two slices. In this tutorial, each pair of cropped subslices overlap at 70% of the areas, so we set s=0.7. For your own datasets you should visualize the slices and manually determine the approxiamte overlap percentage (this
 parameter does not have to be very accurate).</p>
-<p>Now we compute an alignment matrix between each pair of slices in our example dataset:</p>
+<p>Now we compute an alignment matrix between each pair of slices in our example dataset.</p>
+<p><strong>In the calls to ``paste3.pairwise_align`` below, we’re using maxIter=20 here to specify a maximum of 20 iterations for pairwise_align. This is only to allow this demo to run in a resonable amount of time. In a real alignment scenario, you should not include this argument</strong>.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pi_AB</span> <span class="o">=</span> <span class="n">paste2</span><span class="o">.</span><span class="n">partial_pairwise_align</span><span class="p">(</span><span class="n">sliceA</span><span class="p">,</span> <span class="n">sliceB</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pi_AB</span> <span class="o">=</span> <span class="n">paste</span><span class="o">.</span><span class="n">pairwise_align</span><span class="p">(</span><span class="n">sliceA</span><span class="p">,</span> <span class="n">sliceB</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">maxIter</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -782,60 +794,113 @@ parameter does not have to be very accurate).</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-PASTE2 starts...
-Starting GLM-PCA...
-Iteration: 0 | deviance=1.3992E+7
-Iteration: 1 | deviance=1.3990E+7
-Iteration: 2 | deviance=1.2289E+7
-Iteration: 3 | deviance=1.1924E+7
-Iteration: 4 | deviance=1.1782E+7
-Iteration: 5 | deviance=1.1718E+7
-Iteration: 6 | deviance=1.1685E+7
-Iteration: 7 | deviance=1.1664E+7
-Iteration: 8 | deviance=1.1649E+7
-Iteration: 9 | deviance=1.1638E+7
-Iteration: 10 | deviance=1.1629E+7
-Iteration: 11 | deviance=1.1623E+7
-Iteration: 12 | deviance=1.1617E+7
-Iteration: 13 | deviance=1.1612E+7
-Iteration: 14 | deviance=1.1608E+7
-Iteration: 15 | deviance=1.1605E+7
-Iteration: 16 | deviance=1.1602E+7
-Iteration: 17 | deviance=1.1599E+7
-Iteration: 18 | deviance=1.1597E+7
-Iteration: 19 | deviance=1.1594E+7
-Iteration: 20 | deviance=1.1593E+7
-Iteration: 21 | deviance=1.1591E+7
-Iteration: 22 | deviance=1.1589E+7
-Iteration: 23 | deviance=1.1588E+7
-Iteration: 24 | deviance=1.1587E+7
-GLM-PCA finished.
+Using selected backend cpu. If you want to use gpu, set use_gpu = True.
 It.  |Loss        |Relative loss|Absolute loss
 ------------------------------------------------
-    0|5.865545e+01|0.000000e+00|0.000000e+00
-    1|1.618683e+01|2.623652e+00|4.246862e+01
-    2|1.092222e+01|4.820098e-01|5.264615e+00
+    0|6.710936e+05|0.000000e+00|0.000000e+00
+    1|1.505418e+05|3.457856e+00|5.205518e+05
+    2|1.220871e+05|2.330693e-01|2.845474e+04
+    3|7.182183e+02|1.689860e+02|1.213688e+05
+    4|1.601949e+02|3.483404e+00|5.580234e+02
+    5|1.051958e+02|5.228253e-01|5.499904e+01
+    6|9.676084e+01|8.717369e-02|8.434999e+00
+    7|9.517841e+01|1.662587e-02|1.582424e+00
+    8|9.494375e+01|2.471638e-03|2.346665e-01
+    9|9.486669e+01|8.122864e-04|7.705892e-02
+   10|9.478770e+01|8.332650e-04|7.898328e-02
+   11|9.473084e+01|6.002192e-04|5.685927e-02
+   12|9.468515e+01|4.826118e-04|4.569617e-02
+   13|9.460811e+01|8.143292e-04|7.704214e-02
+   14|9.450380e+01|1.103692e-03|1.043031e-01
+   15|9.436983e+01|1.419607e-03|1.339681e-01
+   16|9.423024e+01|1.481454e-03|1.395978e-01
+   17|9.406579e+01|1.748261e-03|1.644516e-01
+   18|9.389097e+01|1.861941e-03|1.748194e-01
+   19|9.377689e+01|1.216480e-03|1.140777e-01
+It.  |Loss        |Relative loss|Absolute loss
+------------------------------------------------
+   20|9.365593e+01|1.291481e-03|1.209548e-01
 </pre></div></div>
 </div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pi_BC</span> <span class="o">=</span> <span class="n">paste2</span><span class="o">.</span><span class="n">partial_pairwise_align</span><span class="p">(</span><span class="n">sliceB</span><span class="p">,</span> <span class="n">sliceC</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pi_BC</span> <span class="o">=</span> <span class="n">paste</span><span class="o">.</span><span class="n">pairwise_align</span><span class="p">(</span><span class="n">sliceB</span><span class="p">,</span> <span class="n">sliceC</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">maxIter</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Using selected backend cpu. If you want to use gpu, set use_gpu = True.
+It.  |Loss        |Relative loss|Absolute loss
+------------------------------------------------
+    0|6.804111e+05|0.000000e+00|0.000000e+00
+    1|1.488760e+05|3.570320e+00|5.315350e+05
+    2|9.497990e+04|5.674479e-01|5.389614e+04
+    3|2.860614e+02|3.310262e+02|9.469384e+04
+    4|1.158295e+02|1.469678e+00|1.702320e+02
+    5|1.027988e+02|1.267584e-01|1.303062e+01
+    6|1.019380e+02|8.445043e-03|8.608705e-01
+    7|1.017369e+02|1.976297e-03|2.010624e-01
+    8|1.015294e+02|2.043557e-03|2.074812e-01
+    9|1.013558e+02|1.712962e-03|1.736186e-01
+   10|1.012657e+02|8.895452e-04|9.008045e-02
+   11|1.011790e+02|8.569265e-04|8.670299e-02
+   12|1.011412e+02|3.742051e-04|3.784754e-02
+   13|1.010967e+02|4.398527e-04|4.446766e-02
+   14|1.010753e+02|2.123128e-04|2.145957e-02
+   15|1.010698e+02|5.388374e-05|5.446019e-03
+   16|1.010680e+02|1.752720e-05|1.771439e-03
+   17|1.010673e+02|7.010470e-06|7.085294e-04
+   18|1.010653e+02|2.012981e-05|2.034425e-03
+   19|1.010635e+02|1.776286e-05|1.795176e-03
+It.  |Loss        |Relative loss|Absolute loss
+------------------------------------------------
+   20|1.010617e+02|1.787046e-05|1.806019e-03
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pi_CD</span> <span class="o">=</span> <span class="n">paste2</span><span class="o">.</span><span class="n">partial_pairwise_align</span><span class="p">(</span><span class="n">sliceC</span><span class="p">,</span> <span class="n">sliceD</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pi_CD</span> <span class="o">=</span> <span class="n">paste</span><span class="o">.</span><span class="n">pairwise_align</span><span class="p">(</span><span class="n">sliceC</span><span class="p">,</span> <span class="n">sliceD</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">maxIter</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Using selected backend cpu. If you want to use gpu, set use_gpu = True.
+It.  |Loss        |Relative loss|Absolute loss
+------------------------------------------------
+    0|6.529668e+05|0.000000e+00|0.000000e+00
+    1|1.442890e+05|3.525409e+00|5.086778e+05
+    2|6.423619e+04|1.246226e+00|8.005284e+04
+    3|1.431102e+04|3.488582e+00|4.992517e+04
+    4|1.247703e+04|1.469897e-01|1.833995e+03
+    5|1.143487e+04|9.113864e-02|1.042158e+03
+    6|1.052649e+04|8.629430e-02|9.083762e+02
+    7|9.527112e+03|1.048984e-01|9.993789e+02
+    8|8.025563e+03|1.870958e-01|1.501549e+03
+    9|5.574198e+03|4.397700e-01|2.451365e+03
+   10|2.275422e+03|1.449742e+00|3.298776e+03
+   11|1.363298e+02|1.569057e+01|2.139093e+03
+   12|1.296576e+00|1.041460e+02|1.350332e+02
+   13|1.244873e+00|4.153240e-02|5.170258e-02
+   14|1.244784e+00|7.213669e-05|8.979456e-05
+   15|1.244783e+00|8.070282e-07|1.004575e-06
+   16|1.244783e+00|0.000000e+00|0.000000e+00
+</pre></div></div>
 </div>
 <p>Let’s check the shape of each alignment matrix. For aligning a slice with n1 spots and a slice with n2 spots, the alignment matrix should be of shape (n1 * n2)</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">pi_AB</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
@@ -844,10 +909,20 @@ It.  |Loss        |Relative loss|Absolute loss
 </pre></div>
 </div>
 </div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(2929, 2877)
+(2877, 2873)
+(2873, 2701)
+</pre></div></div>
+</div>
 <p>There are other optional parameters to PASTE2.partial_pairwise_align() as well. You can checkout the original function signature in the souce code with documentation.</p>
 <p>Let’s visualize the alignment between sliceA and sliceB:</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">largest_indices</span><span class="p">(</span><span class="n">ary</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
@@ -937,12 +1012,11 @@ It.  |Loss        |Relative loss|Absolute loss
 </pre></div>
 </div>
 </div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste2_tutorial_20_0.png" src="../_images/notebooks_paste2_tutorial_20_0.png" />
 </div>
 </div>
 </section>
@@ -951,19 +1025,19 @@ It.  |Loss        |Relative loss|Absolute loss
 <p>Once the alignment matrix between each pair of adjacent slices in a sequence of consecutive slices are computed, we can use this information to project all slices onto the same 2D coordinate system. 3D reconstruction can be done by assiging a z-coordiante to each slice after the projection.</p>
 <p>Specifically, we use visualization.partial_stack_slices_pairwise( ):</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pis</span> <span class="o">=</span> <span class="p">[</span><span class="n">pi_AB</span><span class="p">,</span> <span class="n">pi_BC</span><span class="p">,</span> <span class="n">pi_CD</span><span class="p">]</span>
 <span class="n">slices</span> <span class="o">=</span> <span class="p">[</span><span class="n">sliceA</span><span class="p">,</span> <span class="n">sliceB</span><span class="p">,</span> <span class="n">sliceC</span><span class="p">,</span> <span class="n">sliceD</span><span class="p">]</span>
 
-<span class="n">new_slices</span> <span class="o">=</span> <span class="n">visualization</span><span class="o">.</span><span class="n">partial_stack_slices_pairwise</span><span class="p">(</span><span class="n">slices</span><span class="p">,</span> <span class="n">pis</span><span class="p">)</span>
+<span class="n">new_slices</span> <span class="o">=</span> <span class="n">visualization</span><span class="o">.</span><span class="n">stack_slices_pairwise</span><span class="p">(</span><span class="n">slices</span><span class="p">,</span> <span class="n">pis</span><span class="p">,</span> <span class="n">is_partial</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <p>Now let’s plot the coordinates of all slices after the projection:</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">layer_to_color_map</span> <span class="o">=</span> <span class="p">{</span>
@@ -1011,64 +1085,27 @@ It.  |Loss        |Relative loss|Absolute loss
 </pre></div>
 </div>
 </div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste2_tutorial_24_0.png" src="../_images/notebooks_paste2_tutorial_24_0.png" />
+</div>
+</div>
 <p>Or just the first two, which reproduces Figure 3C of the paper:</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_slices_overlap</span><span class="p">(</span><span class="n">new_slices</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
-</section>
-<section id="Let-me-know-if-PASTE2-runs-on-your-machine!-If-you-run-into-any-problem-don't-hesitate-to-reach-out-at-xl5434&#64;princeton.edu.-I-will-respond-as-quickly-as-possible.">
-<h1>Let me know if PASTE2 runs on your machine! If you run into any problem don’t hesitate to reach out at <a class="reference external" href="mailto:xl5434&#37;&#52;&#48;princeton&#46;edu">xl5434<span>&#64;</span>princeton<span>&#46;</span>edu</a>. I will respond as quickly as possible.<a class="headerlink" href="#Let-me-know-if-PASTE2-runs-on-your-machine!-If-you-run-into-any-problem-don't-hesitate-to-reach-out-at-xl5434@princeton.edu.-I-will-respond-as-quickly-as-possible." title="Permalink to this heading"></a></h1>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste2_tutorial_26_0.png" src="../_images/notebooks_paste2_tutorial_26_0.png" />
 </div>
 </div>
 </section>

@@ -1,6 +1,0 @@
-﻿paste3.visualization.partial\_stack\_slices\_pairwise
-=====================================================
-
-.. currentmodule:: paste3.visualization
-
-.. autofunction:: partial_stack_slices_pairwise

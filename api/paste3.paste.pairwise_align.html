@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="python">
 <head>
@@ -10,16 +12,12 @@
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="../_static/jquery.js"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -57,7 +55,6 @@
 <li class="toctree-l3"><a class="reference internal" href="paste3.paste.center_align.html">paste3.paste.center_align</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../api.html#paste2-alignment">PASTE2 Alignment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api.html#visualization">Visualization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api.html#model-selection">Model Selection</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api.html#glmpca">GLMPCA</a></li>
@@ -96,7 +93,7 @@
 <h1>paste3.paste.pairwise_align<a class="headerlink" href="#paste3-paste-pairwise-align" title="Permalink to this heading"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="paste3.paste.pairwise_align">
-<span class="sig-prename descclassname"><span class="pre">paste3.paste.</span></span><span class="sig-name descname"><span class="pre">pairwise_align</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sliceA</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sliceB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha=0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dissimilarity='kl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_rep=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">G_init=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_distribution=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b_distribution=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numItermax=200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend=&lt;ot.backend.NumpyBackend</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpu=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_obj=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu_verbose=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/paste3/paste.html#pairwise_align"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#paste3.paste.pairwise_align" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">paste3.paste.</span></span><span class="sig-name descname"><span class="pre">pairwise_align</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sliceA</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sliceB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">M=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha=0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dissimilarity='kl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_rep=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">G_init=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_distribution=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b_distribution=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numItermax=200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend=&lt;ot.backend.NumpyBackend</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpu=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_obj=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu_verbose=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxIter=1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizeTheta=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps=0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_histology=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">armijo=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/paste3/paste.html#pairwise_align"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#paste3.paste.pairwise_align" title="Permalink to this definition"></a></dt>
 <dd><p>Calculates and returns optimal alignment of two slices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

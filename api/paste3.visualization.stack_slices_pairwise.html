@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="python">
 <head>
@@ -10,21 +12,17 @@
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="../_static/jquery.js"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="paste3.visualization.stack_slices_center" href="paste3.visualization.stack_slices_center.html" />
-    <link rel="prev" title="paste3.paste2.gwgrad_partial" href="paste3.paste2.gwgrad_partial.html" /> 
+    <link rel="prev" title="paste3.paste.center_align" href="paste3.paste.center_align.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -50,7 +48,6 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../api.html#paste-alignment">PASTE Alignment</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api.html#paste2-alignment">PASTE2 Alignment</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../api.html#visualization">Visualization</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">paste3.visualization.stack_slices_pairwise</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#paste3.visualization.stack_slices_pairwise"><code class="docutils literal notranslate"><span class="pre">stack_slices_pairwise()</span></code></a></li>
@@ -58,8 +55,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="paste3.visualization.stack_slices_center.html">paste3.visualization.stack_slices_center</a></li>
 <li class="toctree-l3"><a class="reference internal" href="paste3.visualization.plot_slice.html">paste3.visualization.plot_slice</a></li>
-<li class="toctree-l3"><a class="reference internal" href="paste3.visualization.partial_stack_slices_pairwise.html">paste3.visualization.partial_stack_slices_pairwise</a></li>
-<li class="toctree-l3"><a class="reference internal" href="paste3.visualization.partial_procrustes_analysis.html">paste3.visualization.partial_procrustes_analysis</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../api.html#model-selection">Model Selection</a></li>
@@ -99,7 +94,7 @@
 <h1>paste3.visualization.stack_slices_pairwise<a class="headerlink" href="#paste3-visualization-stack-slices-pairwise" title="Permalink to this heading"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="paste3.visualization.stack_slices_pairwise">
-<span class="sig-prename descclassname"><span class="pre">paste3.visualization.</span></span><span class="sig-name descname"><span class="pre">stack_slices_pairwise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">slices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/paste3/visualization.html#stack_slices_pairwise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#paste3.visualization.stack_slices_pairwise" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">paste3.visualization.</span></span><span class="sig-name descname"><span class="pre">stack_slices_pairwise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">slices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_partial</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/paste3/visualization.html#stack_slices_pairwise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#paste3.visualization.stack_slices_pairwise" title="Permalink to this definition"></a></dt>
 <dd><p>Align spatial coordinates of sequential pairwise slices.</p>
 <p>In other words, align:</p>
 <blockquote>
@@ -113,6 +108,7 @@
 <li><p><strong>output_params</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) -- If <code class="docutils literal notranslate"><span class="pre">True</span></code>, addtionally return angles of rotation (theta) and translations for each slice.</p></li>
 <li><p><strong>matrix</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) -- If <code class="docutils literal notranslate"><span class="pre">True</span></code> and output_params is also <code class="docutils literal notranslate"><span class="pre">True</span></code>, the rotation is
 return as a matrix instead of an angle for each slice.</p></li>
+<li><p><strong>is_partial</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) -- Boolean of whether this is partial pairwise analysis or a total one</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -138,7 +134,7 @@ return as a matrix instead of an angle for each slice.</p></li>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="paste3.paste2.gwgrad_partial.html" class="btn btn-neutral float-left" title="paste3.paste2.gwgrad_partial" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="paste3.paste.center_align.html" class="btn btn-neutral float-left" title="paste3.paste.center_align" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="paste3.visualization.stack_slices_center.html" class="btn btn-neutral float-right" title="paste3.visualization.stack_slices_center" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

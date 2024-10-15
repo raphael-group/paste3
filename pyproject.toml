@@ -49,3 +49,16 @@ dev = [
     "ruff",
     "pre-commit",
 ]
+
+docs = [
+    "sphinx==6.2.1",
+    "myst-parser",
+    "sphinx-autodoc-typehints",
+    "nbsphinx",
+    "sphinx-gallery",
+    "sphinx-rtd-theme",
+    "sphinx-autodoc-annotation",
+    "jupyterlab",
+    "plotly",
+    "squidpy"
+]

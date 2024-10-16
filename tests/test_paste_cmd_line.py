@@ -1,8 +1,10 @@
 import pandas as pd
+import anndata as ad
 from pandas.testing import assert_frame_equal
 from pathlib import Path
 from collections import namedtuple
 from paste3.paste_cmd_line import main as paste_cmd_line
+from paste3.io import get_shape, process_files
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
@@ -111,3 +113,38 @@ def test_cmd_line_pairwise(tmp_path):
         pd.read_csv(tmp_path / "paste_output/slice1_slice2_pairwise.csv"),
         pd.read_csv(output_dir / "slices_1_2_pairwise.csv"),
     )
+
+
+def test_process_files_csv():
+    """Ensure process files works with csv inputs."""
+    gene_fpath = []
+    spatial_fpath = []
+    for i in range(1, 5):
+        gene_fpath.append(Path(f"{input_dir}/slice{i}.csv"))
+        spatial_fpath.append(Path(f"{input_dir}/slice{i}_coor.csv"))
+
+    ad_objs = process_files(
+        gene_fpath,
+        spatial_fpath,
+    )
+    for obj in ad_objs:
+        assert isinstance(obj, ad.AnnData)
+
+
+def test_process_files_ann_data():
+    """Ensure process files works with Ann Data inputs."""
+    gene_fpath = []
+    for i in range(1, 5):
+        gene_fpath.append(Path(f"{input_dir}/slice{i}.h5ad"))
+
+    ad_objs = process_files(gene_fpath, s_fpath=None)
+    for obj in ad_objs:
+        assert isinstance(obj, ad.AnnData)
+
+
+def test_get_shape():
+    s_fpath = Path(f"{input_dir}/slice1.csv")
+    c_fpath = Path(f"{input_dir}/slice1_coor.csv")
+
+    assert get_shape(s_fpath) == (254, 7999)
+    assert get_shape(c_fpath) == (254, 2)

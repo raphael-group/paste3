@@ -1,257 +1,295 @@
-import scanpy as sc
+import ot.backend
 import numpy as np
-import pandas as pd
 import argparse
-import os
+from pathlib import Path
+
+import pandas as pd
+
+from paste3.io import process_files
+import logging
 from paste3.paste import pairwise_align, center_align
 from paste3.visualization import stack_slices_pairwise, stack_slices_center
 
+logger = logging.getLogger(__name__)
 
-def main(args):
-    # print(args)
-    n_slices = int(len(args.filename) / 2)
-    # Error check arguments
-    if args.mode != "pairwise" and args.mode != "center":
-        raise (ValueError("Please select either 'pairwise' or 'center' mode."))
 
-    if args.alpha < 0 or args.alpha > 1:
-        raise (ValueError("alpha specified outside [0, 1]"))
+def main(
+    mode,
+    gene_fpath,
+    spatial_fpath=None,
+    output_directory="",
+    alpha=0.1,
+    cost="kl",
+    n_components=15,
+    lmbda=None,
+    initial_slice=1,
+    threshold=0.001,
+    coordinates=False,
+    weight_fpath=None,
+    overlap_fraction=None,
+    start=None,
+    seed=None,
+    cost_matrix=None,
+    max_iter=10,
+    norm=False,
+    numItermax=200,
+    use_gpu=False,
+    return_obj=False,
+    optimizeTheta=True,
+    eps=1e-4,
+    is_histology=False,
+    armijo=False,
+):
+    slices = process_files(gene_fpath, spatial_fpath, weight_fpath)
+    n_slices = len(slices)
 
-    if args.initial_slice < 1 or args.initial_slice > n_slices:
-        raise (ValueError("Initial slice specified outside [1, n]"))
+    if not (mode == "pairwise" or mode == "center"):
+        raise (ValueError("Please select either pairwise or center alignment mode."))
 
-    if len(args.lmbda) == 0:
-        lmbda = n_slices * [1.0 / n_slices]
-    elif len(args.lmbda) != n_slices:
-        raise (ValueError("Length of lambda does not equal number of files"))
+    if alpha < 0 or alpha > 1:
+        raise (ValueError("Alpha specified outside of 0-1 range."))
+
+    if initial_slice < 1 or initial_slice > n_slices:
+        raise (ValueError("Initial specified outside of 0 - n range"))
+
+    if overlap_fraction:
+        if overlap_fraction < 0 or overlap_fraction > 1:
+            raise (ValueError("Overlap fraction specified outside of 0-1 range."))
+
+    if lmbda is None:
+        lmbda = n_slices * [1 / n_slices]
+    elif len(lmbda) != n_slices:
+        raise (ValueError("Length of lambda doesn't equal number of files"))
     else:
-        if not all(i >= 0 for i in args.lmbda):
+        if not all(i >= 0 for i in lmbda):
             raise (ValueError("lambda includes negative weights"))
         else:
             print("Normalizing lambda weights into probability vector.")
-            lmbda = args.lmbda
             lmbda = [float(i) / sum(lmbda) for i in lmbda]
 
-    # create slices
-    slices = []
-    for i in range(n_slices):
-        s = sc.read_csv(args.filename[2 * i])
-        s.obsm["spatial"] = np.genfromtxt(args.filename[2 * i + 1], delimiter=",")
-        slices.append(s)
+    if cost_matrix:
+        cost_matrix = np.genfromtxt(cost_matrix, delimiter=",", dtype="float64")
 
-    if len(args.weights) == 0:
-        for i in range(n_slices):
-            slices[i].obsm["weights"] = (
-                np.ones((slices[i].shape[0],)) / slices[i].shape[0]
-            )
-    elif len(args.weights) != n_slices:
-        raise (
-            ValueError(
-                "Number of slices {0} != number of weight files {1}".format(
-                    n_slices, len(args.weights)
-                )
-            )
+    if start is None:
+        pis_init = [None] * (n_slices - 1) if mode == "pairwise" else None
+    elif mode == "pairwise" and not (len(start) == n_slices - 1):
+        raise ValueError(
+            f"Number of slices {n_slices} is not equal to number of start pi files {len(start)}"
         )
     else:
-        for i in range(n_slices):
-            slices[i].obsm["weights"] = np.genfromtxt(args.weights[i], delimiter=",")
-            slices[i].obsm["weights"] = slices[i].obsm["weights"] / np.sum(
-                slices[i].obsm["weights"]
-            )
+        pis_init = [np.genfromtxt(pi, delimiter=",") for pi in start]
 
-    if len(args.start) == 0:
-        pis_init = (n_slices - 1) * [None] if args.mode == "pairwise" else None
-    elif (args.mode == "pairwise" and len(args.start) != n_slices - 1) or (
-        args.mode == "center" and len(args.start) != n_slices
-    ):
-        raise (
-            ValueError(
-                "Number of slices {0} != number of start pi files {1}".format(
-                    n_slices, len(args.start)
-                )
-            )
-        )
-    else:
-        pis_init = [
-            pd.read_csv(args.start[i], index_col=0).to_numpy()
-            for i in range(len(args.start))
-        ]
+    # make output directory if it doesn't exist
+    output_directory = Path(output_directory)
+    Path.mkdir(output_directory, exist_ok=True)
 
-    # create output folder
-    output_path = os.path.join(args.direc, "paste_output")
-    if not os.path.exists(output_path):
-        os.mkdir(output_path)
-
-    if args.mode == "pairwise":
-        print("Computing pairwise alignment.")
-        # compute pairwise align
+    if mode == "pairwise":
+        logger.info("Computing Pairwise Alignment ")
         pis = []
         for i in range(n_slices - 1):
             pi = pairwise_align(
-                slices[i],
-                slices[i + 1],
-                alpha=args.alpha,
-                dissimilarity=args.cost,
+                sliceA=slices[i],
+                sliceB=slices[i + 1],
+                s=overlap_fraction,
+                M=cost_matrix,
+                alpha=alpha,
+                dissimilarity=cost,
+                use_rep=None,
+                G_init=pis_init[i],
                 a_distribution=slices[i].obsm["weights"],
                 b_distribution=slices[i + 1].obsm["weights"],
-                G_init=pis_init[i],
+                norm=norm,
+                numItermax=numItermax,
+                backend=ot.backend.NumpyBackend(),
+                use_gpu=use_gpu,
+                return_obj=return_obj,
+                maxIter=max_iter,
+                optimizeTheta=optimizeTheta,
+                eps=eps,
+                is_histology=is_histology,
+                armijo=armijo,
             )
             pis.append(pi)
-            pi = pd.DataFrame(
+            pd.DataFrame(
                 pi, index=slices[i].obs.index, columns=slices[i + 1].obs.index
+            ).to_csv(output_directory / f"slice_{i+1}_{i+2}_pairwise.csv")
+
+        if coordinates:
+            new_slices = stack_slices_pairwise(
+                slices, pis, is_partial=overlap_fraction is not None
             )
-            output_filename = (
-                "paste_output/slice"
-                + str(i + 1)
-                + "_slice"
-                + str(i + 2)
-                + "_pairwise.csv"
-            )
-            pi.to_csv(os.path.join(args.direc, output_filename))
-        if args.coordinates:
-            new_slices = stack_slices_pairwise(slices, pis)
-            for i in range(n_slices):
-                output_filename = (
-                    "paste_output/slice" + str(i + 1) + "_new_coordinates.csv"
-                )
-                np.savetxt(
-                    os.path.join(args.direc, output_filename),
-                    new_slices[i].obsm["spatial"],
-                    delimiter=",",
-                )
-    elif args.mode == "center":
-        print("Computing center alignment.")
-        initial_slice = slices[args.initial_slice - 1].copy()
-        # compute center align
+
+    elif mode == "center":
+        logger.info("Computing Center Alignment")
+        initial_slice = slices[initial_slice - 1].copy()
+
         center_slice, pis = center_align(
-            initial_slice,
-            slices,
-            lmbda,
-            args.alpha,
-            args.n_components,
-            args.threshold,
-            random_seed=args.seed,
-            dissimilarity=args.cost,
-            distributions=[slices[i].obsm["weights"] for i in range(n_slices)],
+            A=initial_slice,
+            slices=slices,
+            lmbda=lmbda,
+            alpha=alpha,
+            n_components=n_components,
+            threshold=threshold,
+            max_iter=max_iter,
+            dissimilarity=cost,
+            norm=norm,
+            random_seed=seed,
             pis_init=pis_init,
+            distributions=[slice.obsm["weights"] for slice in slices],
+            backend=ot.backend.NumpyBackend(),
+            use_gpu=use_gpu,
         )
-        W = pd.DataFrame(center_slice.uns["paste_W"], index=center_slice.obs.index)
-        H = pd.DataFrame(center_slice.uns["paste_H"], columns=center_slice.var.index)
-        W.to_csv(os.path.join(args.direc, "paste_output/W_center"))
-        H.to_csv(os.path.join(args.direc, "paste_output/H_center"))
-        for i in range(len(pis)):
-            output_filename = (
-                "paste_output/slice_center_slice" + str(i + 1) + "_pairwise.csv"
-            )
-            pi = pd.DataFrame(
+
+        center_slice.write(output_directory / "center_slice.h5ad")
+        for i in range(len(pis) - 1):
+            pd.DataFrame(
                 pis[i], index=center_slice.obs.index, columns=slices[i].obs.index
-            )
-            pi.to_csv(os.path.join(args.direc, output_filename))
-        if args.coordinates:
-            center, new_slices = stack_slices_center(center_slice, slices, pis)
-            for i in range(n_slices):
-                output_filename = (
-                    "paste_output/slice" + str(i + 1) + "_new_coordinates.csv"
-                )
-                np.savetxt(
-                    os.path.join(args.direc, output_filename),
-                    new_slices[i].obsm["spatial"],
-                    delimiter=",",
-                )
-            np.savetxt(
-                os.path.join(args.direc, "paste_output/center_new_coordinates.csv"),
-                center.obsm["spatial"],
-                delimiter=",",
-            )
-    return
+            ).to_csv(output_directory / f"slice_{i}_{i+1}_pairwise.csv")
+
+        if coordinates:
+            new_slices = stack_slices_center(center_slice, slices, pis)
+
+    if coordinates:
+        if mode == "center":
+            center, new_slices = new_slices
+            center.write(output_directory / "new_center.h5ad")
+
+        for i, slice in enumerate(new_slices, start=1):
+            slice.write(output_directory / f"new_slices_{i}.h5ad")
+
+
+def add_args(parser):
+    parser.add_argument(
+        "mode",
+        type=str,
+        default="pairwise",
+        help="Alignment type (Pairwise or Center)",
+    )
+    parser.add_argument(
+        "--gene_fpath",
+        type=str,
+        nargs="+",
+        help="Path to gene expression files (.csv/.h5ad)",
+    )
+    parser.add_argument(
+        "--spatial_fpath",
+        type=str,
+        nargs="*",
+        help="Path to spatial data files (.csv).",
+    )
+    parser.add_argument(
+        "--weight_fpath",
+        type=str,
+        nargs="*",
+        help="Path to the files containing weights of spots in each slice.",
+    )
+    parser.add_argument(
+        "--output_directory",
+        type=str,
+        default="",
+        help="Path to the directory to save output files",
+    )
+    parser.add_argument(
+        "--alpha",
+        type=float,
+        default=0.1,
+        help="Alpha parameter for alignment (range from [0,1])",
+    )
+    parser.add_argument(
+        "--cost",
+        type=str,
+        default="kl",
+        help="Expression dissimilarity cost, either 'kl', 'euc', 'gkl', 'selection_kl', 'pca' or 'glmpca'",
+    )
+    parser.add_argument(
+        "--cost_matrix",
+        type=str,
+        required=False,
+        help="File path to expression dissimilarity cost matrix if available",
+    )
+    parser.add_argument(
+        "--n_components",
+        type=int,
+        default=15,
+        help="Number of components for NMF step in center alignment",
+    )
+    parser.add_argument(
+        "--lmbda",
+        type=float,
+        nargs="+",
+        help="Lambda param in center alignment (weight vector of length n)",
+    )
+    parser.add_argument(
+        "--initial_slice",
+        type=int,
+        default=1,
+        help="Specify which slice is the initial slice for center alignment (1 to n)",
+    )
+    parser.add_argument(
+        "--threshold",
+        type=float,
+        default=0.001,
+        help="Convergence threshold for center alignment.",
+    )
+    parser.add_argument(
+        "--coordinates", action="store_true", help="Compute and save new coordinates"
+    )
+    parser.add_argument(
+        "--overlap_fraction",
+        type=float,
+        default=None,
+        help="Overlap fraction between two slices. (0-1)",
+    )
+    parser.add_argument(
+        "--start",
+        type=str,
+        nargs="+",
+        help="Path to files containing initial starting alignmnets. If not given the OT starts the search with uniform alignments. The format of the files is the same as the alignments files output by PASTE",
+    )
+    parser.add_argument("--norm", action="store_true", help="Normalize Data")
+    parser.add_argument("--max_iter", type=int, help="Maximum number of iterations")
+    parser.add_argument("--use_gpu", action="store_true", help="Use GPU")
+    parser.add_argument(
+        "--return_obj",
+        action="store_true",
+        help="Additionally returns objective function output of FGW-OT",
+    )
+    parser.add_argument(
+        "--is_histology", action="store_true", help="If true, uses histological images "
+    )
+    parser.add_argument(
+        "--armijo",
+        action="store_true",
+        help="If true, runs armijo line search function",
+    )
+    parser.add_argument("--seed", type=int, help="Random seed for reproducibility")
+    return parser
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-f",
-        "--filename",
-        help="path to data files (.csv). Alternate between gene expression and spatial data. Ex: slice1_gene.csv, slice1_coor.csv, slice2_gene.csv, slice2_coor.csv",
-        type=str,
-        default=[],
-        nargs="+",
+    args = add_args(parser).parse_args()
+    main(
+        mode=args.mode,
+        gene_fpath=args.gene_fpath,
+        spatial_fpath=args.spatial_fpath,
+        output_directory=args.output_directory,
+        alpha=args.alpha,
+        cost=args.cost,
+        n_components=args.n_components,
+        lmbda=args.lmbda,
+        initial_slice=args.initial_slice,
+        threshold=args.threshold,
+        coordinates=args.coordinates,
+        weight_fpath=args.weight_fpath,
+        overlap_fraction=args.overlap_fraction,
+        start=args.start,
+        seed=args.seed,
+        cost_matrix=args.cost_matrix,
+        norm=args.norm,
+        numItermax=args.max_iter,
+        use_gpu=args.use_gpu,
+        return_obj=args.return_obj,
+        is_histology=args.is_histology,
+        armijo=args.armijo,
     )
-    parser.add_argument(
-        "-m",
-        "--mode",
-        help="either 'pairwise' or 'center' ",
-        type=str,
-        default="pairwise",
-    )
-    parser.add_argument("-d", "--direc", help="directory to save files", default="")
-    parser.add_argument(
-        "-a",
-        "--alpha",
-        help="alpha param for PASTE (float from [0,1])",
-        type=float,
-        default=0.1,
-    )
-    parser.add_argument(
-        "-c",
-        "--cost",
-        help="expression dissimilarity cost, either 'kl' or 'euclidean' ",
-        type=str,
-        default="kl",
-    )
-    parser.add_argument(
-        "-p",
-        "--n_components",
-        help="n_components for NMF step in center_align",
-        type=int,
-        default=15,
-    )
-    parser.add_argument(
-        "-l",
-        "--lmbda",
-        help="lambda param in center_align (weight vector of length n) ",
-        type=float,
-        default=[],
-        nargs="+",
-    )
-    parser.add_argument(
-        "-i",
-        "--initial_slice",
-        help="specify which slice is the intial slice for center_align (int from 1-n)",
-        type=int,
-        default=1,
-    )
-    parser.add_argument(
-        "-t",
-        "--threshold",
-        help="convergence threshold for center_align",
-        type=float,
-        default=0.001,
-    )
-    parser.add_argument(
-        "-x",
-        "--coordinates",
-        help="output new coordinates",
-        action="store_true",
-        default=False,
-    )
-    parser.add_argument(
-        "-w",
-        "--weights",
-        help="path to files containing weights of spots in each slice. The format of the files is the same as the coordinate files used as input",
-        type=str,
-        default=[],
-        nargs="+",
-    )
-    parser.add_argument(
-        "-s",
-        "--start",
-        help="path to files containing initial starting alignmnets. If not given the OT starts the search with uniform alignments. The format of the files is the same as the alignments files output by PASTE",
-        type=str,
-        default=[],
-        nargs="+",
-    )
-    parser.add_argument(
-        "--seed", help="random seed for reproducibility", type=int, default=None
-    )
-    args = parser.parse_args()
-    main(args)

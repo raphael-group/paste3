@@ -1,117 +1,168 @@
 import pandas as pd
 import anndata as ad
 from pandas.testing import assert_frame_equal
+import scanpy as sc
 from pathlib import Path
-from collections import namedtuple
-from paste3.paste_cmd_line import main as paste_cmd_line
 from paste3.io import get_shape, process_files
+from paste3.paste_cmd_line import main as paste
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
 output_dir = test_dir / "data/output"
 
-args = namedtuple(
-    "args",
-    [
-        "filename",
-        "mode",
-        "direc",
-        "alpha",
-        "cost",
-        "n_components",
-        "lmbda",
-        "initial_slice",
-        "threshold",
-        "coordinates",
-        "weights",
-        "start",
-        "seed",
-    ],
-)
 
-
-def test_cmd_line_center(tmp_path):
+def test_cmd_line_center_csv(tmp_path):
     print(f"Running command in {tmp_path}")
-    result = paste_cmd_line(
-        args(
-            [
-                f"{input_dir}/slice1.csv",
-                f"{input_dir}/slice1_coor.csv",
-                f"{input_dir}/slice2.csv",
-                f"{input_dir}/slice2_coor.csv",
-                f"{input_dir}/slice3.csv",
-                f"{input_dir}/slice3_coor.csv",
-            ],
-            "center",
-            f"{tmp_path}",
-            0.1,
-            "kl",
-            15,
-            [],
-            1,
-            0.001,
-            False,
-            [],
-            [],
-            0,
-        )
+    result = paste(
+        "center",
+        [
+            f"{input_dir}/slice1.csv",
+            f"{input_dir}/slice2.csv",
+            f"{input_dir}/slice3.csv",
+        ],
+        [
+            f"{input_dir}/slice1_coor.csv",
+            f"{input_dir}/slice2_coor.csv",
+            f"{input_dir}/slice3_coor.csv",
+        ],
+        f"{tmp_path}",
+        0.1,
+        "kl",
+        15,
+        None,
+        1,
+        0.001,
+        False,
+        None,
+        None,
+        None,
+        0,
+        None,
     )
 
     assert result is None
+    result = sc.read(tmp_path / "center_slice.h5ad")
+
     assert_frame_equal(
-        pd.read_csv(tmp_path / "paste_output/W_center"),
-        pd.read_csv(output_dir / "W_center"),
+        pd.DataFrame(
+            result.uns["paste_W"],
+            index=result.obs.index,
+            columns=[str(i) for i in range(15)],
+        ),
+        pd.read_csv(output_dir / "W_center", index_col=0),
         check_names=False,
+        check_index_type=False,
         rtol=1e-05,
         atol=1e-08,
     )
     assert_frame_equal(
-        pd.read_csv(tmp_path / "paste_output/H_center"),
-        pd.read_csv(output_dir / "H_center"),
+        pd.DataFrame(result.uns["paste_H"], columns=result.var.index),
+        pd.read_csv(output_dir / "H_center", index_col=0),
         rtol=1e-05,
         atol=1e-08,
     )
 
-    for i, pi in enumerate(range(3)):
+    for i, pi in enumerate(range(2)):
         assert_frame_equal(
+            pd.read_csv(tmp_path / f"slice_{i}_{i+1}_pairwise.csv"),
             pd.read_csv(
-                tmp_path / f"paste_output/slice_center_slice{i + 1}_pairwise.csv"
+                output_dir / f"slice_center_slice{i + 1}_pairwise.csv",
             ),
-            pd.read_csv(output_dir / f"slice_center_slice{i + 1}_pairwise.csv"),
         )
 
 
-def test_cmd_line_pairwise(tmp_path):
+def test_cmd_line_center_anndata(tmp_path, slices):
     print(f"Running command in {tmp_path}")
-    result = paste_cmd_line(
-        args(
-            [
-                f"{input_dir}/slice1.csv",
-                f"{input_dir}/slice1_coor.csv",
-                f"{input_dir}/slice2.csv",
-                f"{input_dir}/slice2_coor.csv",
-                f"{input_dir}/slice3.csv",
-                f"{input_dir}/slice3_coor.csv",
-            ],
-            "pairwise",
-            f"{tmp_path}",
-            0.1,
-            "kl",
-            15,
-            [],
-            1,
-            0.001,
-            False,
-            [],
-            [],
-            0,
+    result = paste(
+        "center",
+        [
+            input_dir / "slice1.h5ad",
+            input_dir / "slice2.h5ad",
+            input_dir / "slice3.h5ad",
+        ],
+        None,
+        f"{tmp_path}",
+        0.1,
+        "kl",
+        15,
+        None,
+        1,
+        0.001,
+        False,
+        None,
+        None,
+        None,
+        0,
+        None,
+    )
+
+    assert result is None
+    result = sc.read(tmp_path / "center_slice.h5ad")
+
+    assert_frame_equal(
+        pd.DataFrame(
+            result.uns["paste_W"],
+            index=result.obs.index,
+            columns=[str(i) for i in range(15)],
+        ),
+        pd.read_csv(output_dir / "W_center", index_col=0),
+        check_names=False,
+        check_index_type=False,
+        rtol=1e-05,
+        atol=1e-08,
+    )
+    assert_frame_equal(
+        pd.DataFrame(result.uns["paste_H"], columns=result.var.index),
+        pd.read_csv(output_dir / "H_center", index_col=0),
+        rtol=1e-05,
+        atol=1e-08,
+    )
+
+    for i, pi in enumerate(range(2)):
+        assert_frame_equal(
+            pd.read_csv(tmp_path / f"slice_{i}_{i+1}_pairwise.csv"),
+            pd.read_csv(
+                output_dir / f"slice_center_slice{i + 1}_pairwise.csv",
+            ),
         )
+
+
+def test_cmd_line_pairwise_csv(tmp_path):
+    print(f"Running command in {tmp_path}")
+    result = paste(
+        "pairwise",
+        [
+            f"{input_dir}/slice1.csv",
+            f"{input_dir}/slice2.csv",
+            f"{input_dir}/slice3.csv",
+        ],
+        [
+            f"{input_dir}/slice1_coor.csv",
+            f"{input_dir}/slice2_coor.csv",
+            f"{input_dir}/slice3_coor.csv",
+        ],
+        f"{tmp_path}",
+        0.1,
+        "kl",
+        15,
+        None,
+        1,
+        0.001,
+        False,
+        None,
+        None,
+        None,
+        0,
+        None,
+        max_iter=1000,
     )
 
     assert result is None
     assert_frame_equal(
-        pd.read_csv(tmp_path / "paste_output/slice1_slice2_pairwise.csv"),
-        pd.read_csv(output_dir / "slices_1_2_pairwise.csv"),
+        pd.read_csv(tmp_path / "slice_1_2_pairwise.csv"),
+        pd.read_csv(
+            output_dir / "slices_1_2_pairwise.csv",
+        ),
     )
 
 

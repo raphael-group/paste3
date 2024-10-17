@@ -4,7 +4,7 @@ from pandas.testing import assert_frame_equal
 import scanpy as sc
 from pathlib import Path
 from paste3.io import get_shape, process_files
-from paste3.paste_cmd_line import main as paste
+from paste3.align import main as paste
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"

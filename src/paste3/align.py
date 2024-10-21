@@ -1,6 +1,5 @@
 import ot.backend
 import numpy as np
-import argparse
 from pathlib import Path
 
 import pandas as pd
@@ -13,7 +12,7 @@ from paste3.visualization import stack_slices_pairwise, stack_slices_center
 logger = logging.getLogger(__name__)
 
 
-def main(
+def align(
     mode,
     gene_fpath,
     spatial_fpath=None,
@@ -160,136 +159,100 @@ def main(
 
 def add_args(parser):
     parser.add_argument(
-        "mode",
-        type=str,
-        default="pairwise",
-        help="Alignment type (Pairwise or Center)",
+        "mode", type=str, help="Alignment type: 'pairwise' or 'center'."
     )
     parser.add_argument(
-        "--gene_fpath",
-        type=str,
-        nargs="+",
-        help="Path to gene expression files (.csv/.h5ad)",
+        "--g_fpath", type=str, nargs="+", help="Paths to gene exp files (.csv/ .h5ad)."
     )
     parser.add_argument(
-        "--spatial_fpath",
-        type=str,
-        nargs="*",
-        help="Path to spatial data files (.csv).",
+        "--s_fpath", type=str, nargs="*", help="Paths to spatial data files (.csv)."
     )
     parser.add_argument(
-        "--weight_fpath",
-        type=str,
-        nargs="*",
-        help="Path to the files containing weights of spots in each slice.",
+        "--w_fpath", type=str, nargs="*", help="Paths to spot weight files (.csv)."
     )
     parser.add_argument(
-        "--output_directory",
-        type=str,
-        default="",
-        help="Path to the directory to save output files",
+        "--output_dir", default="./output", help="Directory to save output files."
     )
     parser.add_argument(
-        "--alpha",
-        type=float,
-        default=0.1,
-        help="Alpha parameter for alignment (range from [0,1])",
+        "--alpha", type=float, default=0.1, help="Alpha param for alignment (0 to 1)."
     )
     parser.add_argument(
         "--cost",
-        type=str,
+        choices=["kl", "euc", "gkl", "selection_kl", "pca", "glmpca"],
         default="kl",
-        help="Expression dissimilarity cost, either 'kl', 'euc', 'gkl', 'selection_kl', 'pca' or 'glmpca'",
+        help="Expression dissimilarity cost",
+    )
+
+    parser.add_argument(
+        "--cost_mat", type=str, help="Paths to exp dissimilarity cost matrix."
     )
     parser.add_argument(
-        "--cost_matrix",
-        type=str,
-        required=False,
-        help="File path to expression dissimilarity cost matrix if available",
+        "--n_comp", type=int, default=15, help="Components for NMF in center alignment."
     )
     parser.add_argument(
-        "--n_components",
-        type=int,
-        default=15,
-        help="Number of components for NMF step in center alignment",
+        "--lmbda", type=float, nargs="+", help="Weight vector for each slice."
     )
     parser.add_argument(
-        "--lmbda",
+        "--init_slice", type=int, default=1, help="First slice for alignment (1 to n)."
+    )
+    parser.add_argument(
+        "--thresh",
         type=float,
-        nargs="+",
-        help="Lambda param in center alignment (weight vector of length n)",
+        default=1e-3,
+        help="Convergence threshold for alignment.",
+    )
+
+    parser.add_argument(
+        "--coor", action="store_true", help="Compute and save new coordinates."
     )
     parser.add_argument(
-        "--initial_slice",
-        type=int,
-        default=1,
-        help="Specify which slice is the initial slice for center alignment (1 to n)",
+        "--ovlp_frac", type=float, default=None, help="Overlap fraction (0-1)."
     )
     parser.add_argument(
-        "--threshold",
-        type=float,
-        default=0.001,
-        help="Convergence threshold for center alignment.",
+        "--start", type=str, nargs="+", help="Paths to initial alignment files."
     )
     parser.add_argument(
-        "--coordinates", action="store_true", help="Compute and save new coordinates"
+        "--norm", action="store_true", help="Normalize expression data if True."
+    )
+    parser.add_argument("--max_iter", type=int, help="Maximum number of iterations.")
+    parser.add_argument(
+        "--gpu", action="store_true", help="Use GPU for processing if True."
+    )
+    parser.add_argument("--r_info", action="store_true", help="Returns log if True.")
+    parser.add_argument(
+        "--hist", action="store_true", help="Use histological images if True."
     )
     parser.add_argument(
-        "--overlap_fraction",
-        type=float,
-        default=None,
-        help="Overlap fraction between two slices. (0-1)",
+        "--armijo", action="store_true", help="Run Armijo line search if True."
     )
     parser.add_argument(
-        "--start",
-        type=str,
-        nargs="+",
-        help="Path to files containing initial starting alignmnets. If not given the OT starts the search with uniform alignments. The format of the files is the same as the alignments files output by PASTE",
+        "--seed", type=int, default=0, help="Random seed for reproducibility."
     )
-    parser.add_argument("--norm", action="store_true", help="Normalize Data")
-    parser.add_argument("--max_iter", type=int, help="Maximum number of iterations")
-    parser.add_argument("--use_gpu", action="store_true", help="Use GPU")
-    parser.add_argument(
-        "--return_obj",
-        action="store_true",
-        help="Additionally returns objective function output of FGW-OT",
-    )
-    parser.add_argument(
-        "--is_histology", action="store_true", help="If true, uses histological images "
-    )
-    parser.add_argument(
-        "--armijo",
-        action="store_true",
-        help="If true, runs armijo line search function",
-    )
-    parser.add_argument("--seed", type=int, help="Random seed for reproducibility")
     return parser
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    args = add_args(parser).parse_args()
-    main(
+def main(args):
+    align(
         mode=args.mode,
-        gene_fpath=args.gene_fpath,
-        spatial_fpath=args.spatial_fpath,
-        output_directory=args.output_directory,
+        gene_fpath=args.g_fpath,
+        spatial_fpath=args.s_fpath,
+        output_directory=args.output_dir,
         alpha=args.alpha,
         cost=args.cost,
-        n_components=args.n_components,
+        n_components=args.n_comp,
         lmbda=args.lmbda,
-        initial_slice=args.initial_slice,
-        threshold=args.threshold,
-        coordinates=args.coordinates,
-        weight_fpath=args.weight_fpath,
-        overlap_fraction=args.overlap_fraction,
+        initial_slice=args.init_slice,
+        threshold=args.thresh,
+        coordinates=args.coor,
+        weight_fpath=args.w_fpath,
+        overlap_fraction=args.ovlp_frac,
         start=args.start,
         seed=args.seed,
-        cost_matrix=args.cost_matrix,
+        cost_matrix=args.cost_mat,
         norm=args.norm,
         numItermax=args.max_iter,
-        use_gpu=args.use_gpu,
-        return_obj=args.return_obj,
-        is_histology=args.is_histology,
+        use_gpu=args.gpu,
+        return_obj=args.r_info,
+        is_histology=args.hist,
         armijo=args.armijo,
     )

@@ -1,5 +1,6 @@
 import pandas as pd
 import anndata as ad
+import pytest
 from pandas.testing import assert_frame_equal
 import scanpy as sc
 from pathlib import Path
@@ -11,76 +12,25 @@ input_dir = test_dir / "data/input"
 output_dir = test_dir / "data/output"
 
 
-def test_cmd_line_center_csv(tmp_path):
-    print(f"Running command in {tmp_path}")
-    result = align(
-        "center",
-        [
-            f"{input_dir}/slice1.csv",
-            f"{input_dir}/slice2.csv",
-            f"{input_dir}/slice3.csv",
-        ],
-        [
-            f"{input_dir}/slice1_coor.csv",
-            f"{input_dir}/slice2_coor.csv",
-            f"{input_dir}/slice3_coor.csv",
-        ],
-        f"{tmp_path}",
-        0.1,
-        "kl",
-        15,
-        None,
-        1,
-        0.001,
-        False,
-        None,
-        None,
-        None,
-        0,
-        None,
-    )
-
-    assert result is None
-    result = sc.read(tmp_path / "center_slice.h5ad")
-
-    assert_frame_equal(
-        pd.DataFrame(
-            result.uns["paste_W"],
-            index=result.obs.index,
-            columns=[str(i) for i in range(15)],
+@pytest.mark.parametrize(
+    "gene_fpath, spatial_fpath",
+    (
+        (
+            [f"{input_dir}/slice{i}.csv" for i in range(1, 4)],
+            [f"{input_dir}/slice{i}_coor.csv" for i in range(1, 4)],
         ),
-        pd.read_csv(output_dir / "W_center", index_col=0),
-        check_names=False,
-        check_index_type=False,
-        rtol=1e-05,
-        atol=1e-08,
-    )
-    assert_frame_equal(
-        pd.DataFrame(result.uns["paste_H"], columns=result.var.index),
-        pd.read_csv(output_dir / "H_center", index_col=0),
-        rtol=1e-05,
-        atol=1e-08,
-    )
-
-    for i, pi in enumerate(range(2)):
-        assert_frame_equal(
-            pd.read_csv(tmp_path / f"slice_{i}_{i+1}_pairwise.csv"),
-            pd.read_csv(
-                output_dir / f"slice_center_slice{i + 1}_pairwise.csv",
-            ),
-        )
-
-
-def test_cmd_line_center_anndata(tmp_path, slices):
+        (
+            [f"{input_dir}/slice{i}.h5ad" for i in range(1, 4)],
+            None,
+        ),
+    ),
+)
+def test_cmd_line_center(tmp_path, gene_fpath, spatial_fpath):
     print(f"Running command in {tmp_path}")
     result = align(
         "center",
-        [
-            input_dir / "slice1.h5ad",
-            input_dir / "slice2.h5ad",
-            input_dir / "slice3.h5ad",
-        ],
-        None,
+        gene_fpath,
+        spatial_fpath,
         f"{tmp_path}",
         0.1,
         "kl",

@@ -1,9 +1,9 @@
 from typing import List, Tuple, Optional
+import torch
 import numpy as np
 from anndata import AnnData
 import ot
 from ot.lp import emd
-from scipy.spatial import distance
 from sklearn.decomposition import NMF
 from paste3.helper import (
     intersect,
@@ -26,8 +26,8 @@ def pairwise_align(
     b_distribution=None,
     norm: bool = False,
     numItermax: int = 200,
-    backend=ot.backend.NumpyBackend(),
-    use_gpu: bool = False,
+    backend=ot.backend.TorchBackend(),
+    use_gpu: bool = True,
     return_obj: bool = False,
     verbose: bool = False,
     gpu_verbose: bool = True,
@@ -116,14 +116,17 @@ def pairwise_align(
     D_A = ot.dist(coordinatesA, coordinatesA, metric="euclidean")
     D_B = ot.dist(coordinatesB, coordinatesB, metric="euclidean")
 
-    if isinstance(nx, ot.backend.TorchBackend) and use_gpu:
+    if isinstance(nx, ot.backend.TorchBackend):
+        D_A = D_A.double()
+        D_B = D_B.double()
+    if use_gpu:
         D_A = D_A.cuda()
         D_B = D_B.cuda()
 
     # Calculate expression dissimilarity
     A_X, B_X = (
-        nx.from_numpy(to_dense_array(extract_data_matrix(sliceA, use_rep))),
-        nx.from_numpy(to_dense_array(extract_data_matrix(sliceB, use_rep))),
+        to_dense_array(extract_data_matrix(sliceA, use_rep)),
+        to_dense_array(extract_data_matrix(sliceB, use_rep)),
     )
 
     if isinstance(nx, ot.backend.TorchBackend) and use_gpu:
@@ -144,11 +147,17 @@ def pairwise_align(
             eps=eps,
             optimizeTheta=optimizeTheta,
         )
-    M = nx.from_numpy(M)
 
     if is_histology:
         # Calculate RGB dissimilarity
-        M_rgb = distance.cdist(sliceA.obsm["rgb"], sliceB.obsm["rgb"])
+        M_rgb = (
+            torch.cdist(
+                torch.Tensor(sliceA.obsm["rgb"]).double(),
+                torch.Tensor(sliceB.obsm["rgb"]).double(),
+            )
+            .to(M.dtype)
+            .to(M.device)
+        )
 
         # Scale M_exp and M_rgb, obtain M by taking half from each
         M_rgb /= M_rgb[M_rgb > 0].max()
@@ -167,6 +176,7 @@ def pairwise_align(
         b = nx.from_numpy(b_distribution)
 
     if isinstance(nx, ot.backend.TorchBackend):
+        M = M.double()
         a = a.double()
         b = b.double()
         if use_gpu:
@@ -228,8 +238,8 @@ def center_align(
     random_seed: Optional[int] = None,
     pis_init: Optional[List[np.ndarray]] = None,
     distributions=None,
-    backend=ot.backend.NumpyBackend(),
-    use_gpu: bool = False,
+    backend=ot.backend.TorchBackend(),
+    use_gpu: bool = True,
     verbose: bool = False,
     gpu_verbose: bool = True,
 ) -> Tuple[AnnData, List[np.ndarray]]:
@@ -509,7 +519,7 @@ def my_fused_gromov_wasserstein(
     numItermax=200,
     tol_rel=1e-9,
     tol_abs=1e-9,
-    use_gpu=False,
+    use_gpu=True,
     numItermaxEmd=100000,
     **kwargs,
 ):
@@ -527,7 +537,7 @@ def my_fused_gromov_wasserstein(
             raise ValueError(
                 "Problem infeasible. Parameter m should be greater" " than 0."
             )
-        elif m > np.min((np.sum(p), np.sum(q))):
+        elif m > min(p.sum(), q.sum()):
             raise ValueError(
                 "Problem infeasible. Parameter m should lower or"
                 " equal to min(|p|_1, |q|_1)."
@@ -537,8 +547,8 @@ def my_fused_gromov_wasserstein(
             _log = {"err": []}
         count = 0
         dummy = 1
-        _p = np.append(p, [(np.sum(q) - m) / dummy] * dummy)
-        _q = np.append(q, [(np.sum(q) - m) / dummy] * dummy)
+        _p = torch.cat([p, torch.Tensor([(q.sum() - m) / dummy] * dummy).to(p.device)])
+        _q = torch.cat([q, torch.Tensor([(q.sum() - m) / dummy] * dummy).to(p.device)])
 
     if G0 is not None:
         G0 = (1 / nx.sum(G0)) * G0
@@ -549,8 +559,8 @@ def my_fused_gromov_wasserstein(
         constC, hC1, hC2 = ot.gromov.init_matrix(
             C1,
             C2,
-            nx.sum(G, axis=1).reshape(-1, 1),
-            nx.sum(G, axis=0).reshape(1, -1),
+            nx.sum(G, axis=1).reshape(-1, 1).to(C1.dtype),
+            nx.sum(G, axis=0).reshape(1, -1).to(C2.dtype),
             loss_fun,
         )
         return ot.gromov.gwloss(constC, hC1, hC2, G)
@@ -574,7 +584,7 @@ def my_fused_gromov_wasserstein(
             if log:
                 # keep track of error only on every 10th iteration
                 if count % 10 == 0:
-                    _log["err"].append(np.linalg.norm(deltaG))
+                    _log["err"].append(torch.norm(deltaG))
             count += 1
 
         if armijo:
@@ -593,8 +603,8 @@ def my_fused_gromov_wasserstein(
 
     def lp_solver(a, b, M, **kwargs):
         if m:
-            _M = np.pad(M, [(0, dummy)] * 2, mode="constant")
-            _M[-dummy:, -dummy:] = np.max(M) * 1e2
+            _M = torch.nn.functional.pad(M, pad=(0, dummy, 0, dummy), mode="constant")
+            _M[-dummy:, -dummy:] = torch.max(M) * 1e2
 
             Gc, innerlog_ = emd(_p, _q, _M, 1000000, log=True)
             if innerlog_.get("warning"):
@@ -711,14 +721,14 @@ def line_search_partial(reg, M, G, C1, C2, deltaG, loss_fun="square_loss"):
     constC, hC1, hC2 = ot.gromov.init_matrix(
         C1,
         C2,
-        np.sum(deltaG, axis=1).reshape(-1, 1),
-        np.sum(deltaG, axis=0).reshape(1, -1),
+        torch.sum(deltaG, axis=1).reshape(-1, 1),
+        torch.sum(deltaG, axis=0).reshape(1, -1),
         loss_fun,
     )
 
-    dot = np.dot(np.dot(C1, deltaG), C2.T)
-    a = reg * np.sum(dot * deltaG)
-    b = (1 - reg) * np.sum(M * deltaG) + 2 * reg * np.sum(
+    dot = torch.matmul(torch.matmul(C1, deltaG), C2.T)
+    a = reg * torch.sum(dot * deltaG)
+    b = (1 - reg) * torch.sum(M * deltaG) + 2 * reg * torch.sum(
         ot.gromov.gwggrad(constC, hC1, hC2, deltaG) * 0.5 * G
     )
     alpha = ot.optim.solve_1d_linesearch_quad(a, b)
@@ -726,9 +736,9 @@ def line_search_partial(reg, M, G, C1, C2, deltaG, loss_fun="square_loss"):
     constC, hC1, hC2 = ot.gromov.init_matrix(
         C1,
         C2,
-        np.sum(G, axis=1).reshape(-1, 1),
-        np.sum(G, axis=0).reshape(1, -1),
+        torch.sum(G, axis=1).reshape(-1, 1),
+        torch.sum(G, axis=0).reshape(1, -1),
         loss_fun,
     )
-    cost_G = (1 - reg) * np.sum(M * G) + reg * ot.gromov.gwloss(constC, hC1, hC2, G)
+    cost_G = (1 - reg) * torch.sum(M * G) + reg * ot.gromov.gwloss(constC, hC1, hC2, G)
     return alpha, a, cost_G

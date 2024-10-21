@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 from scipy.spatial import ConvexHull
 from matplotlib.path import Path
 from scipy.spatial.distance import cdist
@@ -88,7 +89,7 @@ def calculate_convex_hull_edge_inconsistency(sliceA, sliceB, pi):
     sliceA = sliceA.copy()
 
     source_split = []
-    source_mass = np.sum(pi, axis=1)
+    source_mass = torch.sum(pi, axis=1)
     for i in range(len(source_mass)):
         if source_mass[i] > 0:
             source_split.append("true")
@@ -97,10 +98,11 @@ def calculate_convex_hull_edge_inconsistency(sliceA, sliceB, pi):
     sliceA.obs["aligned"] = source_split
 
     source_mapped_points = []
-    source_mass = np.sum(pi, axis=1)
+    source_mass = torch.sum(pi, axis=1)
     for i in range(len(source_mass)):
         if source_mass[i] > 0:
             source_mapped_points.append(sliceA.obsm["spatial"][i])
+
     source_mapped_points = np.array(source_mapped_points)
     source_hull = ConvexHull(source_mapped_points)
     source_hull_path = Path(source_mapped_points[source_hull.vertices])
@@ -116,7 +118,7 @@ def calculate_convex_hull_edge_inconsistency(sliceA, sliceB, pi):
     sliceB = sliceB.copy()
 
     target_split = []
-    target_mass = np.sum(pi, axis=0)
+    target_mass = torch.sum(pi, axis=0)
     for i in range(len(target_mass)):
         if target_mass[i] > 0:
             target_split.append("true")
@@ -125,7 +127,7 @@ def calculate_convex_hull_edge_inconsistency(sliceA, sliceB, pi):
     sliceB.obs["aligned"] = target_split
 
     target_mapped_points = []
-    target_mass = np.sum(pi, axis=0)
+    target_mass = torch.sum(pi, axis=0)
     for i in range(len(target_mass)):
         if target_mass[i] > 0:
             target_mapped_points.append(sliceB.obsm["spatial"][i])
@@ -195,7 +197,9 @@ def select_overlap_fraction(sliceA, sliceB, alpha=0.1, show_plot=True, numIterma
         to_dense_array(extract_data_matrix(sliceA, None)),
         to_dense_array(extract_data_matrix(sliceB, None)),
     )
-    M = glmpca_distance(A_X, B_X, latent_dim=50, filter=True, maxIter=numItermax)
+    M = torch.Tensor(
+        glmpca_distance(A_X, B_X, latent_dim=50, filter=True, maxIter=numItermax)
+    ).double()
 
     m_to_pi = {}
     for m in overlap_to_check:

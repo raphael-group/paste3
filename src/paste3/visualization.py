@@ -1,6 +1,7 @@
 from typing import List, Tuple, Optional
 from anndata import AnnData
 import numpy as np
+import torch
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -47,8 +48,8 @@ def stack_slices_pairwise(
     thetas = []
     translations = []
     result = generalized_procrustes_analysis(
-        slices[0].obsm["spatial"],
-        slices[1].obsm["spatial"],
+        torch.Tensor(slices[0].obsm["spatial"]).to(pis[0].dtype).to(pis[0].device),
+        torch.Tensor(slices[1].obsm["spatial"]).to(pis[0].dtype).to(pis[0].device),
         pis[0],
         is_partial=is_partial,
         output_params=output_params,
@@ -65,7 +66,9 @@ def stack_slices_pairwise(
     for i in range(1, len(slices) - 1):
         result = generalized_procrustes_analysis(
             new_coor[i],
-            slices[i + 1].obsm["spatial"],
+            torch.Tensor(slices[i + 1].obsm["spatial"])
+            .to(pis[i].dtype)
+            .to(pis[i].device),
             pis[i],
             is_partial=is_partial,
             output_params=output_params,
@@ -85,7 +88,7 @@ def stack_slices_pairwise(
     new_slices = []
     for i in range(len(slices)):
         s = slices[i].copy()
-        s.obsm["spatial"] = new_coor[i]
+        s.obsm["spatial"] = new_coor[i].cpu().numpy()
         new_slices.append(s)
 
     if not output_params:
@@ -141,12 +144,14 @@ def stack_slices_center(
     for i in range(len(slices)):
         if not output_params:
             c, y = generalized_procrustes_analysis(
-                center_slice.obsm["spatial"], slices[i].obsm["spatial"], pis[i]
+                torch.Tensor(center_slice.obsm["spatial"]).double(),
+                torch.Tensor(slices[i].obsm["spatial"]).double(),
+                pis[i],
             )
         else:
             c, y, theta, tX, tY = generalized_procrustes_analysis(
-                center_slice.obsm["spatial"],
-                slices[i].obsm["spatial"],
+                torch.Tensor(center_slice.obsm["spatial"]).double(),
+                torch.Tensor(slices[i].obsm["spatial"]).double(),
                 pis[i],
                 output_params=output_params,
                 matrix=matrix,
@@ -158,11 +163,11 @@ def stack_slices_center(
     new_slices = []
     for i in range(len(slices)):
         s = slices[i].copy()
-        s.obsm["spatial"] = new_coor[i]
+        s.obsm["spatial"] = new_coor[i].cpu().numpy()
         new_slices.append(s)
 
     new_center = center_slice.copy()
-    new_center.obsm["spatial"] = c
+    new_center.obsm["spatial"] = c.cpu().numpy()
     if not output_params:
         return new_center, new_slices
     else:
@@ -215,21 +220,21 @@ def generalized_procrustes_analysis(
     """
     assert X.shape[1] == 2 and Y.shape[1] == 2
 
-    tX = pi.sum(axis=1).dot(X)
-    tY = pi.sum(axis=0).dot(Y)
+    tX = pi.sum(axis=1).matmul(X)
+    tY = pi.sum(axis=0).matmul(Y)
     X = X - tX
     Y = Y - tY
     if is_partial:
-        m = np.sum(pi)
+        m = torch.sum(pi)
         X = X * (1.0 / m)
         Y = Y * (1.0 / m)
-    H = Y.T.dot(pi.T.dot(X))
-    U, S, Vt = np.linalg.svd(H)
-    R = Vt.T.dot(U.T)
-    Y = R.dot(Y.T).T
+    H = Y.T.matmul(pi.T.matmul(X))
+    U, S, Vt = torch.linalg.svd(H, full_matrices=True)
+    R = Vt.T.matmul(U.T)
+    Y = R.matmul(Y.T).T
     if output_params and not matrix:
-        M = np.array([[0, -1], [1, 0]])
-        theta = np.arctan(np.trace(M.dot(H)) / np.trace(H))
+        M = torch.Tensor([[0, -1], [1, 0]]).double()
+        theta = torch.arctan(torch.trace(M.matmul(H)) / torch.trace(H))
         return X, Y, theta, tX, tY
     elif output_params and matrix:
         return X, Y, R, tX, tY

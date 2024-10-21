@@ -1,5 +1,6 @@
 from pathlib import Path
 import numpy as np
+import torch
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
@@ -56,8 +57,8 @@ def test_kl_divergence_backend(slices):
 
 
 def test_kl_divergence(slices):
-    X = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    Y = np.array([[2, 4, 6], [8, 10, 12], [14, 16, 28]])
+    X = torch.Tensor([[1, 2, 3], [4, 5, 6], [7, 8, 9]]).double()
+    Y = torch.Tensor([[2, 4, 6], [8, 10, 12], [14, 16, 28]]).double()
 
     kl_divergence_matrix = kl_divergence(X, Y)
     expected_kl_divergence_matrix = np.array(
@@ -67,12 +68,9 @@ def test_kl_divergence(slices):
             [0.05534049, 0.00193493, 0.02355472],
         ]
     )
-    assert np.all(
-        np.isclose(
-            kl_divergence_matrix,
-            expected_kl_divergence_matrix,
-            rtol=1e-04,
-        )
+    assert np.allclose(
+        kl_divergence_matrix,
+        expected_kl_divergence_matrix,
     )
 
 
@@ -87,8 +85,8 @@ def test_filter_for_common_genes(slices):
 
 
 def test_generalized_kl_divergence(slices):
-    X = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    Y = np.array([[2, 4, 6], [8, 10, 12], [14, 16, 28]])
+    X = torch.Tensor([[1, 2, 3], [4, 5, 6], [7, 8, 9]]).double()
+    Y = torch.Tensor([[2, 4, 6], [8, 10, 12], [14, 16, 28]]).double()
 
     generalized_kl_divergence_matrix = generalized_kl_divergence(X, Y)
     expected_kl_divergence_matrix = np.array(
@@ -98,22 +96,19 @@ def test_generalized_kl_divergence(slices):
             [5.9637042, 0.69099319, 13.3879729],
         ]
     )
-    assert np.all(
-        np.isclose(
-            generalized_kl_divergence_matrix,
-            expected_kl_divergence_matrix,
-            rtol=1e-04,
-        )
+    assert np.allclose(
+        generalized_kl_divergence_matrix,
+        expected_kl_divergence_matrix,
     )
 
 
 def test_glmpca_distance():
-    sliceA_X = np.genfromtxt(input_dir / "sliceA_X.csv", delimiter=",", skip_header=1)[
-        10:, :1000
-    ]
-    sliceB_X = np.genfromtxt(input_dir / "sliceB_X.csv", delimiter=",", skip_header=1)[
-        10:, :1000
-    ]
+    sliceA_X = torch.Tensor(
+        np.genfromtxt(input_dir / "sliceA_X.csv", delimiter=",", skip_header=1)
+    ).double()[10:, :1000]
+    sliceB_X = torch.Tensor(
+        np.genfromtxt(input_dir / "sliceB_X.csv", delimiter=",", skip_header=1)
+    ).double()[10:, :1000]
 
     glmpca_distance_matrix = glmpca_distance(
         sliceA_X, sliceB_X, latent_dim=10, filter=True, maxIter=10

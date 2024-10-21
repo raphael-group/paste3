@@ -4,7 +4,7 @@ from pandas.testing import assert_frame_equal
 import scanpy as sc
 from pathlib import Path
 from paste3.io import get_shape, process_files
-from paste3.align import main as paste
+from paste3.align import align
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
@@ -13,7 +13,7 @@ output_dir = test_dir / "data/output"
 
 def test_cmd_line_center_csv(tmp_path):
     print(f"Running command in {tmp_path}")
-    result = paste(
+    result = align(
         "center",
         [
             f"{input_dir}/slice1.csv",
@@ -73,7 +73,7 @@ def test_cmd_line_center_csv(tmp_path):
 
 def test_cmd_line_center_anndata(tmp_path, slices):
     print(f"Running command in {tmp_path}")
-    result = paste(
+    result = align(
         "center",
         [
             input_dir / "slice1.h5ad",
@@ -129,7 +129,7 @@ def test_cmd_line_center_anndata(tmp_path, slices):
 
 def test_cmd_line_pairwise_csv(tmp_path):
     print(f"Running command in {tmp_path}")
-    result = paste(
+    result = align(
         "pairwise",
         [
             f"{input_dir}/slice1.csv",

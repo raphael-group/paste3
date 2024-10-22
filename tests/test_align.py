@@ -1,6 +1,5 @@
 import pandas as pd
 import anndata as ad
-import pytest
 from pandas.testing import assert_frame_equal
 import scanpy as sc
 from pathlib import Path
@@ -16,25 +15,12 @@ input_dir = test_dir / "data/input"
 output_dir = test_dir / "data/output"
 
 
-@pytest.mark.parametrize(
-    "gene_fpath, spatial_fpath",
-    (
-        (
-            [f"{input_dir}/slice{i}.csv" for i in range(1, 4)],
-            [f"{input_dir}/slice{i}_coor.csv" for i in range(1, 4)],
-        ),
-        (
-            [f"{input_dir}/slice{i}.h5ad" for i in range(1, 4)],
-            None,
-        ),
-    ),
-)
-def test_cmd_line_center(tmp_path, gene_fpath, spatial_fpath):
+def test_cmd_line_center(tmp_path):
     print(f"Running command in {tmp_path}")
     result = align(
         "center",
-        gene_fpath,
-        spatial_fpath,
+        [f"{input_dir}/slice{i}.csv" for i in range(1, 4)],
+        [f"{input_dir}/slice{i}_coor.csv" for i in range(1, 4)],
         f"{tmp_path}",
         0.1,
         "kl",

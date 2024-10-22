@@ -118,7 +118,7 @@ def high_umi_gene_distance(X, Y, n):
 
     joint_matrix = np.vstack((X, Y))
     gene_umi_counts = np.sum(joint_matrix, axis=0)
-    top_indices = np.sort((-gene_umi_counts).argsort()[:n])
+    top_indices = np.sort((-gene_umi_counts).argsort(kind="stable")[:n])
     X = X[:, top_indices]
     Y = Y[:, top_indices]
     X += np.tile(0.01 * (np.sum(X, axis=1) / X.shape[1]), (X.shape[1], 1)).T

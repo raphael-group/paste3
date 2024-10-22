@@ -228,7 +228,6 @@
         <span class="n">M_rgb</span> <span class="o">/=</span> <span class="n">M_rgb</span><span class="p">[</span><span class="n">M_rgb</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
         <span class="n">M_rgb</span> <span class="o">*=</span> <span class="n">M</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
         <span class="n">M</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">M</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">M_rgb</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="s2">&quot;M_1.csv&quot;</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
 
     <span class="c1"># init distributions</span>
     <span class="k">if</span> <span class="n">a_distribution</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>

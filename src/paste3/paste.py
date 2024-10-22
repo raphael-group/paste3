@@ -154,7 +154,6 @@ def pairwise_align(
         M_rgb /= M_rgb[M_rgb > 0].max()
         M_rgb *= M.max()
         M = 0.5 * M + 0.5 * M_rgb
-        np.savetxt("M_1.csv", M, delimiter=",")
 
     # init distributions
     if a_distribution is None:

@@ -10,6 +10,7 @@ from paste3.glmpca import (
     est_nb_theta,
     glmpca,
 )
+import pytest
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
@@ -60,13 +61,15 @@ def test_remove_intercept():
         assert np.all(np.isclose(i, j))
 
 
-def test_glmpca_init():
+@pytest.mark.parametrize("fam", ("poi", "nb", "mult", "bern"))
+def test_glmpca_init(fam):
     Y = np.genfromtxt(input_dir / "Y.csv", delimiter=",", skip_header=2)
-
-    glmpca_obj = glmpca_init(Y, "poi", None, 100)
-    assert_frame_equal(
-        pd.DataFrame(glmpca_obj["intercepts"], columns=["0"]),
-        pd.read_csv(output_dir / "glmpca_intercepts.csv"),
+    glmpca_obj = glmpca_init(Y, fam, None, 100)
+    np.allclose(
+        glmpca_obj["intercepts"],
+        np.genfromtxt(
+            output_dir / "glmpca_intercepts.csv", delimiter=",", skip_header=1
+        ),
     )
 
 

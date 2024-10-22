@@ -75,7 +75,7 @@ def glmpca_distance(
     joint_matrix = np.vstack((X, Y))
     if filter:
         gene_umi_counts = np.sum(joint_matrix, axis=0)
-        top_indices = np.sort((-gene_umi_counts).argsort()[:2000])
+        top_indices = np.sort((-gene_umi_counts).argsort(kind="stable")[:2000])
         joint_matrix = joint_matrix[:, top_indices]
 
     print("Starting GLM-PCA...")

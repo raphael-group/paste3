@@ -57,12 +57,12 @@ def test_calculate_convex_hull_edge_inconsistency(slices, tmp_path):
     measure_a, measure_b = calculate_convex_hull_edge_inconsistency(
         slices[0], slices[1], pairwise_info
     )
-    assert measure_a == 0.17692307692307693
-    assert measure_b == 0.2058252427184466
+    assert measure_a == 0.18269230769230768
+    assert measure_b == 0.20970873786407768
 
 
 def test_select_overlap_fraction(slices):
     fraction = select_overlap_fraction(
         slices[0], slices[1], show_plot=False, numItermax=10
     )
-    assert fraction == 0.5
+    assert fraction == 0.3

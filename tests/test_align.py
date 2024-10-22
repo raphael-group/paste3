@@ -125,8 +125,8 @@ def test_process_files_csv():
 def test_process_files_ann_data():
     """Ensure process files works with Ann Data inputs."""
     gene_fpath = []
-    for i in range(1, 5):
-        gene_fpath.append(Path(f"{input_dir}/slice{i}.h5ad"))
+    for i in range(3, 7):
+        gene_fpath.append(Path(f"{input_dir}/15167{i}.h5ad"))
 
     ad_objs = process_files(gene_fpath, s_fpath=None)
     for obj in ad_objs:

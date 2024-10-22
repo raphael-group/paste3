@@ -9,7 +9,7 @@ authors = [
 ]
 description = "A computational method to align and integrate spatial transcriptomics experiments."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = "=3.12"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: BSD License",
@@ -25,7 +25,7 @@ dependencies = [
     "scikit-learn",
     "IPython",
     "statsmodels",
-    "torch<2.5.0"
+    "torch"
 ]
 dynamic = ["version"]
 

@@ -155,7 +155,7 @@ def test_get_shape():
     assert get_shape(c_fpath) == (254, 2)
 
 
-def test_version(capsys):
+def test_version():
     result = sp.run(
         [sys.executable, "-m", "paste3", "--version"], capture_output=True, text=True
     )

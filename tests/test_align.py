@@ -6,6 +6,10 @@ import scanpy as sc
 from pathlib import Path
 from paste3.io import get_shape, process_files
 from paste3.align import align
+import sys
+import subprocess as sp
+import paste3
+
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
@@ -149,3 +153,11 @@ def test_get_shape():
 
     assert get_shape(s_fpath) == (254, 7999)
     assert get_shape(c_fpath) == (254, 2)
+
+
+def test_version(capsys):
+    result = sp.run(
+        [sys.executable, "-m", "paste3", "--version"], capture_output=True, text=True
+    )
+    assert result.returncode == 0
+    assert result.stdout.strip() == paste3.__version__

@@ -99,7 +99,7 @@ def align(
                 b_distribution=slices[i + 1].obsm["weights"],
                 norm=norm,
                 numItermax=numItermax,
-                backend=ot.backend.NumpyBackend(),
+                backend=ot.backend.TorchBackend(),
                 use_gpu=use_gpu,
                 return_obj=return_obj,
                 maxIter=max_iter,
@@ -135,7 +135,7 @@ def align(
             random_seed=seed,
             pis_init=pis_init,
             distributions=[slice.obsm["weights"] for slice in slices],
-            backend=ot.backend.NumpyBackend(),
+            backend=ot.backend.TorchBackend(),
             use_gpu=use_gpu,
         )
 

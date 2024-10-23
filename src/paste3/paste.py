@@ -5,12 +5,15 @@ from anndata import AnnData
 import ot
 from ot.lp import emd
 from sklearn.decomposition import NMF
+import logging
 from paste3.helper import (
     intersect,
     to_dense_array,
     extract_data_matrix,
     dissimilarity_metric,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def pairwise_align(
@@ -66,33 +69,10 @@ def pairwise_align(
         - Objective function output of FGW-OT.
     """
 
-    # Determine if gpu or cpu is being used
     if use_gpu:
-        try:
-            import torch
-        except ModuleNotFoundError:
-            print(
-                "We currently only have gpu support for Pytorch. Please install torch."
-            )
-
-        if isinstance(backend, ot.backend.TorchBackend):
-            if torch.cuda.is_available():
-                if gpu_verbose:
-                    print("gpu is available, using gpu.")
-            else:
-                if gpu_verbose:
-                    print("gpu is not available, resorting to torch cpu.")
-                use_gpu = False
-        else:
-            print(
-                "We currently only have gpu support for Pytorch, please set backend = ot.backend.TorchBackend(). Reverting to selected backend cpu."
-            )
+        if not torch.cuda.is_available():
+            logger.debug("GPU is not available, resorting to torch CPU.")
             use_gpu = False
-    else:
-        if gpu_verbose:
-            print(
-                "Using selected backend cpu. If you want to use gpu, set use_gpu = True."
-            )
 
     # subset for common genes
     common_genes = intersect(sliceA.var.index, sliceB.var.index)
@@ -265,31 +245,9 @@ def center_align(
 
     # Determine if gpu or cpu is being used
     if use_gpu:
-        try:
-            import torch
-        except ModuleNotFoundError:
-            print(
-                "We currently only have gpu support for Pytorch. Please install torch."
-            )
-
-        if isinstance(backend, ot.backend.TorchBackend):
-            if torch.cuda.is_available():
-                if gpu_verbose:
-                    print("gpu is available, using gpu.")
-            else:
-                if gpu_verbose:
-                    print("gpu is not available, resorting to torch cpu.")
-                use_gpu = False
-        else:
-            print(
-                "We currently only have gpu support for Pytorch, please set backend = ot.backend.TorchBackend(). Reverting to selected backend cpu."
-            )
+        if not torch.cuda.is_available():
+            logger.debug("GPU is not available, resorting to torch CPU.")
             use_gpu = False
-    else:
-        if gpu_verbose:
-            print(
-                "Using selected backend cpu. If you want to use gpu, set use_gpu = True."
-            )
 
     if lmbda is None:
         lmbda = len(slices) * [1 / len(slices)]

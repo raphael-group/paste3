@@ -117,3 +117,24 @@ def test_glmpca_covariates():
     assert np.allclose(res["loadings"], saved_result["loadings"])
     assert np.allclose(res["factors"], saved_result["factors"])
     assert np.allclose(res["dev"], saved_result["dev"])
+    assert np.allclose(res["coefZ"], saved_result["coefZ"])
+
+
+def test_glmpca_with_init():
+    joint_matrix_T = np.genfromtxt(input_dir / "joint_matrix.csv", delimiter=",")
+    data = np.load(output_dir / "covariates.npz")
+    res = glmpca(
+        joint_matrix_T,
+        L=50,
+        penalty=1,
+        verbose=True,
+        fam="poi",
+        init={"factors": data["factors"], "loadings": data["loadings"]},
+        ctl={"maxIter": 10, "eps": 1e-4, "optimizeTheta": True},
+    )
+    saved_result = np.load(output_dir / "glmpca_init.npz")
+    assert np.allclose(res["coefX"], saved_result["coefX"])
+    assert np.allclose(res["loadings"], saved_result["loadings"])
+    assert np.allclose(res["factors"], saved_result["factors"])
+    assert np.allclose(res["dev"], saved_result["dev"])
+    assert res["coefZ"] is None

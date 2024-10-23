@@ -464,17 +464,3 @@ def glmpca(
     res["dev"] = dev[range(t + 1)]
     res["glmpca_family"] = gf
     return res
-
-
-if __name__ == "__main__":
-    from numpy import exp, random, repeat
-
-    mu = exp(random.randn(20, 100))
-    mu[range(10), :] *= exp(random.randn(100))
-    clust = repeat(["red", "black"], 10)
-    Y = random.poisson(mu)
-    res = glmpca(Y.T, 2, fam="nb", verbose=True)
-    factors = res["factors"]
-    # from matplotlib.pyplot import scatter
-    # %pylab
-    # scatter(factors[:,0],factors[:,1],c=clust)

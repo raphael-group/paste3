@@ -1,7 +1,5 @@
 from pathlib import Path
 import numpy as np
-import pandas as pd
-from pandas.testing import assert_frame_equal
 from paste3.glmpca import (
     ortho,
     mat_binom_dev,
@@ -10,6 +8,7 @@ from paste3.glmpca import (
     est_nb_theta,
     glmpca,
 )
+import pytest
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
@@ -17,28 +16,13 @@ output_dir = test_dir / "data/output"
 
 
 def test_ortho():
-    U = np.genfromtxt(input_dir / "cell_factors.csv", delimiter=",", skip_header=1)
-    V = np.genfromtxt(
-        input_dir / "loadings_onto_genes.csv", delimiter=",", skip_header=1
-    )
-    A = np.genfromtxt(input_dir / "coeffX.csv", delimiter=",", ndmin=2)
-    Z = np.genfromtxt(input_dir / "gene_specific_covariates.csv", delimiter=",")
-    G = None
+    data = np.load(input_dir / "test_ortho.npz")
+    outcome = ortho(data["U"], data["V"], data["A"], X=1, G=None, Z=data["Z"])
 
-    outcome = ortho(U, V, A, X=1, G=G, Z=Z)
-
-    assert_frame_equal(
-        pd.DataFrame(outcome["factors"], columns=[str(i) for i in range(50)]),
-        pd.read_csv(output_dir / "ortho_factors.csv"),
-    )
-    assert_frame_equal(
-        pd.DataFrame(outcome["loadings"], columns=[str(i) for i in range(50)]),
-        pd.read_csv(output_dir / "ortho_loadings.csv"),
-    )
-    assert_frame_equal(
-        pd.DataFrame(outcome["coefX"], columns=["0"]),
-        pd.read_csv(output_dir / "ortho_coefX.csv"),
-    )
+    saved_output = np.load(output_dir / "test_ortho.npz")
+    assert np.allclose(outcome["factors"], saved_output["factors"])
+    assert np.allclose(outcome["loadings"], saved_output["loadings"])
+    assert np.allclose(outcome["coefX"], saved_output["coefX"])
     assert outcome["coefZ"] is None
 
 
@@ -60,13 +44,15 @@ def test_remove_intercept():
         assert np.all(np.isclose(i, j))
 
 
-def test_glmpca_init():
+@pytest.mark.parametrize("fam", ("poi", "nb", "mult", "bern"))
+def test_glmpca_init(fam):
     Y = np.genfromtxt(input_dir / "Y.csv", delimiter=",", skip_header=2)
 
-    glmpca_obj = glmpca_init(Y, "poi", None, 100)
-    assert_frame_equal(
-        pd.DataFrame(glmpca_obj["intercepts"], columns=["0"]),
-        pd.read_csv(output_dir / "glmpca_intercepts.csv"),
+    glmpca_obj = glmpca_init(Y, fam, None, 100)
+
+    assert np.allclose(
+        glmpca_obj["intercepts"],
+        np.load(output_dir / "glmpca_intercepts.npz")[fam],
     )
 
 
@@ -81,18 +67,64 @@ def test_est_nb_theta():
     assert output == expected_output
 
 
-def test_glmpca():
+@pytest.mark.parametrize("fam", ("poi", "nb", "mult", "bern"))
+def test_glmpca(fam):
     joint_matrix_T = np.genfromtxt(input_dir / "joint_matrix.csv", delimiter=",")
-
+    if fam == "bern":
+        joint_matrix_T /= np.linalg.norm(joint_matrix_T, axis=1, keepdims=True)
     res = glmpca(
         joint_matrix_T,
         L=50,
         penalty=1,
         verbose=True,
+        fam=fam,
         ctl={"maxIter": 10, "eps": 1e-4, "optimizeTheta": True},
     )
-    saved_result = np.load(output_dir / "glmpca_result.npz")
 
+    saved_result = np.load(output_dir / "glmpca_result.npz")
+    assert np.allclose(res["coefX"], saved_result[f"coefX_{fam}"])
+    assert np.allclose(res["loadings"], saved_result[f"loadings_{fam}"])
+    assert np.allclose(res["factors"], saved_result[f"factors_{fam}"])
+    assert np.allclose(res["dev"], saved_result[f"dev_{fam}"])
+    assert res["coefZ"] is None
+
+
+def test_glmpca_covariates():
+    X = np.array(range(505))
+    Z = np.array(range(2001))
+    joint_matrix_T = np.genfromtxt(input_dir / "joint_matrix.csv", delimiter=",")
+    res = glmpca(
+        joint_matrix_T,
+        L=50,
+        penalty=1,
+        verbose=True,
+        fam="poi",
+        X=X[:, None],
+        Z=Z[:, None],
+        ctl={"maxIter": 10, "eps": 1e-4, "optimizeTheta": True},
+    )
+
+    saved_result = np.load(output_dir / "covariates.npz")
+    assert np.allclose(res["coefX"], saved_result["coefX"])
+    assert np.allclose(res["loadings"], saved_result["loadings"])
+    assert np.allclose(res["factors"], saved_result["factors"])
+    assert np.allclose(res["dev"], saved_result["dev"])
+    assert np.allclose(res["coefZ"], saved_result["coefZ"])
+
+
+def test_glmpca_with_init():
+    joint_matrix_T = np.genfromtxt(input_dir / "joint_matrix.csv", delimiter=",")
+    data = np.load(output_dir / "covariates.npz")
+    res = glmpca(
+        joint_matrix_T,
+        L=50,
+        penalty=1,
+        verbose=True,
+        fam="poi",
+        init={"factors": data["factors"], "loadings": data["loadings"]},
+        ctl={"maxIter": 10, "eps": 1e-4, "optimizeTheta": True},
+    )
+    saved_result = np.load(output_dir / "glmpca_init.npz")
     assert np.allclose(res["coefX"], saved_result["coefX"])
     assert np.allclose(res["loadings"], saved_result["loadings"])
     assert np.allclose(res["factors"], saved_result["factors"])

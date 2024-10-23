@@ -53,7 +53,7 @@ def test_pairwise_alignment(slices):
         backend=ot.backend.TorchBackend(),
     )
     probability_mapping = pd.DataFrame(
-        outcome, index=slices[0].obs.index, columns=slices[1].obs.index
+        outcome.cpu().numpy(), index=slices[0].obs.index, columns=slices[1].obs.index
     )
     true_probability_mapping = pd.read_csv(
         output_dir / "slices_1_2_pairwise.csv", index_col=0
@@ -104,7 +104,7 @@ def test_center_alignment(slices):
 
     for i, pi in enumerate(pairwise_info):
         pairwise_mapping = pd.DataFrame(
-            pi, index=center_slice.obs.index, columns=slices[i].obs.index
+            pi.cpu().numpy(), index=center_slice.obs.index, columns=slices[i].obs.index
         )
         true_pairwise_mapping = pd.read_csv(
             output_dir / f"center_slice{i + 1}_pairwise.csv", index_col=0
@@ -126,7 +126,7 @@ def test_center_ot(slices):
         slices=slices,
         center_coordinates=intersecting_slice.obsm["spatial"],
         common_genes=common_genes,
-        use_gpu=False,
+        use_gpu=True,
         alpha=0.1,
         backend=ot.backend.TorchBackend(),
         dissimilarity="kl",
@@ -145,7 +145,9 @@ def test_center_ot(slices):
 
     for i, pi in enumerate(pairwise_info):
         pd.DataFrame(
-            pi, index=intersecting_slice.obs.index, columns=slices[i].obs.index
+            pi.cpu().numpy(),
+            index=intersecting_slice.obs.index,
+            columns=slices[i].obs.index,
         ).to_csv(temp_dir / f"center_ot{i + 1}_pairwise.csv")
         assert_checksum_equals(temp_dir, f"center_ot{i + 1}_pairwise.csv", loose=True)
 
@@ -154,7 +156,9 @@ def test_center_NMF(intersecting_slices):
     n_slices = len(intersecting_slices)
 
     pairwise_info = [
-        np.genfromtxt(input_dir / f"center_ot{i+1}_pairwise.csv", delimiter=",")
+        torch.Tensor(
+            np.genfromtxt(input_dir / f"center_ot{i+1}_pairwise.csv", delimiter=",")
+        ).double()
         for i in range(n_slices)
     ]
 

@@ -32,7 +32,7 @@ def align(
     max_iter=10,
     norm=False,
     numItermax=200,
-    use_gpu=False,
+    use_gpu=True,
     return_obj=False,
     optimizeTheta=True,
     eps=1e-4,
@@ -110,7 +110,9 @@ def align(
             )
             pis.append(pi)
             pd.DataFrame(
-                pi, index=slices[i].obs.index, columns=slices[i + 1].obs.index
+                pi.cpu().numpy(),
+                index=slices[i].obs.index,
+                columns=slices[i + 1].obs.index,
             ).to_csv(output_directory / f"slice_{i+1}_{i+2}_pairwise.csv")
 
         if coordinates:
@@ -142,7 +144,9 @@ def align(
         center_slice.write(output_directory / "center_slice.h5ad")
         for i in range(len(pis) - 1):
             pd.DataFrame(
-                pis[i], index=center_slice.obs.index, columns=slices[i].obs.index
+                pis[i].cpu().numpy(),
+                index=center_slice.obs.index,
+                columns=slices[i].obs.index,
             ).to_csv(output_directory / f"slice_{i}_{i+1}_pairwise.csv")
 
         if coordinates:

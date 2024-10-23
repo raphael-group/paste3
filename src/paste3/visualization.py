@@ -144,14 +144,22 @@ def stack_slices_center(
     for i in range(len(slices)):
         if not output_params:
             c, y = generalized_procrustes_analysis(
-                torch.Tensor(center_slice.obsm["spatial"]).double(),
-                torch.Tensor(slices[i].obsm["spatial"]).double(),
+                torch.Tensor(center_slice.obsm["spatial"])
+                .to(pis[i].dtype)
+                .to(pis[i].device),
+                torch.Tensor(slices[i].obsm["spatial"])
+                .to(pis[i].dtype)
+                .to(pis[i].device),
                 pis[i],
             )
         else:
             c, y, theta, tX, tY = generalized_procrustes_analysis(
-                torch.Tensor(center_slice.obsm["spatial"]).double(),
-                torch.Tensor(slices[i].obsm["spatial"]).double(),
+                torch.Tensor(center_slice.obsm["spatial"])
+                .to(pis[i].dtype)
+                .to(pis[i].device),
+                torch.Tensor(slices[i].obsm["spatial"])
+                .to(pis[i].dtype)
+                .to(pis[i].device),
                 pis[i],
                 output_params=output_params,
                 matrix=matrix,

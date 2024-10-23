@@ -194,11 +194,8 @@ def pairwise_align(
             D_B *= M.max()
 
     # Run OT
-    if G_init is not None:
-        G_init = nx.from_numpy(G_init)
-        if isinstance(nx, ot.backend.TorchBackend):
-            if use_gpu:
-                G_init.cuda()
+    if G_init is not None and use_gpu:
+        G_init.cuda()
     pi, log = my_fused_gromov_wasserstein(
         M,
         D_A,
@@ -215,10 +212,7 @@ def pairwise_align(
         verbose=verbose,
     )
     if not s:
-        pi = nx.to_numpy(pi)
-        log = nx.to_numpy(log["fgw_dist"])
-        if isinstance(backend, ot.backend.TorchBackend) and use_gpu:
-            torch.cuda.empty_cache()
+        log = log["fgw_dist"].item()
 
     if return_obj:
         return pi, log
@@ -404,11 +398,17 @@ def center_align(
     center_slice.X = np.dot(W, H)
     center_slice.uns["paste_W"] = W
     center_slice.uns["paste_H"] = H
-    center_slice.uns["full_rank"] = center_slice.shape[0] * sum(
-        [
-            lmbda[i] * np.dot(pis[i], to_dense_array(slices[i].X))
-            for i in range(len(slices))
-        ]
+    center_slice.uns["full_rank"] = (
+        center_slice.shape[0]
+        * sum(
+            [
+                lmbda[i]
+                * torch.matmul(pis[i], to_dense_array(slices[i].X).to(pis[i].device))
+                for i in range(len(slices))
+            ]
+        )
+        .cpu()
+        .numpy()
     )
     center_slice.uns["obj"] = R
     return center_slice, pis
@@ -479,7 +479,8 @@ def center_NMF(
     n = W.shape[0]
     B = n * sum(
         [
-            lmbda[i] * np.dot(pis[i], to_dense_array(slices[i].X))
+            lmbda[i]
+            * torch.matmul(pis[i], to_dense_array(slices[i].X).to(pis[i].device))
             for i in range(len(slices))
         ]
     )
@@ -499,7 +500,7 @@ def center_NMF(
             random_state=random_seed,
             verbose=verbose,
         )
-    W_new = model.fit_transform(B)
+    W_new = model.fit_transform(B.cpu().numpy())
     H_new = model.components_
     return W_new, H_new
 

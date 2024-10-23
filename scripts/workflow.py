@@ -114,11 +114,8 @@ class AlignmentDataset:
         )
         return Slice(adata=center_slice), pis
 
-    def find_pis_init(
-        self, reference_slice: Optional[Slice] = None
-    ) -> List[np.ndarray]:
-        if reference_slice is None:
-            reference_slice = self.slices[0]
+    def find_pis_init(self) -> List[np.ndarray]:
+        reference_slice = self.slices[0]
         return [
             match_spots_using_spatial_heuristic(reference_slice.adata.X, slice_.adata.X)
             for slice_ in self.slices
@@ -130,9 +127,9 @@ class AlignmentDataset:
         pis: Optional[List[np.ndarray]] = None,
     ):
         if reference_slice is None:
-            reference_slice = self.slices[0]
-        if pis is None:
-            pis = self.find_pis_init(reference_slice)
+            reference_slice, pis = self.find_center_slice(pis=pis)
+        else:
+            pis = self.find_pis_init()
 
         _, new_slices = stack_slices_center(
             center_slice=reference_slice.adata, slices=self.slices_adata, pis=pis
@@ -141,11 +138,6 @@ class AlignmentDataset:
 
 
 if __name__ == "__main__":
-    # adata = sc.read_h5ad("data/151673.h5ad")
-    # print(adata)
-    # dataloader = AnnLoader(adata, use_cuda=True)
-    # dataset = dataloader.dataset
-    # print(dataset)
     dataset = AlignmentDataset("data/", max_slices=3)
     aligned_dataset = dataset.align(
         center_align=False, overlap_fraction=0.7, max_iters=2

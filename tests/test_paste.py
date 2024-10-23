@@ -1,6 +1,7 @@
 import hashlib
 from pathlib import Path
 import numpy as np
+import torch
 import ot.backend
 import pandas as pd
 import tempfile
@@ -15,24 +16,28 @@ from paste3.paste import (
     line_search_partial,
 )
 from pandas.testing import assert_frame_equal
+import pytest
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
 output_dir = test_dir / "data/output"
 
 
-def assert_checksum_equals(temp_dir, filename):
+def assert_checksum_equals(temp_dir, filename, loose=False):
     generated_file = temp_dir / filename
     oracle = output_dir / filename
 
-    assert (
-        hashlib.md5(
-            "".join(open(generated_file, "r").readlines()).encode("utf8")
-        ).hexdigest()
-        == hashlib.md5(
-            "".join(open(oracle, "r").readlines()).encode("utf8")
-        ).hexdigest()
-    )
+    if loose:
+        assert_frame_equal(pd.read_csv(generated_file), pd.read_csv(oracle))
+    else:
+        assert (
+            hashlib.md5(
+                "".join(open(generated_file, "r").readlines()).encode("utf8")
+            ).hexdigest()
+            == hashlib.md5(
+                "".join(open(oracle, "r").readlines()).encode("utf8")
+            ).hexdigest()
+        )
 
 
 def test_pairwise_alignment(slices):
@@ -48,7 +53,7 @@ def test_pairwise_alignment(slices):
         backend=ot.backend.TorchBackend(),
     )
     probability_mapping = pd.DataFrame(
-        outcome, index=slices[0].obs.index, columns=slices[1].obs.index
+        outcome.cpu().numpy(), index=slices[0].obs.index, columns=slices[1].obs.index
     )
     true_probability_mapping = pd.read_csv(
         output_dir / "slices_1_2_pairwise.csv", index_col=0
@@ -99,7 +104,7 @@ def test_center_alignment(slices):
 
     for i, pi in enumerate(pairwise_info):
         pairwise_mapping = pd.DataFrame(
-            pi, index=center_slice.obs.index, columns=slices[i].obs.index
+            pi.cpu().numpy(), index=center_slice.obs.index, columns=slices[i].obs.index
         )
         true_pairwise_mapping = pd.read_csv(
             output_dir / f"center_slice{i + 1}_pairwise.csv", index_col=0
@@ -121,9 +126,9 @@ def test_center_ot(slices):
         slices=slices,
         center_coordinates=intersecting_slice.obsm["spatial"],
         common_genes=common_genes,
-        use_gpu=False,
+        use_gpu=True,
         alpha=0.1,
-        backend=ot.backend.NumpyBackend(),
+        backend=ot.backend.TorchBackend(),
         dissimilarity="kl",
         norm=False,
         G_inits=[None for _ in range(len(slices))],
@@ -136,20 +141,24 @@ def test_center_ot(slices):
         -25.740615316378296,
     ]
 
-    assert np.all(np.isclose(expected_r, r, rtol=1e-05, atol=1e-08, equal_nan=True))
+    assert np.allclose(expected_r, r)
 
     for i, pi in enumerate(pairwise_info):
         pd.DataFrame(
-            pi, index=intersecting_slice.obs.index, columns=slices[i].obs.index
+            pi.cpu().numpy(),
+            index=intersecting_slice.obs.index,
+            columns=slices[i].obs.index,
         ).to_csv(temp_dir / f"center_ot{i + 1}_pairwise.csv")
-        assert_checksum_equals(temp_dir, f"center_ot{i + 1}_pairwise.csv")
+        assert_checksum_equals(temp_dir, f"center_ot{i + 1}_pairwise.csv", loose=True)
 
 
 def test_center_NMF(intersecting_slices):
     n_slices = len(intersecting_slices)
 
     pairwise_info = [
-        np.genfromtxt(input_dir / f"center_ot{i+1}_pairwise.csv", delimiter=",")
+        torch.Tensor(
+            np.genfromtxt(input_dir / f"center_ot{i+1}_pairwise.csv", delimiter=",")
+        ).double()
         for i in range(n_slices)
     ]
 
@@ -184,15 +193,17 @@ def test_center_NMF(intersecting_slices):
 def test_fused_gromov_wasserstein(slices, spot_distance_matrix):
     temp_dir = Path(tempfile.mkdtemp())
 
-    nx = ot.backend.NumpyBackend()
+    nx = ot.backend.TorchBackend()
 
-    M = np.genfromtxt(input_dir / "gene_distance.csv", delimiter=",")
+    M = torch.Tensor(
+        np.genfromtxt(input_dir / "gene_distance.csv", delimiter=",")
+    ).double()
     pairwise_info, log = my_fused_gromov_wasserstein(
         M,
         spot_distance_matrix[0],
         spot_distance_matrix[1],
-        p=nx.ones((254,)) / 254,
-        q=nx.ones((251,)) / 251,
+        p=nx.ones((254,)).double() / 254,
+        q=nx.ones((251,)).double() / 251,
         alpha=0.1,
         G0=None,
         loss_fun="square_loss",
@@ -206,10 +217,12 @@ def test_fused_gromov_wasserstein(slices, spot_distance_matrix):
 
 
 def test_gromov_linesearch(slices, spot_distance_matrix):
-    nx = ot.backend.NumpyBackend()
+    nx = ot.backend.TorchBackend()
 
-    G = 1.509115054931788e-05 * np.ones((251, 264))
-    deltaG = np.genfromtxt(input_dir / "deltaG.csv", delimiter=",")
+    G = 1.509115054931788e-05 * torch.ones((251, 264)).double()
+    deltaG = torch.Tensor(
+        np.genfromtxt(input_dir / "deltaG.csv", delimiter=",")
+    ).double()
     costG = 6.0935270338235075
 
     alpha, fc, cost_G = solve_gromov_linesearch(
@@ -224,13 +237,17 @@ def test_gromov_linesearch(slices, spot_distance_matrix):
     )
     assert alpha == 1.0
     assert fc == 1
-    assert round(cost_G, 5) == -11.20545
+    assert pytest.approx(cost_G) == -11.20545
 
 
 def test_line_search_partial(slices, spot_distance_matrix):
-    G = 1.509115054931788e-05 * np.ones((251, 264))
-    deltaG = np.genfromtxt(input_dir / "deltaG.csv", delimiter=",")
-    M = np.genfromtxt(input_dir / "euc_dissimilarity.csv", delimiter=",")
+    G = 1.509115054931788e-05 * torch.ones((251, 264)).double()
+    deltaG = torch.Tensor(
+        np.genfromtxt(input_dir / "deltaG.csv", delimiter=",")
+    ).double()
+    M = torch.Tensor(
+        np.genfromtxt(input_dir / "euc_dissimilarity.csv", delimiter=",")
+    ).double()
 
     alpha, a, cost_G = line_search_partial(
         reg=0.1,
@@ -241,5 +258,5 @@ def test_line_search_partial(slices, spot_distance_matrix):
         deltaG=deltaG,
     )
     assert alpha == 1.0
-    assert a == 0.4858849047237918
-    assert cost_G == 102.6333512778727
+    assert pytest.approx(a) == 0.4858849047237918
+    assert pytest.approx(cost_G) == 102.6333512778727

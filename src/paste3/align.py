@@ -32,7 +32,7 @@ def align(
     max_iter=10,
     norm=False,
     numItermax=200,
-    use_gpu=False,
+    use_gpu=True,
     return_obj=False,
     optimizeTheta=True,
     eps=1e-4,
@@ -99,7 +99,7 @@ def align(
                 b_distribution=slices[i + 1].obsm["weights"],
                 norm=norm,
                 numItermax=numItermax,
-                backend=ot.backend.NumpyBackend(),
+                backend=ot.backend.TorchBackend(),
                 use_gpu=use_gpu,
                 return_obj=return_obj,
                 maxIter=max_iter,
@@ -110,7 +110,9 @@ def align(
             )
             pis.append(pi)
             pd.DataFrame(
-                pi, index=slices[i].obs.index, columns=slices[i + 1].obs.index
+                pi.cpu().numpy(),
+                index=slices[i].obs.index,
+                columns=slices[i + 1].obs.index,
             ).to_csv(output_directory / f"slice_{i+1}_{i+2}_pairwise.csv")
 
         if coordinates:
@@ -135,14 +137,16 @@ def align(
             random_seed=seed,
             pis_init=pis_init,
             distributions=[slice.obsm["weights"] for slice in slices],
-            backend=ot.backend.NumpyBackend(),
+            backend=ot.backend.TorchBackend(),
             use_gpu=use_gpu,
         )
 
         center_slice.write(output_directory / "center_slice.h5ad")
         for i in range(len(pis) - 1):
             pd.DataFrame(
-                pis[i], index=center_slice.obs.index, columns=slices[i].obs.index
+                pis[i].cpu().numpy(),
+                index=center_slice.obs.index,
+                columns=slices[i].obs.index,
             ).to_csv(output_directory / f"slice_{i}_{i+1}_pairwise.csv")
 
         if coordinates:

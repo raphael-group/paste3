@@ -5,6 +5,7 @@ from scipy.spatial import distance
 from typing import List
 from anndata import AnnData
 import numpy as np
+import torch
 import scipy
 import ot
 
@@ -22,11 +23,11 @@ def kl_divergence(X, Y):
 
     X = X / X.sum(axis=1, keepdims=True)
     Y = Y / Y.sum(axis=1, keepdims=True)
-    log_X = np.log(X)
-    log_Y = np.log(Y)
-    X_log_X = np.matrix([np.dot(X[i], log_X[i].T) for i in range(X.shape[0])])
-    D = X_log_X.T - np.dot(X, log_Y.T)
-    return np.asarray(D)
+    log_X = X.log()
+    log_Y = Y.log()
+    X_log_X = torch.sum(X * log_X, axis=1)[torch.newaxis, :]
+    D = X_log_X.T - torch.matmul(X, log_Y.T)
+    return D
 
 
 def generalized_kl_divergence(X, Y):
@@ -40,14 +41,14 @@ def generalized_kl_divergence(X, Y):
     """
     assert X.shape[1] == Y.shape[1], "X and Y do not have the same number of features."
 
-    log_X = np.log(X)
-    log_Y = np.log(Y)
-    X_log_X = np.matrix([np.dot(X[i], log_X[i].T) for i in range(X.shape[0])])
-    D = X_log_X.T - np.dot(X, log_Y.T)
-    sum_X = np.sum(X, axis=1)
-    sum_Y = np.sum(Y, axis=1)
+    log_X = X.log()
+    log_Y = Y.log()
+    X_log_X = torch.sum(X * log_X, axis=1)[torch.newaxis, :]
+    D = X_log_X.T - torch.matmul(X, log_Y.T)
+    sum_X = torch.sum(X, axis=1)
+    sum_Y = torch.sum(Y, axis=1)
     D = (D.T - sum_X).T + sum_Y.T
-    return np.asarray(D)
+    return D
 
 
 def glmpca_distance(
@@ -72,15 +73,15 @@ def glmpca_distance(
     """
     assert X.shape[1] == Y.shape[1], "X and Y do not have the same number of features."
 
-    joint_matrix = np.vstack((X, Y))
+    joint_matrix = torch.vstack((X, Y))
     if filter:
-        gene_umi_counts = np.sum(joint_matrix, axis=0)
+        gene_umi_counts = torch.sum(joint_matrix, axis=0).cpu().numpy()
         top_indices = np.sort((-gene_umi_counts).argsort(kind="stable")[:2000])
         joint_matrix = joint_matrix[:, top_indices]
 
     print("Starting GLM-PCA...")
     res = glmpca(
-        joint_matrix.T,
+        joint_matrix.T.cpu().numpy(),  # TODO: Use Tensors
         latent_dim,
         penalty=1,
         verbose=verbose,
@@ -116,13 +117,13 @@ def high_umi_gene_distance(X, Y, n):
     """
     assert X.shape[1] == Y.shape[1], "X and Y do not have the same number of features."
 
-    joint_matrix = np.vstack((X, Y))
-    gene_umi_counts = np.sum(joint_matrix, axis=0)
+    joint_matrix = torch.vstack((X, Y))
+    gene_umi_counts = torch.sum(joint_matrix, axis=0).cpu().numpy()
     top_indices = np.sort((-gene_umi_counts).argsort(kind="stable")[:n])
     X = X[:, top_indices]
     Y = Y[:, top_indices]
-    X += np.tile(0.01 * (np.sum(X, axis=1) / X.shape[1]), (X.shape[1], 1)).T
-    Y += np.tile(0.01 * (np.sum(Y, axis=1) / Y.shape[1]), (Y.shape[1], 1)).T
+    X += torch.tile(0.01 * (torch.sum(X, axis=1) / X.shape[1]), (X.shape[1], 1)).T
+    Y += torch.tile(0.01 * (torch.sum(Y, axis=1) / Y.shape[1]), (Y.shape[1], 1)).T
     return kl_divergence(X, Y)
 
 
@@ -150,7 +151,8 @@ def norm_and_center_coordinates(X):
 
 ## Covert a sparse matrix into a dense matrix
 def to_dense_array(X):
-    return np.array(X.todense()) if isinstance(X, scipy.sparse.csr.spmatrix) else X
+    np_array = np.array(X.todense()) if isinstance(X, scipy.sparse.csr.spmatrix) else X
+    return torch.Tensor(np_array).double()
 
 
 def extract_data_matrix(adata, rep=None):
@@ -190,6 +192,7 @@ def match_spots_using_spatial_heuristic(X, Y, use_ot: bool = True) -> np.ndarray
     Returns:
         Mapping of spots using a spatial heuristic.
     """
+    # X, Y = X.todense(), Y.todense()
     n1, n2 = len(X), len(Y)
     X, Y = norm_and_center_coordinates(X), norm_and_center_coordinates(Y)
     dist = scipy.spatial.distance_matrix(X, Y)
@@ -238,7 +241,7 @@ def kl_divergence_backend(X, Y):
 def dissimilarity_metric(which, sliceA, sliceB, A, B, **kwargs):
     match which:
         case "euc" | "euclidean":
-            return scipy.spatial.distance.cdist(A, B)
+            return torch.cdist(A, B)
         case "gkl":
             s_A = A + 0.01
             s_B = B + 0.01
@@ -254,8 +257,10 @@ def dissimilarity_metric(which, sliceA, sliceB, A, B, **kwargs):
         case "selection_kl":
             return high_umi_gene_distance(A, B, 2000)
         case "pca":
-            return pca_distance(sliceA, sliceB, 2000, 20)
+            # TODO: Modify this function to work with Tensors
+            return torch.Tensor(pca_distance(sliceA, sliceB, 2000, 20)).double()
         case "glmpca":
-            return glmpca_distance(A, B, **kwargs)
+            # TODO: Modify this function to work with Tensors
+            return torch.Tensor(glmpca_distance(A, B, **kwargs)).double()
         case _:
             raise RuntimeError(f"Error: Invalid dissimilarity metric {which}")

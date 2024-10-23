@@ -1,6 +1,7 @@
 from pathlib import Path
 import pandas as pd
 import numpy as np
+import torch
 from paste3.helper import intersect
 import pytest
 from unittest.mock import patch
@@ -18,7 +19,7 @@ def test_partial_pairwise_align_glmpca(fn, slices2):
     # Load pre-computed dissimilarity metrics,
     # since it is time-consuming to compute.
     data = np.load(output_dir / "test_partial_pairwise_align.npz")
-    fn.return_value = data["glmpca"]
+    fn.return_value = torch.Tensor(data["glmpca"]).double()
 
     pi_BC = pairwise_align(
         slices2[0],
@@ -30,7 +31,7 @@ def test_partial_pairwise_align_glmpca(fn, slices2):
         maxIter=10,
     )
 
-    assert np.allclose(pi_BC, data["pi_BC"])
+    assert np.allclose(pi_BC.cpu().numpy(), data["pi_BC"], atol=1e-7)
 
 
 def test_partial_pairwise_align_given_cost_matrix(slices):
@@ -38,9 +39,11 @@ def test_partial_pairwise_align_given_cost_matrix(slices):
     sliceA = slices[1][:, common_genes]
     sliceB = slices[2][:, common_genes]
 
-    glmpca_distance_matrix = np.genfromtxt(
-        input_dir / "glmpca_distance_matrix.csv", delimiter=",", skip_header=1
-    )
+    glmpca_distance_matrix = torch.Tensor(
+        np.genfromtxt(
+            input_dir / "glmpca_distance_matrix.csv", delimiter=",", skip_header=1
+        )
+    ).double()
 
     pairwise_info, log = pairwise_align(
         sliceA,
@@ -57,11 +60,11 @@ def test_partial_pairwise_align_given_cost_matrix(slices):
     )
 
     assert_frame_equal(
-        pd.DataFrame(pairwise_info, columns=[str(i) for i in range(264)]),
+        pd.DataFrame(pairwise_info.cpu().numpy(), columns=[str(i) for i in range(264)]),
         pd.read_csv(output_dir / "align_given_cost_matrix_pairwise_info.csv"),
-        rtol=1e-05,
+        rtol=1e-04,
     )
-    assert log["partial_fgw_cost"] == pytest.approx(40.86494022326222)
+    assert log["partial_fgw_cost"].cpu().numpy() == pytest.approx(40.86494022326222)
 
 
 def test_partial_pairwise_align_histology(slices2):
@@ -78,11 +81,11 @@ def test_partial_pairwise_align_histology(slices2):
         maxIter=10,
         is_histology=True,
     )
-    assert log["partial_fgw_cost"] == pytest.approx(88.06713721008786)
-    assert_frame_equal(
-        pd.DataFrame(pairwise_info, columns=[str(i) for i in range(2877)]),
-        pd.read_csv(output_dir / "partial_pairwise_align_histology.csv"),
-        rtol=1e-05,
+    assert log["partial_fgw_cost"].cpu().numpy() == pytest.approx(88.06713721008786)
+    assert np.allclose(
+        pairwise_info.cpu().numpy(),
+        pd.read_csv(output_dir / "partial_pairwise_align_histology.csv").to_numpy(),
+        atol=1e-7,
     )
 
 
@@ -155,11 +158,11 @@ def test_partial_fused_gromov_wasserstein(slices, armijo, expected_log, filename
     distance_b *= glmpca_distance_matrix.max()
 
     pairwise_info, log = my_fused_gromov_wasserstein(
-        glmpca_distance_matrix,
-        distance_a,
-        distance_b,
-        np.ones((sliceA.shape[0],)) / sliceA.shape[0],
-        np.ones((sliceB.shape[0],)) / sliceB.shape[0],
+        torch.Tensor(glmpca_distance_matrix).double(),
+        torch.Tensor(distance_a).double(),
+        torch.Tensor(distance_b).double(),
+        torch.ones((sliceA.shape[0],)).double() / sliceA.shape[0],
+        torch.ones((sliceB.shape[0],)).double() / sliceB.shape[0],
         alpha=0.1,
         m=0.7,
         G0=None,
@@ -168,10 +171,8 @@ def test_partial_fused_gromov_wasserstein(slices, armijo, expected_log, filename
         log=True,
     )
 
-    assert_frame_equal(
-        pd.DataFrame(pairwise_info, columns=[str(i) for i in range(264)]),
-        pd.read_csv(output_dir / filename),
-        rtol=1e-05,
+    assert np.allclose(
+        pd.read_csv(output_dir / filename).to_numpy(), pairwise_info, atol=1e-7
     )
 
     for k, v in expected_log.items():

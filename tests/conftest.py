@@ -29,7 +29,7 @@ def slices():
 
 @pytest.fixture(scope="session")
 def spot_distance_matrix(slices):
-    nx = ot.backend.NumpyBackend()
+    nx = ot.backend.TorchBackend()
 
     spot_distances = []
     for slice in slices:

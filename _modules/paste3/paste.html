@@ -79,12 +79,15 @@
 <span class="kn">import</span> <span class="nn">ot</span>
 <span class="kn">from</span> <span class="nn">ot.lp</span> <span class="kn">import</span> <span class="n">emd</span>
 <span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">NMF</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">paste3.helper</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">intersect</span><span class="p">,</span>
     <span class="n">to_dense_array</span><span class="p">,</span>
     <span class="n">extract_data_matrix</span><span class="p">,</span>
     <span class="n">dissimilarity_metric</span><span class="p">,</span>
 <span class="p">)</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="pairwise_align"><a class="viewcode-back" href="../../api/paste3.paste.pairwise_align.html#paste3.paste.pairwise_align">[docs]</a><span class="k">def</span> <span class="nf">pairwise_align</span><span class="p">(</span>
@@ -140,33 +143,10 @@
 <span class="sd">        - Objective function output of FGW-OT.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># Determine if gpu or cpu is being used</span>
     <span class="k">if</span> <span class="n">use_gpu</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="kn">import</span> <span class="nn">torch</span>
-        <span class="k">except</span> <span class="ne">ModuleNotFoundError</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="s2">&quot;We currently only have gpu support for Pytorch. Please install torch.&quot;</span>
-            <span class="p">)</span>
-
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">gpu_verbose</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;gpu is available, using gpu.&quot;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">gpu_verbose</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;gpu is not available, resorting to torch cpu.&quot;</span><span class="p">)</span>
-                <span class="n">use_gpu</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="s2">&quot;We currently only have gpu support for Pytorch, please set backend = ot.backend.TorchBackend(). Reverting to selected backend cpu.&quot;</span>
-            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;GPU is not available, resorting to torch CPU.&quot;</span><span class="p">)</span>
             <span class="n">use_gpu</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">gpu_verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="s2">&quot;Using selected backend cpu. If you want to use gpu, set use_gpu = True.&quot;</span>
-            <span class="p">)</span>
 
     <span class="c1"># subset for common genes</span>
     <span class="n">common_genes</span> <span class="o">=</span> <span class="n">intersect</span><span class="p">(</span><span class="n">sliceA</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">sliceB</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
@@ -339,31 +319,9 @@
 
     <span class="c1"># Determine if gpu or cpu is being used</span>
     <span class="k">if</span> <span class="n">use_gpu</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="kn">import</span> <span class="nn">torch</span>
-        <span class="k">except</span> <span class="ne">ModuleNotFoundError</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="s2">&quot;We currently only have gpu support for Pytorch. Please install torch.&quot;</span>
-            <span class="p">)</span>
-
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">gpu_verbose</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;gpu is available, using gpu.&quot;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">gpu_verbose</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;gpu is not available, resorting to torch cpu.&quot;</span><span class="p">)</span>
-                <span class="n">use_gpu</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="s2">&quot;We currently only have gpu support for Pytorch, please set backend = ot.backend.TorchBackend(). Reverting to selected backend cpu.&quot;</span>
-            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;GPU is not available, resorting to torch CPU.&quot;</span><span class="p">)</span>
             <span class="n">use_gpu</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">gpu_verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="s2">&quot;Using selected backend cpu. If you want to use gpu, set use_gpu = True.&quot;</span>
-            <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">lmbda</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">lmbda</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)</span> <span class="o">*</span> <span class="p">[</span><span class="mi">1</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)]</span>

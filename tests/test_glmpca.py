@@ -19,18 +19,10 @@ def test_ortho():
     data = np.load(input_dir / "test_ortho.npz")
     outcome = ortho(data["U"], data["V"], data["A"], X=1, G=None, Z=data["Z"])
 
-    assert np.allclose(
-        outcome["factors"],
-        np.genfromtxt(output_dir / "ortho_factors.csv", delimiter=",", skip_header=1),
-    )
-    assert np.allclose(
-        outcome["loadings"],
-        np.genfromtxt(output_dir / "ortho_loadings.csv", delimiter=",", skip_header=1),
-    )
-    assert np.allclose(
-        outcome["coefX"].T,
-        np.genfromtxt(output_dir / "ortho_coefX.csv", skip_header=1),
-    )
+    saved_output = np.load(output_dir / "test_ortho.npz")
+    assert np.allclose(outcome["factors"], saved_output["factors"])
+    assert np.allclose(outcome["loadings"], saved_output["loadings"])
+    assert np.allclose(outcome["coefX"], saved_output["coefX"])
     assert outcome["coefZ"] is None
 
 

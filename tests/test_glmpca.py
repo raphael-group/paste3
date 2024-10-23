@@ -104,3 +104,25 @@ def test_glmpca(fam):
     assert np.allclose(res["factors"], saved_result[f"factors_{fam}"])
     assert np.allclose(res["dev"], saved_result[f"dev_{fam}"])
     assert res["coefZ"] is None
+
+
+def test_glmpca_covariates():
+    X = np.array(range(505))
+    Z = np.array(range(2001))
+    joint_matrix_T = np.genfromtxt(input_dir / "joint_matrix.csv", delimiter=",")
+    res = glmpca(
+        joint_matrix_T,
+        L=50,
+        penalty=1,
+        verbose=True,
+        fam="poi",
+        X=X[:, None],
+        Z=Z[:, None],
+        ctl={"maxIter": 10, "eps": 1e-4, "optimizeTheta": True},
+    )
+
+    saved_result = np.load(output_dir / "covariates.npz")
+    assert np.allclose(res["coefX"], saved_result["coefX"])
+    assert np.allclose(res["loadings"], saved_result["loadings"])
+    assert np.allclose(res["factors"], saved_result["factors"])
+    assert np.allclose(res["dev"], saved_result["dev"])

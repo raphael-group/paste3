@@ -69,10 +69,9 @@ def pairwise_align(
         - Objective function output of FGW-OT.
     """
 
-    if use_gpu:
-        if not torch.cuda.is_available():
-            logger.debug("GPU is not available, resorting to torch CPU.")
-            use_gpu = False
+    if use_gpu and not torch.cuda.is_available():
+        logger.info("GPU is not available, resorting to torch CPU.")
+        use_gpu = False
 
     # subset for common genes
     common_genes = intersect(sliceA.var.index, sliceB.var.index)
@@ -243,11 +242,9 @@ def center_align(
         - List of pairwise alignment mappings of the center slice (rows) to each input slice (columns).
     """
 
-    # Determine if gpu or cpu is being used
-    if use_gpu:
-        if not torch.cuda.is_available():
-            logger.debug("GPU is not available, resorting to torch CPU.")
-            use_gpu = False
+    if use_gpu and not torch.cuda.is_available():
+        logger.info("GPU is not available, resorting to torch CPU.")
+        use_gpu = False
 
     if lmbda is None:
         lmbda = len(slices) * [1 / len(slices)]

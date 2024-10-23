@@ -1,7 +1,5 @@
 from pathlib import Path
 import numpy as np
-import pandas as pd
-from pandas.testing import assert_frame_equal
 from paste3.glmpca import (
     ortho,
     mat_binom_dev,
@@ -18,27 +16,20 @@ output_dir = test_dir / "data/output"
 
 
 def test_ortho():
-    U = np.genfromtxt(input_dir / "cell_factors.csv", delimiter=",", skip_header=1)
-    V = np.genfromtxt(
-        input_dir / "loadings_onto_genes.csv", delimiter=",", skip_header=1
-    )
-    A = np.genfromtxt(input_dir / "coeffX.csv", delimiter=",", ndmin=2)
-    Z = np.genfromtxt(input_dir / "gene_specific_covariates.csv", delimiter=",")
-    G = None
+    data = np.load(input_dir / "test_ortho.npz")
+    outcome = ortho(data["U"], data["V"], data["A"], X=1, G=None, Z=data["Z"])
 
-    outcome = ortho(U, V, A, X=1, G=G, Z=Z)
-
-    assert_frame_equal(
-        pd.DataFrame(outcome["factors"], columns=[str(i) for i in range(50)]),
-        pd.read_csv(output_dir / "ortho_factors.csv"),
+    assert np.allclose(
+        outcome["factors"],
+        np.genfromtxt(output_dir / "ortho_factors.csv", delimiter=",", skip_header=1),
     )
-    assert_frame_equal(
-        pd.DataFrame(outcome["loadings"], columns=[str(i) for i in range(50)]),
-        pd.read_csv(output_dir / "ortho_loadings.csv"),
+    assert np.allclose(
+        outcome["loadings"],
+        np.genfromtxt(output_dir / "ortho_loadings.csv", delimiter=",", skip_header=1),
     )
-    assert_frame_equal(
-        pd.DataFrame(outcome["coefX"], columns=["0"]),
-        pd.read_csv(output_dir / "ortho_coefX.csv"),
+    assert np.allclose(
+        outcome["coefX"].T,
+        np.genfromtxt(output_dir / "ortho_coefX.csv", skip_header=1),
     )
     assert outcome["coefZ"] is None
 

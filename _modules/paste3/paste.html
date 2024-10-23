@@ -73,11 +73,11 @@
              
   <h1>Source code for paste3.paste</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span>
-<span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">anndata</span> <span class="kn">import</span> <span class="n">AnnData</span>
 <span class="kn">import</span> <span class="nn">ot</span>
 <span class="kn">from</span> <span class="nn">ot.lp</span> <span class="kn">import</span> <span class="n">emd</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">distance</span>
 <span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">NMF</span>
 <span class="kn">from</span> <span class="nn">paste3.helper</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">intersect</span><span class="p">,</span>
@@ -100,8 +100,8 @@
     <span class="n">b_distribution</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">norm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">numItermax</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
-    <span class="n">backend</span><span class="o">=</span><span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">(),</span>
-    <span class="n">use_gpu</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">backend</span><span class="o">=</span><span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">NumpyBackend</span><span class="p">(),</span>
+    <span class="n">use_gpu</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">return_obj</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">gpu_verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -190,17 +190,14 @@
     <span class="n">D_A</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">coordinatesA</span><span class="p">,</span> <span class="n">coordinatesA</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;euclidean&quot;</span><span class="p">)</span>
     <span class="n">D_B</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">coordinatesB</span><span class="p">,</span> <span class="n">coordinatesB</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;euclidean&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">):</span>
-        <span class="n">D_A</span> <span class="o">=</span> <span class="n">D_A</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
-        <span class="n">D_B</span> <span class="o">=</span> <span class="n">D_B</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">use_gpu</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">)</span> <span class="ow">and</span> <span class="n">use_gpu</span><span class="p">:</span>
         <span class="n">D_A</span> <span class="o">=</span> <span class="n">D_A</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
         <span class="n">D_B</span> <span class="o">=</span> <span class="n">D_B</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
 
     <span class="c1"># Calculate expression dissimilarity</span>
     <span class="n">A_X</span><span class="p">,</span> <span class="n">B_X</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">to_dense_array</span><span class="p">(</span><span class="n">extract_data_matrix</span><span class="p">(</span><span class="n">sliceA</span><span class="p">,</span> <span class="n">use_rep</span><span class="p">)),</span>
-        <span class="n">to_dense_array</span><span class="p">(</span><span class="n">extract_data_matrix</span><span class="p">(</span><span class="n">sliceB</span><span class="p">,</span> <span class="n">use_rep</span><span class="p">)),</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">to_dense_array</span><span class="p">(</span><span class="n">extract_data_matrix</span><span class="p">(</span><span class="n">sliceA</span><span class="p">,</span> <span class="n">use_rep</span><span class="p">))),</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">to_dense_array</span><span class="p">(</span><span class="n">extract_data_matrix</span><span class="p">(</span><span class="n">sliceB</span><span class="p">,</span> <span class="n">use_rep</span><span class="p">))),</span>
     <span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">)</span> <span class="ow">and</span> <span class="n">use_gpu</span><span class="p">:</span>
@@ -221,17 +218,11 @@
             <span class="n">eps</span><span class="o">=</span><span class="n">eps</span><span class="p">,</span>
             <span class="n">optimizeTheta</span><span class="o">=</span><span class="n">optimizeTheta</span><span class="p">,</span>
         <span class="p">)</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">is_histology</span><span class="p">:</span>
         <span class="c1"># Calculate RGB dissimilarity</span>
-        <span class="n">M_rgb</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">torch</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">sliceA</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;rgb&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">double</span><span class="p">(),</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">sliceB</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;rgb&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">double</span><span class="p">(),</span>
-            <span class="p">)</span>
-            <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="n">M_rgb</span> <span class="o">=</span> <span class="n">distance</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span><span class="n">sliceA</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;rgb&quot;</span><span class="p">],</span> <span class="n">sliceB</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;rgb&quot;</span><span class="p">])</span>
 
         <span class="c1"># Scale M_exp and M_rgb, obtain M by taking half from each</span>
         <span class="n">M_rgb</span> <span class="o">/=</span> <span class="n">M_rgb</span><span class="p">[</span><span class="n">M_rgb</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
@@ -250,7 +241,6 @@
         <span class="n">b</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">b_distribution</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">):</span>
-        <span class="n">M</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
         <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
         <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">use_gpu</span><span class="p">:</span>
@@ -268,8 +258,11 @@
             <span class="n">D_B</span> <span class="o">*=</span> <span class="n">M</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
 
     <span class="c1"># Run OT</span>
-    <span class="k">if</span> <span class="n">G_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">use_gpu</span><span class="p">:</span>
-        <span class="n">G_init</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">G_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">G_init</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">G_init</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">use_gpu</span><span class="p">:</span>
+                <span class="n">G_init</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
     <span class="n">pi</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="n">my_fused_gromov_wasserstein</span><span class="p">(</span>
         <span class="n">M</span><span class="p">,</span>
         <span class="n">D_A</span><span class="p">,</span>
@@ -286,7 +279,10 @@
         <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span><span class="p">:</span>
-        <span class="n">log</span> <span class="o">=</span> <span class="n">log</span><span class="p">[</span><span class="s2">&quot;fgw_dist&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="n">pi</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
+        <span class="n">log</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">log</span><span class="p">[</span><span class="s2">&quot;fgw_dist&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">)</span> <span class="ow">and</span> <span class="n">use_gpu</span><span class="p">:</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">empty_cache</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="n">return_obj</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">pi</span><span class="p">,</span> <span class="n">log</span>
@@ -306,8 +302,8 @@
     <span class="n">random_seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">pis_init</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">distributions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">backend</span><span class="o">=</span><span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">(),</span>
-    <span class="n">use_gpu</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">backend</span><span class="o">=</span><span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">NumpyBackend</span><span class="p">(),</span>
+    <span class="n">use_gpu</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">gpu_verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">AnnData</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
@@ -472,17 +468,11 @@
     <span class="n">center_slice</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span>
     <span class="n">center_slice</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;paste_W&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">W</span>
     <span class="n">center_slice</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;paste_H&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">H</span>
-    <span class="n">center_slice</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;full_rank&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">center_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span>
-            <span class="p">[</span>
-                <span class="n">lmbda</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_dense_array</span><span class="p">(</span><span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">))</span>
-            <span class="p">]</span>
-        <span class="p">)</span>
-        <span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
-        <span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+    <span class="n">center_slice</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;full_rank&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">center_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">lmbda</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_dense_array</span><span class="p">(</span><span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">X</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">))</span>
+        <span class="p">]</span>
     <span class="p">)</span>
     <span class="n">center_slice</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;obj&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">R</span>
     <span class="k">return</span> <span class="n">center_slice</span><span class="p">,</span> <span class="n">pis</span></div>
@@ -553,8 +543,7 @@
     <span class="n">n</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">B</span> <span class="o">=</span> <span class="n">n</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span>
         <span class="p">[</span>
-            <span class="n">lmbda</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-            <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_dense_array</span><span class="p">(</span><span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
+            <span class="n">lmbda</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_dense_array</span><span class="p">(</span><span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">X</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">))</span>
         <span class="p">]</span>
     <span class="p">)</span>
@@ -574,7 +563,7 @@
             <span class="n">random_state</span><span class="o">=</span><span class="n">random_seed</span><span class="p">,</span>
             <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
         <span class="p">)</span>
-    <span class="n">W_new</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+    <span class="n">W_new</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
     <span class="n">H_new</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">components_</span>
     <span class="k">return</span> <span class="n">W_new</span><span class="p">,</span> <span class="n">H_new</span>
 
@@ -594,7 +583,7 @@
     <span class="n">numItermax</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
     <span class="n">tol_rel</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span>
     <span class="n">tol_abs</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span>
-    <span class="n">use_gpu</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">use_gpu</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">numItermaxEmd</span><span class="o">=</span><span class="mi">100000</span><span class="p">,</span>
     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 <span class="p">):</span>
@@ -612,7 +601,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;Problem infeasible. Parameter m should be greater&quot;</span> <span class="s2">&quot; than 0.&quot;</span>
             <span class="p">)</span>
-        <span class="k">elif</span> <span class="n">m</span> <span class="o">&gt;</span> <span class="nb">min</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="n">q</span><span class="o">.</span><span class="n">sum</span><span class="p">()):</span>
+        <span class="k">elif</span> <span class="n">m</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">q</span><span class="p">))):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;Problem infeasible. Parameter m should lower or&quot;</span>
                 <span class="s2">&quot; equal to min(|p|_1, |q|_1).&quot;</span>
@@ -622,8 +611,8 @@
             <span class="n">_log</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;err&quot;</span><span class="p">:</span> <span class="p">[]}</span>
         <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">dummy</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="n">_p</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">p</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([(</span><span class="n">q</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">dummy</span><span class="p">]</span> <span class="o">*</span> <span class="n">dummy</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">device</span><span class="p">)])</span>
-        <span class="n">_q</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">q</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([(</span><span class="n">q</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">dummy</span><span class="p">]</span> <span class="o">*</span> <span class="n">dummy</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">device</span><span class="p">)])</span>
+        <span class="n">_p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">dummy</span><span class="p">]</span> <span class="o">*</span> <span class="n">dummy</span><span class="p">)</span>
+        <span class="n">_q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">dummy</span><span class="p">]</span> <span class="o">*</span> <span class="n">dummy</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">G0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">G0</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">G0</span><span class="p">))</span> <span class="o">*</span> <span class="n">G0</span>
@@ -634,8 +623,8 @@
         <span class="n">constC</span><span class="p">,</span> <span class="n">hC1</span><span class="p">,</span> <span class="n">hC2</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">init_matrix</span><span class="p">(</span>
             <span class="n">C1</span><span class="p">,</span>
             <span class="n">C2</span><span class="p">,</span>
-            <span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">C1</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
-            <span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">C2</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
+            <span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
             <span class="n">loss_fun</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">gwloss</span><span class="p">(</span><span class="n">constC</span><span class="p">,</span> <span class="n">hC1</span><span class="p">,</span> <span class="n">hC2</span><span class="p">,</span> <span class="n">G</span><span class="p">)</span>
@@ -659,7 +648,7 @@
             <span class="k">if</span> <span class="n">log</span><span class="p">:</span>
                 <span class="c1"># keep track of error only on every 10th iteration</span>
                 <span class="k">if</span> <span class="n">count</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">_log</span><span class="p">[</span><span class="s2">&quot;err&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">deltaG</span><span class="p">))</span>
+                    <span class="n">_log</span><span class="p">[</span><span class="s2">&quot;err&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">deltaG</span><span class="p">))</span>
             <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="k">if</span> <span class="n">armijo</span><span class="p">:</span>
@@ -678,8 +667,8 @@
 
     <span class="k">def</span> <span class="nf">lp_solver</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
-            <span class="n">_M</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dummy</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">dummy</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;constant&quot;</span><span class="p">)</span>
-            <span class="n">_M</span><span class="p">[</span><span class="o">-</span><span class="n">dummy</span><span class="p">:,</span> <span class="o">-</span><span class="n">dummy</span><span class="p">:]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">M</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e2</span>
+            <span class="n">_M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dummy</span><span class="p">)]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;constant&quot;</span><span class="p">)</span>
+            <span class="n">_M</span><span class="p">[</span><span class="o">-</span><span class="n">dummy</span><span class="p">:,</span> <span class="o">-</span><span class="n">dummy</span><span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">M</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e2</span>
 
             <span class="n">Gc</span><span class="p">,</span> <span class="n">innerlog_</span> <span class="o">=</span> <span class="n">emd</span><span class="p">(</span><span class="n">_p</span><span class="p">,</span> <span class="n">_q</span><span class="p">,</span> <span class="n">_M</span><span class="p">,</span> <span class="mi">1000000</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">innerlog_</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;warning&quot;</span><span class="p">):</span>
@@ -796,14 +785,14 @@
     <span class="n">constC</span><span class="p">,</span> <span class="n">hC1</span><span class="p">,</span> <span class="n">hC2</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">init_matrix</span><span class="p">(</span>
         <span class="n">C1</span><span class="p">,</span>
         <span class="n">C2</span><span class="p">,</span>
-        <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">deltaG</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-        <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">deltaG</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">deltaG</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">deltaG</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
         <span class="n">loss_fun</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">dot</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">C1</span><span class="p">,</span> <span class="n">deltaG</span><span class="p">),</span> <span class="n">C2</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-    <span class="n">a</span> <span class="o">=</span> <span class="n">reg</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dot</span> <span class="o">*</span> <span class="n">deltaG</span><span class="p">)</span>
-    <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">reg</span><span class="p">)</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">M</span> <span class="o">*</span> <span class="n">deltaG</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">reg</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+    <span class="n">dot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">C1</span><span class="p">,</span> <span class="n">deltaG</span><span class="p">),</span> <span class="n">C2</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">reg</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dot</span> <span class="o">*</span> <span class="n">deltaG</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">reg</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">M</span> <span class="o">*</span> <span class="n">deltaG</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">reg</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
         <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">gwggrad</span><span class="p">(</span><span class="n">constC</span><span class="p">,</span> <span class="n">hC1</span><span class="p">,</span> <span class="n">hC2</span><span class="p">,</span> <span class="n">deltaG</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">G</span>
     <span class="p">)</span>
     <span class="n">alpha</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">solve_1d_linesearch_quad</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
@@ -811,11 +800,11 @@
     <span class="n">constC</span><span class="p">,</span> <span class="n">hC1</span><span class="p">,</span> <span class="n">hC2</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">init_matrix</span><span class="p">(</span>
         <span class="n">C1</span><span class="p">,</span>
         <span class="n">C2</span><span class="p">,</span>
-        <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-        <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
         <span class="n">loss_fun</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">cost_G</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">reg</span><span class="p">)</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">M</span> <span class="o">*</span> <span class="n">G</span><span class="p">)</span> <span class="o">+</span> <span class="n">reg</span> <span class="o">*</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">gwloss</span><span class="p">(</span><span class="n">constC</span><span class="p">,</span> <span class="n">hC1</span><span class="p">,</span> <span class="n">hC2</span><span class="p">,</span> <span class="n">G</span><span class="p">)</span>
+    <span class="n">cost_G</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">reg</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">M</span> <span class="o">*</span> <span class="n">G</span><span class="p">)</span> <span class="o">+</span> <span class="n">reg</span> <span class="o">*</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">gwloss</span><span class="p">(</span><span class="n">constC</span><span class="p">,</span> <span class="n">hC1</span><span class="p">,</span> <span class="n">hC2</span><span class="p">,</span> <span class="n">G</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">cost_G</span>
 </pre></div>
 

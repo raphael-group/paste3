@@ -40,7 +40,6 @@
     "import time\n",
     "import pandas as pd\n",
     "import numpy as np\n",
-    "import torch\n",
     "import scanpy as sc\n",
     "import matplotlib.pyplot as plt\n",
     "import matplotlib.patches as mpatches\n",
@@ -252,7 +251,7 @@
    },
    "outputs": [],
    "source": [
-    "pd.DataFrame(pi12.cpu().numpy())"
+    "pd.DataFrame(pi12)"
    ]
   },
   {
@@ -455,11 +454,7 @@
     "\n",
     "b = []\n",
     "for i in range(len(slices)):\n",
-    "    b.append(\n",
-    "        torch.Tensor(\n",
-    "            match_spots_using_spatial_heuristic(slices[0].X, slices[i].X)\n",
-    "        ).double()\n",
-    "    )"
+    "    b.append(match_spots_using_spatial_heuristic(slices[0].X, slices[i].X))"
    ]
   },
   {
@@ -801,9 +796,9 @@
    "source": [
     "start = time.time()\n",
     "\n",
-    "pi12 = pairwise_align(slice1, slice2, backend=ot.backend.TorchBackend(), use_gpu=True)\n",
-    "pi23 = pairwise_align(slice2, slice3, backend=ot.backend.TorchBackend(), use_gpu=True)\n",
-    "pi34 = pairwise_align(slice3, slice4, backend=ot.backend.TorchBackend(), use_gpu=True)\n",
+    "pi12 = pairwise_align(slice1, slice2, backend=ot.backend.TorchBackend(), use_gpu=False)\n",
+    "pi23 = pairwise_align(slice2, slice3, backend=ot.backend.TorchBackend(), use_gpu=False)\n",
+    "pi34 = pairwise_align(slice3, slice4, backend=ot.backend.TorchBackend(), use_gpu=False)\n",
     "\n",
     "print(\"Runtime: \" + str(time.time() - start))"
    ]
@@ -819,7 +814,7 @@
    },
    "outputs": [],
    "source": [
-    "pd.DataFrame(pi12.cpu().numpy())"
+    "pd.DataFrame(pi12)"
    ]
   },
   {
@@ -869,7 +864,7 @@
     "    lmbda,\n",
     "    random_seed=5,\n",
     "    backend=ot.backend.TorchBackend(),\n",
-    "    use_gpu=True,\n",
+    "    use_gpu=False,\n",
     ")\n",
     "\n",
     "print(\"Runtime: \" + str(time.time() - start))"

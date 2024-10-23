@@ -64,12 +64,12 @@ def test_remove_intercept():
 @pytest.mark.parametrize("fam", ("poi", "nb", "mult", "bern"))
 def test_glmpca_init(fam):
     Y = np.genfromtxt(input_dir / "Y.csv", delimiter=",", skip_header=2)
+
     glmpca_obj = glmpca_init(Y, fam, None, 100)
-    np.allclose(
+
+    assert np.allclose(
         glmpca_obj["intercepts"],
-        np.genfromtxt(
-            output_dir / "glmpca_intercepts.csv", delimiter=",", skip_header=1
-        ),
+        np.load(output_dir / "glmpca_intercepts.npz")[fam],
     )
 
 
@@ -84,20 +84,23 @@ def test_est_nb_theta():
     assert output == expected_output
 
 
-def test_glmpca():
+@pytest.mark.parametrize("fam", ("poi", "nb", "mult", "bern"))
+def test_glmpca(fam):
     joint_matrix_T = np.genfromtxt(input_dir / "joint_matrix.csv", delimiter=",")
-
+    if fam == "bern":
+        joint_matrix_T /= np.linalg.norm(joint_matrix_T, axis=1, keepdims=True)
     res = glmpca(
         joint_matrix_T,
         L=50,
         penalty=1,
         verbose=True,
+        fam=fam,
         ctl={"maxIter": 10, "eps": 1e-4, "optimizeTheta": True},
     )
-    saved_result = np.load(output_dir / "glmpca_result.npz")
 
-    assert np.allclose(res["coefX"], saved_result["coefX"])
-    assert np.allclose(res["loadings"], saved_result["loadings"])
-    assert np.allclose(res["factors"], saved_result["factors"])
-    assert np.allclose(res["dev"], saved_result["dev"])
+    saved_result = np.load(output_dir / "glmpca_result.npz")
+    assert np.allclose(res["coefX"], saved_result[f"coefX_{fam}"])
+    assert np.allclose(res["loadings"], saved_result[f"loadings_{fam}"])
+    assert np.allclose(res["factors"], saved_result[f"factors_{fam}"])
+    assert np.allclose(res["dev"], saved_result[f"dev_{fam}"])
     assert res["coefZ"] is None

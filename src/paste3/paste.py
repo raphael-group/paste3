@@ -175,7 +175,6 @@ def pairwise_align(
         m=s,
         G0=G_init,
         loss_fun="square_loss",
-        log=True,
         numItermax=maxIter if s else numItermax,
         use_gpu=use_gpu,
     )
@@ -446,7 +445,6 @@ def my_fused_gromov_wasserstein(
     G0=None,
     loss_fun="square_loss",
     armijo=False,
-    log=False,
     numItermax=200,
     tol_rel=1e-9,
     tol_abs=1e-9,
@@ -474,8 +472,7 @@ def my_fused_gromov_wasserstein(
                 " equal to min(|p|_1, |q|_1)."
             )
 
-        if log:
-            _log = {"err": []}
+        _log = {"err": []}
         count = 0
         dummy = 1
         _p = torch.cat([p, torch.Tensor([(q.sum() - m) / dummy] * dummy).to(p.device)])
@@ -512,10 +509,9 @@ def my_fused_gromov_wasserstein(
     def line_search(cost, G, deltaG, Mi, cost_G, **kwargs):
         if m:
             nonlocal count
-            if log:
-                # keep track of error only on every 10th iteration
-                if count % 10 == 0:
-                    _log["err"].append(torch.norm(deltaG))
+            # keep track of error only on every 10th iteration
+            if count % 10 == 0:
+                _log["err"].append(torch.norm(deltaG))
             count += 1
 
         if armijo:
@@ -557,25 +553,22 @@ def my_fused_gromov_wasserstein(
         lp_solver,
         line_search,
         G0,
-        log=log,
+        log=True,
         numItermax=numItermax,
         stopThr=tol_rel,
         stopThr2=tol_abs,
         **kwargs,
     )
 
-    if log:
-        res, log = return_val
-        if m:
-            log["partial_fgw_cost"] = log["loss"][-1]
-            log["err"] = _log["err"]
-        else:
-            log["fgw_dist"] = log["loss"][-1]
-            log["u"] = log["u"]
-            log["v"] = log["v"]
-        return res, log
+    res, log = return_val
+    if m:
+        log["partial_fgw_cost"] = log["loss"][-1]
+        log["err"] = _log["err"]
     else:
-        return return_val
+        log["fgw_dist"] = log["loss"][-1]
+        log["u"] = log["u"]
+        log["v"] = log["v"]
+    return res, log
 
 
 def solve_gromov_linesearch(

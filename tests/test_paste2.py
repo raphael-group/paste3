@@ -165,7 +165,6 @@ def test_partial_fused_gromov_wasserstein(slices, armijo, expected_log, filename
         G0=None,
         loss_fun="square_loss",
         armijo=armijo,
-        log=True,
     )
 
     assert np.allclose(

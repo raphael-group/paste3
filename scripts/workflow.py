@@ -85,7 +85,7 @@ class AlignmentDataset:
                 pairwise_align(
                     self.slices[i].adata,
                     self.slices[i + 1].adata,
-                    s=overlap_fraction,
+                    overlap_fraction=overlap_fraction,
                     numItermax=max_iters,
                     maxIter=max_iters,
                 )

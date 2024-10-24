@@ -16,15 +16,15 @@ logger = logging.getLogger(__name__)
 
 
 def pairwise_align(
-    sliceA: AnnData,
-    sliceB: AnnData,
-    s: float = None,
-    M=None,
+    a_slice: AnnData,
+    b_slice: AnnData,
+    overlap_fraction: float = None,
+    exp_dissim_matrix=None,
     alpha: float = 0.1,
-    dissimilarity: str = "kl",
-    G_init=None,
-    a_distribution=None,
-    b_distribution=None,
+    exp_dissim_metric: str = "kl",
+    pis_init=None,
+    a_spots_weight=None,
+    b_spots_weight=None,
     norm: bool = False,
     numItermax: int = 200,
     backend=ot.backend.TorchBackend(),
@@ -33,7 +33,7 @@ def pairwise_align(
     maxIter=1000,
     optimizeTheta=True,
     eps=1e-4,
-    is_histology: bool = False,
+    do_histology: bool = False,
     armijo=False,
     **kwargs,
 ) -> Tuple[np.ndarray, Optional[int]]:
@@ -41,13 +41,13 @@ def pairwise_align(
     Calculates and returns optimal alignment of two slices.
 
     Args:
-        sliceA: Slice A to align.
-        sliceB: Slice B to align.
+        a_slice: Slice A to align.
+        b_slice: Slice B to align.
         alpha:  Alignment tuning parameter. Note: 0 <= alpha <= 1.
-        dissimilarity: Expression dissimilarity measure: ``'kl'`` or ``'euclidean'``.
-        G_init (array-like, optional): Initial mapping to be used in FGW-OT, otherwise default is uniform mapping.
-        a_distribution (array-like, optional): Distribution of sliceA spots, otherwise default is uniform.
-        b_distribution (array-like, optional): Distribution of sliceB spots, otherwise default is uniform.
+        exp_dissim_metric: Expression dissimilarity measure: ``'kl'`` or ``'euclidean'``.
+        pis_init (array-like, optional): Initial mapping to be used in FGW-OT, otherwise default is uniform mapping.
+        a_spots_weight (array-like, optional): Distribution of sliceA spots, otherwise default is uniform.
+        b_spots_weight (array-like, optional): Distribution of sliceB spots, otherwise default is uniform.
         numItermax: Max number of iterations during FGW-OT.
         norm: If ``True``, scales spatial distances such that neighboring spots are at distance 1. Otherwise, spatial distances remain unchanged.
         backend: Type of backend to run calculations. For list of backends available on system: ``ot.backend.get_backend_list()``.
@@ -67,49 +67,49 @@ def pairwise_align(
         use_gpu = False
 
     # subset for common genes
-    common_genes = intersect(sliceA.var.index, sliceB.var.index)
-    sliceA = sliceA[:, common_genes]
-    sliceB = sliceB[:, common_genes]
+    common_genes = intersect(a_slice.var.index, b_slice.var.index)
+    a_slice = a_slice[:, common_genes]
+    b_slice = b_slice[:, common_genes]
 
     # check if slices are valid
-    for slice in [sliceA, sliceB]:
+    for slice in [a_slice, b_slice]:
         if not len(slice):
-            raise ValueError(f"Found empty `AnnData`:\n{sliceA}.")
+            raise ValueError(f"Found empty `AnnData`:\n{a_slice}.")
 
     # Backend
     nx = backend
 
     # Calculate spatial distances
-    coordinatesA = sliceA.obsm["spatial"].copy()
-    coordinatesA = nx.from_numpy(coordinatesA)
-    coordinatesB = sliceB.obsm["spatial"].copy()
-    coordinatesB = nx.from_numpy(coordinatesB)
+    a_coordinates = a_slice.obsm["spatial"].copy()
+    a_coordinates = nx.from_numpy(a_coordinates)
+    b_coordinates = b_slice.obsm["spatial"].copy()
+    b_coordinates = nx.from_numpy(b_coordinates)
 
-    D_A = ot.dist(coordinatesA, coordinatesA, metric="euclidean")
-    D_B = ot.dist(coordinatesB, coordinatesB, metric="euclidean")
+    a_spatial_dist = ot.dist(a_coordinates, a_coordinates, metric="euclidean")
+    b_spatial_dist = ot.dist(b_coordinates, b_coordinates, metric="euclidean")
 
     if isinstance(nx, ot.backend.TorchBackend):
-        D_A = D_A.double()
-        D_B = D_B.double()
+        a_spatial_dist = a_spatial_dist.double()
+        b_spatial_dist = b_spatial_dist.double()
     if use_gpu:
-        D_A = D_A.cuda()
-        D_B = D_B.cuda()
+        a_spatial_dist = a_spatial_dist.cuda()
+        b_spatial_dist = b_spatial_dist.cuda()
 
     # Calculate expression dissimilarity
-    A_X = to_dense_array(sliceA.X)
-    B_X = to_dense_array(sliceB.X)
+    a_exp_dissim = to_dense_array(a_slice.X)
+    b_exp_dissim = to_dense_array(b_slice.X)
 
     if isinstance(nx, ot.backend.TorchBackend) and use_gpu:
-        A_X = A_X.cuda()
-        B_X = B_X.cuda()
+        a_exp_dissim = a_exp_dissim.cuda()
+        b_exp_dissim = b_exp_dissim.cuda()
 
-    if M is None:
-        M = dissimilarity_metric(
-            dissimilarity,
-            sliceA,
-            sliceB,
-            A_X,
-            B_X,
+    if exp_dissim_matrix is None:
+        exp_dissim_matrix = dissimilarity_metric(
+            exp_dissim_metric,
+            a_slice,
+            b_slice,
+            a_exp_dissim,
+            b_exp_dissim,
             latent_dim=50,
             filter=True,
             maxIter=maxIter,
@@ -117,72 +117,72 @@ def pairwise_align(
             optimizeTheta=optimizeTheta,
         )
 
-    if is_histology:
+    if do_histology:
         # Calculate RGB dissimilarity
-        M_rgb = (
+        rgb_dissim_matrix = (
             torch.cdist(
-                torch.Tensor(sliceA.obsm["rgb"]).double(),
-                torch.Tensor(sliceB.obsm["rgb"]).double(),
+                torch.Tensor(a_slice.obsm["rgb"]).double(),
+                torch.Tensor(b_slice.obsm["rgb"]).double(),
             )
-            .to(M.dtype)
-            .to(M.device)
+            .to(exp_dissim_matrix.dtype)
+            .to(exp_dissim_matrix.device)
         )
 
-        # Scale M_exp and M_rgb, obtain M by taking half from each
-        M_rgb /= M_rgb[M_rgb > 0].max()
-        M_rgb *= M.max()
-        M = 0.5 * M + 0.5 * M_rgb
+        # Scale M_exp and rgb_dissim_matrix, obtain M by taking half from each
+        rgb_dissim_matrix /= rgb_dissim_matrix[rgb_dissim_matrix > 0].max()
+        rgb_dissim_matrix *= exp_dissim_matrix.max()
+        exp_dissim_matrix = 0.5 * exp_dissim_matrix + 0.5 * rgb_dissim_matrix
 
     # init distributions
-    if a_distribution is None:
-        a = nx.ones((sliceA.shape[0],)) / sliceA.shape[0]
+    if a_spots_weight is None:
+        a_spots_weight = nx.ones((a_slice.shape[0],)) / a_slice.shape[0]
     else:
-        a = nx.from_numpy(a_distribution)
+        a_spots_weight = nx.from_numpy(a_spots_weight)
 
-    if b_distribution is None:
-        b = nx.ones((sliceB.shape[0],)) / sliceB.shape[0]
+    if b_spots_weight is None:
+        b_spots_weight = nx.ones((b_slice.shape[0],)) / b_slice.shape[0]
     else:
-        b = nx.from_numpy(b_distribution)
+        b_spots_weight = nx.from_numpy(b_spots_weight)
 
     if isinstance(nx, ot.backend.TorchBackend):
-        M = M.double()
-        a = a.double()
-        b = b.double()
+        exp_dissim_matrix = exp_dissim_matrix.double()
+        a_spots_weight = a_spots_weight.double()
+        b_spots_weight = b_spots_weight.double()
         if use_gpu:
-            M = M.cuda()
-            a = a.cuda()
-            b = b.cuda()
+            exp_dissim_matrix = exp_dissim_matrix.cuda()
+            a_spots_weight = a_spots_weight.cuda()
+            b_spots_weight = b_spots_weight.cuda()
 
     if norm:
-        D_A /= nx.min(D_A[D_A > 0])
-        D_B /= nx.min(D_B[D_B > 0])
-        if s:
-            D_A /= D_A[D_A > 0].max()
-            D_A *= M.max()
-            D_B /= D_B[D_B > 0].max()
-            D_B *= M.max()
+        a_spatial_dist /= nx.min(a_spatial_dist[a_spatial_dist > 0])
+        b_spatial_dist /= nx.min(b_spatial_dist[b_spatial_dist > 0])
+        if overlap_fraction:
+            a_spatial_dist /= a_spatial_dist[a_spatial_dist > 0].max()
+            a_spatial_dist *= exp_dissim_matrix.max()
+            b_spatial_dist /= b_spatial_dist[b_spatial_dist > 0].max()
+            b_spatial_dist *= exp_dissim_matrix.max()
 
     # Run OT
-    if G_init is not None and use_gpu:
-        G_init.cuda()
-    pi, log = my_fused_gromov_wasserstein(
-        M,
-        D_A,
-        D_B,
-        a,
-        b,
+    if pis_init is not None and use_gpu:
+        pis_init.cuda()
+    pi, info = my_fused_gromov_wasserstein(
+        exp_dissim_matrix,
+        a_spatial_dist,
+        b_spatial_dist,
+        a_spots_weight,
+        b_spots_weight,
         alpha=alpha,
-        m=s,
-        G0=G_init,
+        m=overlap_fraction,
+        G0=pis_init,
         loss_fun="square_loss",
-        numItermax=maxIter if s else numItermax,
+        numItermax=maxIter if overlap_fraction else numItermax,
         use_gpu=use_gpu,
     )
-    if not s:
-        log = log["fgw_dist"].item()
+    if not overlap_fraction:
+        info = info["fgw_dist"].item()
 
     if return_obj:
-        return pi, log
+        return pi, info
     return pi
 
 
@@ -382,12 +382,12 @@ def center_ot(
             center_slice,
             slices[i],
             alpha=alpha,
-            dissimilarity=dissimilarity,
+            exp_dissim_metric=dissimilarity,
             norm=norm,
             numItermax=numItermax,
             return_obj=True,
-            G_init=G_inits[i],
-            b_distribution=distributions[i],
+            pis_init=G_inits[i],
+            b_spots_weight=distributions[i],
             backend=backend,
             use_gpu=use_gpu,
         )

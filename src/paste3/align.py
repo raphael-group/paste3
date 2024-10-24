@@ -87,15 +87,15 @@ def align(
         pis = []
         for i in range(n_slices - 1):
             pi = pairwise_align(
-                sliceA=slices[i],
-                sliceB=slices[i + 1],
-                s=overlap_fraction,
-                M=cost_matrix,
+                a_slice=slices[i],
+                b_slice=slices[i + 1],
+                overlap_fraction=overlap_fraction,
+                exp_dissim_matrix=cost_matrix,
                 alpha=alpha,
-                dissimilarity=cost,
-                G_init=pis_init[i],
-                a_distribution=slices[i].obsm["weights"],
-                b_distribution=slices[i + 1].obsm["weights"],
+                exp_dissim_metric=cost,
+                pis_init=pis_init[i],
+                a_spots_weight=slices[i].obsm["weights"],
+                b_spots_weight=slices[i + 1].obsm["weights"],
                 norm=norm,
                 numItermax=numItermax,
                 backend=ot.backend.TorchBackend(),
@@ -104,7 +104,7 @@ def align(
                 maxIter=max_iter,
                 optimizeTheta=optimizeTheta,
                 eps=eps,
-                is_histology=is_histology,
+                do_histology=is_histology,
                 armijo=armijo,
             )
             pis.append(pi)

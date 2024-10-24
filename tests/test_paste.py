@@ -68,16 +68,16 @@ def test_center_alignment(slices):
     center_slice, pairwise_info = center_align(
         slices[0],
         slices,
-        lmbda=n_slices * [1.0 / n_slices],
+        slice_weights=n_slices * [1.0 / n_slices],
         alpha=0.1,
         n_components=15,
         random_seed=0,
         threshold=0.001,
         max_iter=2,
-        dissimilarity="kl",
+        exp_dissim_metric="kl",
         use_gpu=True,
         backend=ot.backend.TorchBackend(),
-        distributions=[
+        spots_weights=[
             slices[i].obsm["weights"].astype(slices[i].X.dtype)
             for i in range(len(slices))
         ],

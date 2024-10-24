@@ -124,18 +124,18 @@ def align(
         initial_slice = slices[initial_slice - 1].copy()
 
         center_slice, pis = center_align(
-            A=initial_slice,
+            initial_slice=initial_slice,
             slices=slices,
-            lmbda=lmbda,
+            slice_weights=lmbda,
             alpha=alpha,
             n_components=n_components,
             threshold=threshold,
             max_iter=max_iter,
-            dissimilarity=cost,
+            exp_dissim_metric=cost,
             norm=norm,
             random_seed=seed,
             pis_init=pis_init,
-            distributions=[slice.obsm["weights"] for slice in slices],
+            spots_weights=[slice.obsm["weights"] for slice in slices],
             backend=ot.backend.TorchBackend(),
             use_gpu=use_gpu,
         )

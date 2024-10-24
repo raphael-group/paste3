@@ -187,18 +187,18 @@ def pairwise_align(
 
 
 def center_align(
-    A: AnnData,
+    initial_slice: AnnData,
     slices: List[AnnData],
-    lmbda=None,
+    slice_weights=None,
     alpha: float = 0.1,
     n_components: int = 15,
     threshold: float = 0.001,
     max_iter: int = 10,
-    dissimilarity: str = "kl",
+    exp_dissim_metric: str = "kl",
     norm: bool = False,
     random_seed: Optional[int] = None,
     pis_init: Optional[List[np.ndarray]] = None,
-    distributions=None,
+    spots_weights=None,
     backend=ot.backend.TorchBackend(),
     use_gpu: bool = True,
 ) -> Tuple[AnnData, List[np.ndarray]]:
@@ -206,23 +206,23 @@ def center_align(
     Computes center alignment of slices.
 
     Args:
-        A: Slice to use as the initialization for center alignment; Make sure to include gene expression and spatial information.
+        initial_slice: Slice to use as the initialization for center alignment; Make sure to include gene expression and spatial information.
         slices: List of slices to use in the center alignment.
-        lmbda (array-like, optional): List of probability weights assigned to each slice; If ``None``, use uniform weights.
+        slice_weights (array-like, optional): List of probability weights assigned to each slice; If ``None``, use uniform weights.
         alpha:  Alignment tuning parameter. Note: 0 <= alpha <= 1.
         n_components: Number of components in NMF decomposition.
-        threshold: Threshold for convergence of W and H during NMF decomposition.
+        threshold: Threshold for convergence of feature_matrix and coeff_matrix during NMF decomposition.
         max_iter: Maximum number of iterations for our center alignment algorithm.
-        dissimilarity: Expression dissimilarity measure: ``'kl'`` or ``'euclidean'``.
+        exp_dissim_metric: Expression dissimilarity measure: ``'kl'`` or ``'euclidean'``.
         norm:  If ``True``, scales spatial distances such that neighboring spots are at distance 1. Otherwise, spatial distances remain unchanged.
         random_seed: Set random seed for reproducibility.
         pis_init: Initial list of mappings between 'A' and 'slices' to solver. Otherwise, default will automatically calculate mappings.
-        distributions (List[array-like], optional): Distributions of spots for each slice. Otherwise, default is uniform.
+        spots_weights (List[array-like], optional): Distributions of spots for each slice. Otherwise, default is uniform.
         backend: Type of backend to run calculations. For list of backends available on system: ``ot.backend.get_backend_list()``.
         use_gpu: If ``True``, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.
 
     Returns:
-        - Inferred center slice with full and low dimensional representations (W, H) of the gene expression matrix.
+        - Inferred center slice with full and low dimensional representations (feature_matrix, coeff_matrix) of the gene expression matrix.
         - List of pairwise alignment mappings of the center slice (rows) to each input slice (columns).
     """
 
@@ -230,19 +230,19 @@ def center_align(
         logger.info("GPU is not available, resorting to torch CPU.")
         use_gpu = False
 
-    if lmbda is None:
-        lmbda = len(slices) * [1 / len(slices)]
+    if slice_weights is None:
+        slice_weights = len(slices) * [1 / len(slices)]
 
-    if distributions is None:
-        distributions = len(slices) * [None]
+    if spots_weights is None:
+        spots_weights = len(slices) * [None]
 
     # get common genes
-    common_genes = A.var.index
+    common_genes = initial_slice.var.index
     for s in slices:
         common_genes = intersect(common_genes, s.var.index)
 
     # subset common genes
-    A = A[:, common_genes]
+    initial_slice = initial_slice[:, common_genes]
     for i in range(len(slices)):
         slices[i] = slices[i][:, common_genes]
     logger.info(
@@ -252,14 +252,14 @@ def center_align(
     )
 
     # Run initial NMF
-    if dissimilarity.lower() == "euclidean" or dissimilarity.lower() == "euc":
-        model = NMF(
+    if exp_dissim_metric.lower() == "euclidean" or exp_dissim_metric.lower() == "euc":
+        nmf_model = NMF(
             n_components=n_components,
             init="random",
             random_state=random_seed,
         )
     else:
-        model = NMF(
+        nmf_model = NMF(
             n_components=n_components,
             solver="mu",
             beta_loss="kullback-leibler",
@@ -269,75 +269,75 @@ def center_align(
 
     if pis_init is None:
         pis = [None for i in range(len(slices))]
-        W = model.fit_transform(A.X)
+        feature_matrix = nmf_model.fit_transform(initial_slice.X)
     else:
         pis = pis_init
-        W = model.fit_transform(
-            A.shape[0]
+        feature_matrix = nmf_model.fit_transform(
+            initial_slice.shape[0]
             * sum(
                 [
-                    lmbda[i] * np.dot(pis[i], to_dense_array(slices[i].X))
+                    slice_weights[i] * np.dot(pis[i], to_dense_array(slices[i].X))
                     for i in range(len(slices))
                 ]
             )
         )
-    H = model.components_
-    center_coordinates = A.obsm["spatial"]
+    coeff_matrix = nmf_model.components_
+    center_coordinates = initial_slice.obsm["spatial"]
 
     if not isinstance(center_coordinates, np.ndarray):
         logger.warning("A.obsm['spatial'] is not of type numpy array.")
 
     # Initialize center_slice
-    center_slice = AnnData(np.dot(W, H))
+    center_slice = AnnData(np.dot(feature_matrix, coeff_matrix))
     center_slice.var.index = common_genes
-    center_slice.obs.index = A.obs.index
+    center_slice.obs.index = initial_slice.obs.index
     center_slice.obsm["spatial"] = center_coordinates
 
-    # Minimize R
+    # Minimize loss
     iteration_count = 0
-    R = 0
-    R_diff = 100
-    while R_diff > threshold and iteration_count < max_iter:
+    loss_init = 0
+    loss_diff = 100
+    while loss_diff > threshold and iteration_count < max_iter:
         logger.info("Iteration: " + str(iteration_count))
-        pis, r = center_ot(
-            W,
-            H,
+        pis, loss = center_ot(
+            feature_matrix,
+            coeff_matrix,
             slices,
             center_coordinates,
             common_genes,
             alpha,
             backend,
             use_gpu,
-            dissimilarity=dissimilarity,
+            dissimilarity=exp_dissim_metric,
             norm=norm,
             G_inits=pis,
-            distributions=distributions,
+            distributions=spots_weights,
         )
-        W, H = center_NMF(
-            W,
-            H,
+        feature_matrix, coeff_matrix = center_NMF(
+            feature_matrix,
+            coeff_matrix,
             slices,
             pis,
-            lmbda,
+            slice_weights,
             n_components,
             random_seed,
-            dissimilarity=dissimilarity,
+            dissimilarity=exp_dissim_metric,
         )
-        R_new = np.dot(r, lmbda)
+        loss_new = np.dot(loss, slice_weights)
         iteration_count += 1
-        R_diff = abs(R - R_new)
-        logger.info(f"Objective {R_new}")
-        logger.info(f"Difference: {R_diff}")
-        R = R_new
-    center_slice = A.copy()
-    center_slice.X = np.dot(W, H)
-    center_slice.uns["paste_W"] = W
-    center_slice.uns["paste_H"] = H
+        loss_diff = abs(loss_init - loss_new)
+        logger.info(f"Objective {loss_new}")
+        logger.info(f"Difference: {loss_diff}")
+        loss_init = loss_new
+    center_slice = initial_slice.copy()
+    center_slice.X = np.dot(feature_matrix, coeff_matrix)
+    center_slice.uns["paste_W"] = feature_matrix
+    center_slice.uns["paste_H"] = coeff_matrix
     center_slice.uns["full_rank"] = (
         center_slice.shape[0]
         * sum(
             [
-                lmbda[i]
+                slice_weights[i]
                 * torch.matmul(pis[i], to_dense_array(slices[i].X).to(pis[i].device))
                 for i in range(len(slices))
             ]
@@ -345,7 +345,7 @@ def center_align(
         .cpu()
         .numpy()
     )
-    center_slice.uns["obj"] = R
+    center_slice.uns["obj"] = loss_init
     return center_slice, pis
 
 

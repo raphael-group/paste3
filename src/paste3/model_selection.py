@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 from paste3.helper import (
     intersect,
     to_dense_array,
-    extract_data_matrix,
     glmpca_distance,
 )
 from paste3.paste import pairwise_align
@@ -196,10 +195,9 @@ def select_overlap_fraction(sliceA, sliceB, alpha=0.1, show_plot=True, numIterma
     sliceA = sliceA[:, common_genes]
     sliceB = sliceB[:, common_genes]
     # Get transport cost matrix
-    A_X, B_X = (
-        to_dense_array(extract_data_matrix(sliceA, None)),
-        to_dense_array(extract_data_matrix(sliceB, None)),
-    )
+    A_X = to_dense_array(sliceA.X)
+    B_X = to_dense_array(sliceB.X)
+
     M = torch.Tensor(
         glmpca_distance(A_X, B_X, latent_dim=50, filter=True, maxIter=numItermax)
     ).double()

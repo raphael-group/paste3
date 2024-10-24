@@ -93,7 +93,6 @@ def align(
                 M=cost_matrix,
                 alpha=alpha,
                 dissimilarity=cost,
-                use_rep=None,
                 G_init=pis_init[i],
                 a_distribution=slices[i].obsm["weights"],
                 b_distribution=slices[i + 1].obsm["weights"],

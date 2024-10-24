@@ -9,7 +9,6 @@ import logging
 from paste3.helper import (
     intersect,
     to_dense_array,
-    extract_data_matrix,
     dissimilarity_metric,
 )
 
@@ -23,7 +22,6 @@ def pairwise_align(
     M=None,
     alpha: float = 0.1,
     dissimilarity: str = "kl",
-    use_rep: Optional[str] = None,
     G_init=None,
     a_distribution=None,
     b_distribution=None,
@@ -47,7 +45,6 @@ def pairwise_align(
         sliceB: Slice B to align.
         alpha:  Alignment tuning parameter. Note: 0 <= alpha <= 1.
         dissimilarity: Expression dissimilarity measure: ``'kl'`` or ``'euclidean'``.
-        use_rep: If ``None``, uses ``slice.X`` to calculate dissimilarity between spots, otherwise uses the representation given by ``slice.obsm[use_rep]``.
         G_init (array-like, optional): Initial mapping to be used in FGW-OT, otherwise default is uniform mapping.
         a_distribution (array-like, optional): Distribution of sliceA spots, otherwise default is uniform.
         b_distribution (array-like, optional): Distribution of sliceB spots, otherwise default is uniform.
@@ -99,10 +96,8 @@ def pairwise_align(
         D_B = D_B.cuda()
 
     # Calculate expression dissimilarity
-    A_X, B_X = (
-        to_dense_array(extract_data_matrix(sliceA, use_rep)),
-        to_dense_array(extract_data_matrix(sliceB, use_rep)),
-    )
+    A_X = to_dense_array(sliceA.X)
+    B_X = to_dense_array(sliceB.X)
 
     if isinstance(nx, ot.backend.TorchBackend) and use_gpu:
         A_X = A_X.cuda()

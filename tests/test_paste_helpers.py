@@ -8,7 +8,6 @@ from paste3.helper import (
     intersect,
     kl_divergence_backend,
     to_dense_array,
-    extract_data_matrix,
     kl_divergence,
     filter_for_common_genes,
     match_spots_using_spatial_heuristic,
@@ -145,10 +144,7 @@ def test_high_umi_gene_distance(slices):
     sliceA = slices[1][:, common_genes]
     sliceB = slices[2][:, common_genes]
 
-    sliceA_X, sliceB_X = (
-        to_dense_array(extract_data_matrix(sliceA, None)),
-        to_dense_array(extract_data_matrix(sliceB, None)),
-    )
+    sliceA_X, sliceB_X = to_dense_array(sliceA.X), to_dense_array(sliceB.X)
 
     high_umi_gene_distance_matrix = high_umi_gene_distance(sliceA_X, sliceB_X, n=2000)
     assert_frame_equal(
@@ -188,10 +184,7 @@ def test_norm_and_center_coordinates(slices):
     sliceA = slices[1][:, common_genes]
     sliceB = slices[2][:, common_genes]
 
-    sliceA_X, sliceB_X = (
-        to_dense_array(extract_data_matrix(sliceA, None)),
-        to_dense_array(extract_data_matrix(sliceB, None)),
-    )
+    sliceA_X, sliceB_X = to_dense_array(sliceA.X), to_dense_array(sliceB.X)
 
     X = norm_and_center_coordinates(sliceA_X)
     Y = norm_and_center_coordinates(sliceB_X)
@@ -224,10 +217,7 @@ def test_dissimilarity_metric(slices2, dissimilarity):
     sliceA = sliceA[:, common_genes]
     sliceB = sliceB[:, common_genes]
 
-    A_X, B_X = (
-        to_dense_array(extract_data_matrix(sliceA, None)),
-        to_dense_array(extract_data_matrix(sliceB, None)),
-    )
+    A_X, B_X = to_dense_array(sliceA.X), to_dense_array(sliceB.X)
 
     M = dissimilarity_metric(dissimilarity, sliceA, sliceB, A_X, B_X)
 

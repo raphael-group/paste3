@@ -332,8 +332,8 @@ def center_align(
         R_new = np.dot(r, lmbda)
         iteration_count += 1
         R_diff = abs(R - R_new)
-        logger.info("Objective ", R_new)
-        logger.info("Difference: " + str(R_diff) + "\n")
+        logger.info(f"Objective {R_new}")
+        logger.info(f"Difference: {R_diff}")
         R = R_new
     center_slice = A.copy()
     center_slice.X = np.dot(W, H)

@@ -163,11 +163,11 @@ def test_center_NMF(intersecting_slices):
     ]
 
     _W, _H = center_NMF(
-        W=np.genfromtxt(input_dir / "W_intermediate.csv", delimiter=","),
-        H=np.genfromtxt(input_dir / "H_intermediate.csv", delimiter=","),
+        feature_matrix=np.genfromtxt(input_dir / "W_intermediate.csv", delimiter=","),
+        coeff_matrix=np.genfromtxt(input_dir / "H_intermediate.csv", delimiter=","),
         slices=intersecting_slices,
         pis=pairwise_info,
-        lmbda=n_slices * [1.0 / n_slices],
+        slice_weights=n_slices * [1.0 / n_slices],
         n_components=15,
         random_seed=0,
     )

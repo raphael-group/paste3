@@ -321,7 +321,7 @@ def center_align(
             slice_weights,
             n_components,
             random_seed,
-            dissimilarity=exp_dissim_metric,
+            exp_dissim_metric=exp_dissim_metric,
         )
         loss_new = np.dot(loss, slice_weights)
         iteration_count += 1
@@ -397,41 +397,41 @@ def center_ot(
 
 
 def center_NMF(
-    W,
-    H,
+    feature_matrix,
+    coeff_matrix,
     slices,
     pis,
-    lmbda,
+    slice_weights,
     n_components,
     random_seed,
-    dissimilarity="kl",
+    exp_dissim_metric="kl",
 ):
     logger.info("Solving Center Mapping NMF Problem.")
-    n = W.shape[0]
-    B = n * sum(
+    n_features = feature_matrix.shape[0]
+    weighted_features = n_features * sum(
         [
-            lmbda[i]
+            slice_weights[i]
             * torch.matmul(pis[i], to_dense_array(slices[i].X).to(pis[i].device))
             for i in range(len(slices))
         ]
     )
-    if dissimilarity.lower() == "euclidean" or dissimilarity.lower() == "euc":
-        model = NMF(
+    if exp_dissim_metric.lower() == "euclidean" or exp_dissim_metric.lower() == "euc":
+        nmf_model = NMF(
             n_components=n_components,
             init="random",
             random_state=random_seed,
         )
     else:
-        model = NMF(
+        nmf_model = NMF(
             n_components=n_components,
             solver="mu",
             beta_loss="kullback-leibler",
             init="random",
             random_state=random_seed,
         )
-    W_new = model.fit_transform(B.cpu().numpy())
-    H_new = model.components_
-    return W_new, H_new
+    new_feature_matrix = nmf_model.fit_transform(weighted_features.cpu().numpy())
+    new_coeff_matrix = nmf_model.components_
+    return new_feature_matrix, new_coeff_matrix
 
 
 def my_fused_gromov_wasserstein(

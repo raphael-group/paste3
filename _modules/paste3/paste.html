@@ -249,7 +249,6 @@
         <span class="n">m</span><span class="o">=</span><span class="n">s</span><span class="p">,</span>
         <span class="n">G0</span><span class="o">=</span><span class="n">G_init</span><span class="p">,</span>
         <span class="n">loss_fun</span><span class="o">=</span><span class="s2">&quot;square_loss&quot;</span><span class="p">,</span>
-        <span class="n">log</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">numItermax</span><span class="o">=</span><span class="n">maxIter</span> <span class="k">if</span> <span class="n">s</span> <span class="k">else</span> <span class="n">numItermax</span><span class="p">,</span>
         <span class="n">use_gpu</span><span class="o">=</span><span class="n">use_gpu</span><span class="p">,</span>
     <span class="p">)</span>
@@ -520,7 +519,6 @@
     <span class="n">G0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">loss_fun</span><span class="o">=</span><span class="s2">&quot;square_loss&quot;</span><span class="p">,</span>
     <span class="n">armijo</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">numItermax</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
     <span class="n">tol_rel</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span>
     <span class="n">tol_abs</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span>
@@ -548,8 +546,7 @@
                 <span class="s2">&quot; equal to min(|p|_1, |q|_1).&quot;</span>
             <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">log</span><span class="p">:</span>
-            <span class="n">_log</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;err&quot;</span><span class="p">:</span> <span class="p">[]}</span>
+        <span class="n">_log</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;err&quot;</span><span class="p">:</span> <span class="p">[]}</span>
         <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">dummy</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="n">_p</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">p</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([(</span><span class="n">q</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">dummy</span><span class="p">]</span> <span class="o">*</span> <span class="n">dummy</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">device</span><span class="p">)])</span>
@@ -586,10 +583,9 @@
     <span class="k">def</span> <span class="nf">line_search</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">deltaG</span><span class="p">,</span> <span class="n">Mi</span><span class="p">,</span> <span class="n">cost_G</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
             <span class="k">nonlocal</span> <span class="n">count</span>
-            <span class="k">if</span> <span class="n">log</span><span class="p">:</span>
-                <span class="c1"># keep track of error only on every 10th iteration</span>
-                <span class="k">if</span> <span class="n">count</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">_log</span><span class="p">[</span><span class="s2">&quot;err&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">deltaG</span><span class="p">))</span>
+            <span class="c1"># keep track of error only on every 10th iteration</span>
+            <span class="k">if</span> <span class="n">count</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">_log</span><span class="p">[</span><span class="s2">&quot;err&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">deltaG</span><span class="p">))</span>
             <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="k">if</span> <span class="n">armijo</span><span class="p">:</span>
@@ -631,25 +627,22 @@
         <span class="n">lp_solver</span><span class="p">,</span>
         <span class="n">line_search</span><span class="p">,</span>
         <span class="n">G0</span><span class="p">,</span>
-        <span class="n">log</span><span class="o">=</span><span class="n">log</span><span class="p">,</span>
+        <span class="n">log</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">numItermax</span><span class="o">=</span><span class="n">numItermax</span><span class="p">,</span>
         <span class="n">stopThr</span><span class="o">=</span><span class="n">tol_rel</span><span class="p">,</span>
         <span class="n">stopThr2</span><span class="o">=</span><span class="n">tol_abs</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">log</span><span class="p">:</span>
-        <span class="n">res</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="n">return_val</span>
-        <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
-            <span class="n">log</span><span class="p">[</span><span class="s2">&quot;partial_fgw_cost&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">log</span><span class="p">[</span><span class="s2">&quot;loss&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-            <span class="n">log</span><span class="p">[</span><span class="s2">&quot;err&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_log</span><span class="p">[</span><span class="s2">&quot;err&quot;</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">log</span><span class="p">[</span><span class="s2">&quot;fgw_dist&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">log</span><span class="p">[</span><span class="s2">&quot;loss&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-            <span class="n">log</span><span class="p">[</span><span class="s2">&quot;u&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">log</span><span class="p">[</span><span class="s2">&quot;u&quot;</span><span class="p">]</span>
-            <span class="n">log</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">log</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">log</span>
+    <span class="n">res</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="n">return_val</span>
+    <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+        <span class="n">log</span><span class="p">[</span><span class="s2">&quot;partial_fgw_cost&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">log</span><span class="p">[</span><span class="s2">&quot;loss&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">log</span><span class="p">[</span><span class="s2">&quot;err&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_log</span><span class="p">[</span><span class="s2">&quot;err&quot;</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">return_val</span>
+        <span class="n">log</span><span class="p">[</span><span class="s2">&quot;fgw_dist&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">log</span><span class="p">[</span><span class="s2">&quot;loss&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">log</span><span class="p">[</span><span class="s2">&quot;u&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">log</span><span class="p">[</span><span class="s2">&quot;u&quot;</span><span class="p">]</span>
+        <span class="n">log</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">log</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">log</span>
 
 
 <span class="k">def</span> <span class="nf">solve_gromov_linesearch</span><span class="p">(</span>

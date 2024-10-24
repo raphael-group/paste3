@@ -81,6 +81,9 @@
 <span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">digamma</span><span class="p">,</span> <span class="n">polygamma</span>
 <span class="kn">import</span> <span class="nn">statsmodels.genmod.families</span> <span class="k">as</span> <span class="nn">smf</span>
 <span class="kn">from</span> <span class="nn">decimal</span> <span class="kn">import</span> <span class="n">Decimal</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">trigamma</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
@@ -368,7 +371,6 @@
     <span class="n">fam</span><span class="o">=</span><span class="s2">&quot;poi&quot;</span><span class="p">,</span>
     <span class="n">ctl</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;maxIter&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span> <span class="s2">&quot;eps&quot;</span><span class="p">:</span> <span class="mf">1e-4</span><span class="p">,</span> <span class="s2">&quot;optimizeTheta&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
     <span class="n">penalty</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">init</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;factors&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;loadings&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
     <span class="n">nb_theta</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
     <span class="n">X</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -396,8 +398,6 @@
 <span class="sd">      distribution is optimized (default), or fixed to the value provided in nb_theta.</span>
 <span class="sd">    penalty: the L2 penalty for the latent factors (default = 1).</span>
 <span class="sd">      Regression coefficients are not penalized.</span>
-<span class="sd">    verbose: logical value indicating whether the current deviance should</span>
-<span class="sd">      be printed after each iteration (default = False).</span>
 <span class="sd">    init: a dictionary containing initial estimates for the factors (U) and</span>
 <span class="sd">      loadings (V) matrices.</span>
 <span class="sd">    nb_theta: negative binomial dispersion parameter. Smaller values mean more dispersion</span>
@@ -504,11 +504,11 @@
             <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dev</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="n">dev</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mf">0.1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dev</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]))</span> <span class="o">&lt;</span> <span class="n">ctl</span><span class="p">[</span><span class="s2">&quot;eps&quot;</span><span class="p">]</span>
         <span class="p">):</span>
             <span class="k">break</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Iteration: </span><span class="si">{:d}</span><span class="s2"> | deviance=</span><span class="si">{:.4E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">(</span><span class="n">dev</span><span class="p">[</span><span class="n">t</span><span class="p">]))</span>
-            <span class="k">if</span> <span class="n">fam</span> <span class="o">==</span> <span class="s2">&quot;nb&quot;</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot; | nb_theta: </span><span class="si">{:.3E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nb_theta</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Iteration: </span><span class="si">{:d}</span><span class="s2"> | deviance=</span><span class="si">{:.4E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">(</span><span class="n">dev</span><span class="p">[</span><span class="n">t</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="n">fam</span> <span class="o">==</span> <span class="s2">&quot;nb&quot;</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot; | nb_theta: </span><span class="si">{:.3E}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nb_theta</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="c1"># (k in lid) ensures no penalty on regression coefficients:</span>
         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">vid</span><span class="p">:</span>

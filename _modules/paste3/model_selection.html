@@ -88,6 +88,9 @@
     <span class="n">glmpca_distance</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">paste3.paste</span> <span class="kn">import</span> <span class="n">pairwise_align</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <span class="sd">&quot;&quot;&quot;</span>
@@ -277,7 +280,7 @@
 
     <span class="n">m_to_pi</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">overlap_to_check</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running PASTE2 with s = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;...&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running PASTE2 with s = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;...&quot;</span><span class="p">)</span>
         <span class="n">pi</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="n">pairwise_align</span><span class="p">(</span>
             <span class="n">sliceA</span><span class="p">,</span>
             <span class="n">sliceB</span><span class="p">,</span>
@@ -287,7 +290,6 @@
             <span class="n">armijo</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">return_obj</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">numItermax</span><span class="o">=</span><span class="n">numItermax</span><span class="p">,</span>
             <span class="n">maxIter</span><span class="o">=</span><span class="n">numItermax</span><span class="p">,</span>
         <span class="p">)</span>
@@ -315,7 +317,7 @@
         <span class="n">m_to_edge_inconsistency_B</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">m_to_edge_inconsistency_B</span><span class="p">))</span>
     <span class="p">]</span>
 
-    <span class="nb">print</span><span class="p">(</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
         <span class="s2">&quot;Estimation of overlap percentage is &quot;</span>
         <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="nb">min</span><span class="p">(</span><span class="n">half_estimate_A</span><span class="p">,</span> <span class="n">half_estimate_B</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
     <span class="p">)</span>

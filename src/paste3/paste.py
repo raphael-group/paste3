@@ -33,7 +33,6 @@ def pairwise_align(
     use_gpu: bool = True,
     return_obj: bool = False,
     verbose: bool = False,
-    gpu_verbose: bool = True,
     maxIter=1000,
     optimizeTheta=True,
     eps=1e-4,
@@ -59,7 +58,7 @@ def pairwise_align(
         use_gpu: If ``True``, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.
         return_obj: If ``True``, additionally returns objective function output of FGW-OT.
         verbose: If ``True``, FGW-OT is verbose.
-        gpu_verbose: If ``True``, print whether gpu is being used to user.
+        : If ``True``, print whether gpu is being used to user.
 
     Returns:
         - Alignment of spots.
@@ -214,7 +213,6 @@ def center_align(
     backend=ot.backend.TorchBackend(),
     use_gpu: bool = True,
     verbose: bool = False,
-    gpu_verbose: bool = True,
 ) -> Tuple[AnnData, List[np.ndarray]]:
     """
     Computes center alignment of slices.
@@ -235,7 +233,7 @@ def center_align(
         backend: Type of backend to run calculations. For list of backends available on system: ``ot.backend.get_backend_list()``.
         use_gpu: If ``True``, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.
         verbose: If ``True``, FGW-OT is verbose.
-        gpu_verbose: If ``True``, print whether gpu is being used to user.
+        : If ``True``, print whether gpu is being used to user.
 
     Returns:
         - Inferred center slice with full and low dimensional representations (W, H) of the gene expression matrix.
@@ -412,7 +410,6 @@ def center_ot(
             backend=backend,
             use_gpu=use_gpu,
             verbose=verbose,
-            gpu_verbose=False,
         )
         pis.append(p)
         r.append(r_q)

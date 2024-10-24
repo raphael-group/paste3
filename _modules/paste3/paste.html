@@ -107,7 +107,6 @@
     <span class="n">use_gpu</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">return_obj</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">gpu_verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">maxIter</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
     <span class="n">optimizeTheta</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">eps</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
@@ -133,7 +132,7 @@
 <span class="sd">        use_gpu: If ``True``, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.</span>
 <span class="sd">        return_obj: If ``True``, additionally returns objective function output of FGW-OT.</span>
 <span class="sd">        verbose: If ``True``, FGW-OT is verbose.</span>
-<span class="sd">        gpu_verbose: If ``True``, print whether gpu is being used to user.</span>
+<span class="sd">        : If ``True``, print whether gpu is being used to user.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        - Alignment of spots.</span>
@@ -288,7 +287,6 @@
     <span class="n">backend</span><span class="o">=</span><span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">(),</span>
     <span class="n">use_gpu</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">gpu_verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">AnnData</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes center alignment of slices.</span>
@@ -309,7 +307,7 @@
 <span class="sd">        backend: Type of backend to run calculations. For list of backends available on system: ``ot.backend.get_backend_list()``.</span>
 <span class="sd">        use_gpu: If ``True``, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.</span>
 <span class="sd">        verbose: If ``True``, FGW-OT is verbose.</span>
-<span class="sd">        gpu_verbose: If ``True``, print whether gpu is being used to user.</span>
+<span class="sd">        : If ``True``, print whether gpu is being used to user.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        - Inferred center slice with full and low dimensional representations (W, H) of the gene expression matrix.</span>
@@ -486,7 +484,6 @@
             <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
             <span class="n">use_gpu</span><span class="o">=</span><span class="n">use_gpu</span><span class="p">,</span>
             <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
-            <span class="n">gpu_verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">pis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
         <span class="n">r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r_q</span><span class="p">)</span>

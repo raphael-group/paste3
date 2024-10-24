@@ -22,7 +22,7 @@ def pairwise_align(
     exp_dissim_matrix=None,
     alpha: float = 0.1,
     exp_dissim_metric: str = "kl",
-    pis_init=None,
+    pi_init=None,
     a_spots_weight=None,
     b_spots_weight=None,
     norm: bool = False,
@@ -45,7 +45,7 @@ def pairwise_align(
         b_slice: Slice B to align.
         alpha:  Alignment tuning parameter. Note: 0 <= alpha <= 1.
         exp_dissim_metric: Expression dissimilarity measure: ``'kl'`` or ``'euclidean'``.
-        pis_init (array-like, optional): Initial mapping to be used in FGW-OT, otherwise default is uniform mapping.
+        pi_init (array-like, optional): Initial mapping to be used in FGW-OT, otherwise default is uniform mapping.
         a_spots_weight (array-like, optional): Distribution of sliceA spots, otherwise default is uniform.
         b_spots_weight (array-like, optional): Distribution of sliceB spots, otherwise default is uniform.
         numItermax: Max number of iterations during FGW-OT.
@@ -163,8 +163,8 @@ def pairwise_align(
             b_spatial_dist *= exp_dissim_matrix.max()
 
     # Run OT
-    if pis_init is not None and use_gpu:
-        pis_init.cuda()
+    if pi_init is not None and use_gpu:
+        pi_init.cuda()
     pi, info = my_fused_gromov_wasserstein(
         exp_dissim_matrix,
         a_spatial_dist,
@@ -173,7 +173,7 @@ def pairwise_align(
         b_spots_weight,
         alpha=alpha,
         m=overlap_fraction,
-        G0=pis_init,
+        G0=pi_init,
         loss_fun="square_loss",
         numItermax=maxIter if overlap_fraction else numItermax,
         use_gpu=use_gpu,
@@ -197,7 +197,7 @@ def center_align(
     exp_dissim_metric: str = "kl",
     norm: bool = False,
     random_seed: Optional[int] = None,
-    pis_init: Optional[List[np.ndarray]] = None,
+    pi_inits: Optional[List[np.ndarray]] = None,
     spots_weights=None,
     backend=ot.backend.TorchBackend(),
     use_gpu: bool = True,
@@ -216,7 +216,7 @@ def center_align(
         exp_dissim_metric: Expression dissimilarity measure: ``'kl'`` or ``'euclidean'``.
         norm:  If ``True``, scales spatial distances such that neighboring spots are at distance 1. Otherwise, spatial distances remain unchanged.
         random_seed: Set random seed for reproducibility.
-        pis_init: Initial list of mappings between 'A' and 'slices' to solver. Otherwise, default will automatically calculate mappings.
+        pi_inits: Initial list of mappings between 'A' and 'slices' to solver. Otherwise, default will automatically calculate mappings.
         spots_weights (List[array-like], optional): Distributions of spots for each slice. Otherwise, default is uniform.
         backend: Type of backend to run calculations. For list of backends available on system: ``ot.backend.get_backend_list()``.
         use_gpu: If ``True``, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.
@@ -267,11 +267,11 @@ def center_align(
             random_state=random_seed,
         )
 
-    if pis_init is None:
+    if pi_inits is None:
         pis = [None for i in range(len(slices))]
         feature_matrix = nmf_model.fit_transform(initial_slice.X)
     else:
-        pis = pis_init
+        pis = pi_inits
         feature_matrix = nmf_model.fit_transform(
             initial_slice.shape[0]
             * sum(
@@ -308,10 +308,10 @@ def center_align(
             alpha,
             backend,
             use_gpu,
-            dissimilarity=exp_dissim_metric,
+            exp_dissim_metric=exp_dissim_metric,
             norm=norm,
-            G_inits=pis,
-            distributions=spots_weights,
+            pi_inits=pis,
+            spot_weights=spots_weights,
         )
         feature_matrix, coeff_matrix = center_NMF(
             feature_matrix,
@@ -353,47 +353,47 @@ def center_align(
 
 
 def center_ot(
-    W,
-    H,
+    feature_matrix,
+    coeff_matrix,
     slices,
     center_coordinates,
     common_genes,
     alpha,
     backend,
     use_gpu,
-    dissimilarity="kl",
+    exp_dissim_metric="kl",
     norm=False,
-    G_inits=None,
-    distributions=None,
+    pi_inits=None,
+    spot_weights=None,
     numItermax=200,
 ):
-    center_slice = AnnData(np.dot(W, H))
+    center_slice = AnnData(np.dot(feature_matrix, coeff_matrix))
     center_slice.var.index = common_genes
     center_slice.obsm["spatial"] = center_coordinates
 
-    if distributions is None:
-        distributions = len(slices) * [None]
+    if spot_weights is None:
+        spot_weights = len(slices) * [None]
 
     pis = []
-    r = []
+    losses = []
     logger.info("Solving Pairwise Slice Alignment Problem.")
     for i in range(len(slices)):
-        p, r_q = pairwise_align(
+        pi, loss = pairwise_align(
             center_slice,
             slices[i],
             alpha=alpha,
-            exp_dissim_metric=dissimilarity,
+            exp_dissim_metric=exp_dissim_metric,
             norm=norm,
             numItermax=numItermax,
             return_obj=True,
-            pis_init=G_inits[i],
-            b_spots_weight=distributions[i],
+            pi_init=pi_inits[i],
+            b_spots_weight=spot_weights[i],
             backend=backend,
             use_gpu=use_gpu,
         )
-        pis.append(p)
-        r.append(r_q)
-    return pis, np.array(r)
+        pis.append(pi)
+        losses.append(loss)
+    return pis, np.array(losses)
 
 
 def center_NMF(

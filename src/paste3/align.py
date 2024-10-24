@@ -70,13 +70,13 @@ def align(
         cost_matrix = np.genfromtxt(cost_matrix, delimiter=",", dtype="float64")
 
     if start is None:
-        pis_init = [None] * (n_slices - 1) if mode == "pairwise" else None
+        pi_inits = [None] * (n_slices - 1) if mode == "pairwise" else None
     elif mode == "pairwise" and not (len(start) == n_slices - 1):
         raise ValueError(
             f"Number of slices {n_slices} is not equal to number of start pi files {len(start)}"
         )
     else:
-        pis_init = [np.genfromtxt(pi, delimiter=",") for pi in start]
+        pi_inits = [np.genfromtxt(pi, delimiter=",") for pi in start]
 
     # make output directory if it doesn't exist
     output_directory = Path(output_directory)
@@ -93,7 +93,7 @@ def align(
                 exp_dissim_matrix=cost_matrix,
                 alpha=alpha,
                 exp_dissim_metric=cost,
-                pis_init=pis_init[i],
+                pi_init=pi_inits[i],
                 a_spots_weight=slices[i].obsm["weights"],
                 b_spots_weight=slices[i + 1].obsm["weights"],
                 norm=norm,
@@ -134,7 +134,7 @@ def align(
             exp_dissim_metric=cost,
             norm=norm,
             random_seed=seed,
-            pis_init=pis_init,
+            pi_inits=pi_inits,
             spots_weights=[slice.obsm["weights"] for slice in slices],
             backend=ot.backend.TorchBackend(),
             use_gpu=use_gpu,

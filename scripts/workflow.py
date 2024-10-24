@@ -109,7 +109,7 @@ class AlignmentDataset:
         if reference_slice is None:
             reference_slice = self.slices[0]
         center_slice, pis = center_align(
-            reference_slice.adata, self.slices_adata, pis_init=pis
+            reference_slice.adata, self.slices_adata, pi_inits=pis
         )
         return Slice(adata=center_slice), pis
 

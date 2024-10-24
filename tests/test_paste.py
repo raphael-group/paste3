@@ -48,7 +48,7 @@ def test_pairwise_alignment(slices):
         exp_dissim_metric="kl",
         a_spots_weight=slices[0].obsm["weights"].astype(slices[0].X.dtype),
         b_spots_weight=slices[1].obsm["weights"].astype(slices[1].X.dtype),
-        pis_init=None,
+        pi_init=None,
         use_gpu=True,
         backend=ot.backend.TorchBackend(),
     )
@@ -121,17 +121,17 @@ def test_center_ot(slices):
 
     intersecting_slice = slices[0][:, common_genes]
     pairwise_info, r = center_ot(
-        W=np.genfromtxt(input_dir / "W_intermediate.csv", delimiter=","),
-        H=np.genfromtxt(input_dir / "H_intermediate.csv", delimiter=","),
+        feature_matrix=np.genfromtxt(input_dir / "W_intermediate.csv", delimiter=","),
+        coeff_matrix=np.genfromtxt(input_dir / "H_intermediate.csv", delimiter=","),
         slices=slices,
         center_coordinates=intersecting_slice.obsm["spatial"],
         common_genes=common_genes,
         use_gpu=True,
         alpha=0.1,
         backend=ot.backend.TorchBackend(),
-        dissimilarity="kl",
+        exp_dissim_metric="kl",
         norm=False,
-        G_inits=[None for _ in range(len(slices))],
+        pi_inits=[None for _ in range(len(slices))],
     )
 
     expected_r = [

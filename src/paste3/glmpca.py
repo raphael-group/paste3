@@ -7,6 +7,9 @@ from numpy import log
 from scipy.special import digamma, polygamma
 import statsmodels.genmod.families as smf
 from decimal import Decimal
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def trigamma(x):
@@ -294,7 +297,6 @@ def glmpca(
     fam="poi",
     ctl={"maxIter": 1000, "eps": 1e-4, "optimizeTheta": True},
     penalty=1,
-    verbose=False,
     init={"factors": None, "loadings": None},
     nb_theta=100,
     X=None,
@@ -322,8 +324,6 @@ def glmpca(
       distribution is optimized (default), or fixed to the value provided in nb_theta.
     penalty: the L2 penalty for the latent factors (default = 1).
       Regression coefficients are not penalized.
-    verbose: logical value indicating whether the current deviance should
-      be printed after each iteration (default = False).
     init: a dictionary containing initial estimates for the factors (U) and
       loadings (V) matrices.
     nb_theta: negative binomial dispersion parameter. Smaller values mean more dispersion
@@ -430,11 +430,11 @@ def glmpca(
             and np.abs(dev[t] - dev[t - 1]) / (0.1 + np.abs(dev[t - 1])) < ctl["eps"]
         ):
             break
-        if verbose:
-            msg = "Iteration: {:d} | deviance={:.4E}".format(t, Decimal(dev[t]))
-            if fam == "nb":
-                msg += " | nb_theta: {:.3E}".format(nb_theta)
-            print(msg)
+
+        msg = "Iteration: {:d} | deviance={:.4E}".format(t, Decimal(dev[t]))
+        if fam == "nb":
+            msg += " | nb_theta: {:.3E}".format(nb_theta)
+        logger.debug(msg)
 
         # (k in lid) ensures no penalty on regression coefficients:
         for k in vid:

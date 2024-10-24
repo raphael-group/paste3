@@ -5,12 +5,14 @@ from anndata import AnnData
 import ot
 from ot.lp import emd
 from sklearn.decomposition import NMF
+import logging
 from paste3.helper import (
     intersect,
     to_dense_array,
-    extract_data_matrix,
     dissimilarity_metric,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def pairwise_align(
@@ -20,7 +22,6 @@ def pairwise_align(
     M=None,
     alpha: float = 0.1,
     dissimilarity: str = "kl",
-    use_rep: Optional[str] = None,
     G_init=None,
     a_distribution=None,
     b_distribution=None,
@@ -29,8 +30,6 @@ def pairwise_align(
     backend=ot.backend.TorchBackend(),
     use_gpu: bool = True,
     return_obj: bool = False,
-    verbose: bool = False,
-    gpu_verbose: bool = True,
     maxIter=1000,
     optimizeTheta=True,
     eps=1e-4,
@@ -46,7 +45,6 @@ def pairwise_align(
         sliceB: Slice B to align.
         alpha:  Alignment tuning parameter. Note: 0 <= alpha <= 1.
         dissimilarity: Expression dissimilarity measure: ``'kl'`` or ``'euclidean'``.
-        use_rep: If ``None``, uses ``slice.X`` to calculate dissimilarity between spots, otherwise uses the representation given by ``slice.obsm[use_rep]``.
         G_init (array-like, optional): Initial mapping to be used in FGW-OT, otherwise default is uniform mapping.
         a_distribution (array-like, optional): Distribution of sliceA spots, otherwise default is uniform.
         b_distribution (array-like, optional): Distribution of sliceB spots, otherwise default is uniform.
@@ -55,8 +53,6 @@ def pairwise_align(
         backend: Type of backend to run calculations. For list of backends available on system: ``ot.backend.get_backend_list()``.
         use_gpu: If ``True``, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.
         return_obj: If ``True``, additionally returns objective function output of FGW-OT.
-        verbose: If ``True``, FGW-OT is verbose.
-        gpu_verbose: If ``True``, print whether gpu is being used to user.
 
     Returns:
         - Alignment of spots.
@@ -66,33 +62,9 @@ def pairwise_align(
         - Objective function output of FGW-OT.
     """
 
-    # Determine if gpu or cpu is being used
-    if use_gpu:
-        try:
-            import torch
-        except ModuleNotFoundError:
-            print(
-                "We currently only have gpu support for Pytorch. Please install torch."
-            )
-
-        if isinstance(backend, ot.backend.TorchBackend):
-            if torch.cuda.is_available():
-                if gpu_verbose:
-                    print("gpu is available, using gpu.")
-            else:
-                if gpu_verbose:
-                    print("gpu is not available, resorting to torch cpu.")
-                use_gpu = False
-        else:
-            print(
-                "We currently only have gpu support for Pytorch, please set backend = ot.backend.TorchBackend(). Reverting to selected backend cpu."
-            )
-            use_gpu = False
-    else:
-        if gpu_verbose:
-            print(
-                "Using selected backend cpu. If you want to use gpu, set use_gpu = True."
-            )
+    if use_gpu and not torch.cuda.is_available():
+        logger.info("GPU is not available, resorting to torch CPU.")
+        use_gpu = False
 
     # subset for common genes
     common_genes = intersect(sliceA.var.index, sliceB.var.index)
@@ -124,10 +96,8 @@ def pairwise_align(
         D_B = D_B.cuda()
 
     # Calculate expression dissimilarity
-    A_X, B_X = (
-        to_dense_array(extract_data_matrix(sliceA, use_rep)),
-        to_dense_array(extract_data_matrix(sliceB, use_rep)),
-    )
+    A_X = to_dense_array(sliceA.X)
+    B_X = to_dense_array(sliceB.X)
 
     if isinstance(nx, ot.backend.TorchBackend) and use_gpu:
         A_X = A_X.cuda()
@@ -142,7 +112,6 @@ def pairwise_align(
             B_X,
             latent_dim=50,
             filter=True,
-            verbose=verbose,
             maxIter=maxIter,
             eps=eps,
             optimizeTheta=optimizeTheta,
@@ -206,10 +175,8 @@ def pairwise_align(
         m=s,
         G0=G_init,
         loss_fun="square_loss",
-        log=True,
         numItermax=maxIter if s else numItermax,
         use_gpu=use_gpu,
-        verbose=verbose,
     )
     if not s:
         log = log["fgw_dist"].item()
@@ -234,8 +201,6 @@ def center_align(
     distributions=None,
     backend=ot.backend.TorchBackend(),
     use_gpu: bool = True,
-    verbose: bool = False,
-    gpu_verbose: bool = True,
 ) -> Tuple[AnnData, List[np.ndarray]]:
     """
     Computes center alignment of slices.
@@ -255,41 +220,15 @@ def center_align(
         distributions (List[array-like], optional): Distributions of spots for each slice. Otherwise, default is uniform.
         backend: Type of backend to run calculations. For list of backends available on system: ``ot.backend.get_backend_list()``.
         use_gpu: If ``True``, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.
-        verbose: If ``True``, FGW-OT is verbose.
-        gpu_verbose: If ``True``, print whether gpu is being used to user.
 
     Returns:
         - Inferred center slice with full and low dimensional representations (W, H) of the gene expression matrix.
         - List of pairwise alignment mappings of the center slice (rows) to each input slice (columns).
     """
 
-    # Determine if gpu or cpu is being used
-    if use_gpu:
-        try:
-            import torch
-        except ModuleNotFoundError:
-            print(
-                "We currently only have gpu support for Pytorch. Please install torch."
-            )
-
-        if isinstance(backend, ot.backend.TorchBackend):
-            if torch.cuda.is_available():
-                if gpu_verbose:
-                    print("gpu is available, using gpu.")
-            else:
-                if gpu_verbose:
-                    print("gpu is not available, resorting to torch cpu.")
-                use_gpu = False
-        else:
-            print(
-                "We currently only have gpu support for Pytorch, please set backend = ot.backend.TorchBackend(). Reverting to selected backend cpu."
-            )
-            use_gpu = False
-    else:
-        if gpu_verbose:
-            print(
-                "Using selected backend cpu. If you want to use gpu, set use_gpu = True."
-            )
+    if use_gpu and not torch.cuda.is_available():
+        logger.info("GPU is not available, resorting to torch CPU.")
+        use_gpu = False
 
     if lmbda is None:
         lmbda = len(slices) * [1 / len(slices)]
@@ -306,7 +245,7 @@ def center_align(
     A = A[:, common_genes]
     for i in range(len(slices)):
         slices[i] = slices[i][:, common_genes]
-    print(
+    logger.info(
         "Filtered all slices for common genes. There are "
         + str(len(common_genes))
         + " common genes."
@@ -318,7 +257,6 @@ def center_align(
             n_components=n_components,
             init="random",
             random_state=random_seed,
-            verbose=verbose,
         )
     else:
         model = NMF(
@@ -327,7 +265,6 @@ def center_align(
             beta_loss="kullback-leibler",
             init="random",
             random_state=random_seed,
-            verbose=verbose,
         )
 
     if pis_init is None:
@@ -348,7 +285,7 @@ def center_align(
     center_coordinates = A.obsm["spatial"]
 
     if not isinstance(center_coordinates, np.ndarray):
-        print("Warning: A.obsm['spatial'] is not of type numpy array.")
+        logger.warning("A.obsm['spatial'] is not of type numpy array.")
 
     # Initialize center_slice
     center_slice = AnnData(np.dot(W, H))
@@ -361,7 +298,7 @@ def center_align(
     R = 0
     R_diff = 100
     while R_diff > threshold and iteration_count < max_iter:
-        print("Iteration: " + str(iteration_count))
+        logger.info("Iteration: " + str(iteration_count))
         pis, r = center_ot(
             W,
             H,
@@ -375,7 +312,6 @@ def center_align(
             norm=norm,
             G_inits=pis,
             distributions=distributions,
-            verbose=verbose,
         )
         W, H = center_NMF(
             W,
@@ -386,13 +322,12 @@ def center_align(
             n_components,
             random_seed,
             dissimilarity=dissimilarity,
-            verbose=verbose,
         )
         R_new = np.dot(r, lmbda)
         iteration_count += 1
         R_diff = abs(R - R_new)
-        print("Objective ", R_new)
-        print("Difference: " + str(R_diff) + "\n")
+        logger.info(f"Objective {R_new}")
+        logger.info(f"Difference: {R_diff}")
         R = R_new
     center_slice = A.copy()
     center_slice.X = np.dot(W, H)
@@ -430,7 +365,6 @@ def center_ot(
     norm=False,
     G_inits=None,
     distributions=None,
-    verbose=False,
     numItermax=200,
 ):
     center_slice = AnnData(np.dot(W, H))
@@ -442,7 +376,7 @@ def center_ot(
 
     pis = []
     r = []
-    print("Solving Pairwise Slice Alignment Problem.")
+    logger.info("Solving Pairwise Slice Alignment Problem.")
     for i in range(len(slices)):
         p, r_q = pairwise_align(
             center_slice,
@@ -456,8 +390,6 @@ def center_ot(
             b_distribution=distributions[i],
             backend=backend,
             use_gpu=use_gpu,
-            verbose=verbose,
-            gpu_verbose=False,
         )
         pis.append(p)
         r.append(r_q)
@@ -473,9 +405,8 @@ def center_NMF(
     n_components,
     random_seed,
     dissimilarity="kl",
-    verbose=False,
 ):
-    print("Solving Center Mapping NMF Problem.")
+    logger.info("Solving Center Mapping NMF Problem.")
     n = W.shape[0]
     B = n * sum(
         [
@@ -489,7 +420,6 @@ def center_NMF(
             n_components=n_components,
             init="random",
             random_state=random_seed,
-            verbose=verbose,
         )
     else:
         model = NMF(
@@ -498,7 +428,6 @@ def center_NMF(
             beta_loss="kullback-leibler",
             init="random",
             random_state=random_seed,
-            verbose=verbose,
         )
     W_new = model.fit_transform(B.cpu().numpy())
     H_new = model.components_
@@ -516,7 +445,6 @@ def my_fused_gromov_wasserstein(
     G0=None,
     loss_fun="square_loss",
     armijo=False,
-    log=False,
     numItermax=200,
     tol_rel=1e-9,
     tol_abs=1e-9,
@@ -544,8 +472,7 @@ def my_fused_gromov_wasserstein(
                 " equal to min(|p|_1, |q|_1)."
             )
 
-        if log:
-            _log = {"err": []}
+        _log = {"err": []}
         count = 0
         dummy = 1
         _p = torch.cat([p, torch.Tensor([(q.sum() - m) / dummy] * dummy).to(p.device)])
@@ -582,10 +509,9 @@ def my_fused_gromov_wasserstein(
     def line_search(cost, G, deltaG, Mi, cost_G, **kwargs):
         if m:
             nonlocal count
-            if log:
-                # keep track of error only on every 10th iteration
-                if count % 10 == 0:
-                    _log["err"].append(torch.norm(deltaG))
+            # keep track of error only on every 10th iteration
+            if count % 10 == 0:
+                _log["err"].append(torch.norm(deltaG))
             count += 1
 
         if armijo:
@@ -627,25 +553,22 @@ def my_fused_gromov_wasserstein(
         lp_solver,
         line_search,
         G0,
-        log=log,
+        log=True,
         numItermax=numItermax,
         stopThr=tol_rel,
         stopThr2=tol_abs,
         **kwargs,
     )
 
-    if log:
-        res, log = return_val
-        if m:
-            log["partial_fgw_cost"] = log["loss"][-1]
-            log["err"] = _log["err"]
-        else:
-            log["fgw_dist"] = log["loss"][-1]
-            log["u"] = log["u"]
-            log["v"] = log["v"]
-        return res, log
+    res, log = return_val
+    if m:
+        log["partial_fgw_cost"] = log["loss"][-1]
+        log["err"] = _log["err"]
     else:
-        return return_val
+        log["fgw_dist"] = log["loss"][-1]
+        log["u"] = log["u"]
+        log["v"] = log["v"]
+    return res, log
 
 
 def solve_gromov_linesearch(

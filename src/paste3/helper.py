@@ -8,6 +8,9 @@ import numpy as np
 import torch
 import scipy
 import ot
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def kl_divergence(X, Y):
@@ -56,7 +59,6 @@ def glmpca_distance(
     Y,
     latent_dim=50,
     filter=True,
-    verbose=True,
     maxIter=1000,
     eps=1e-4,
     optimizeTheta=True,
@@ -66,7 +68,6 @@ def glmpca_distance(
     param: Y - np array with dim (m_samples by n_features)
     param: latent_dim - number of latent dimensions in glm-pca
     param: filter - whether to first select genes with highest UMI counts
-    param: verbose - whether to print glmpca progress
     param maxIter - maximum number of iterations for glmpca
     param eps - convergence threshold for glmpca
     param optimizeTheta - whether to optimize overdispersion in glmpca
@@ -79,18 +80,15 @@ def glmpca_distance(
         top_indices = np.sort((-gene_umi_counts).argsort(kind="stable")[:2000])
         joint_matrix = joint_matrix[:, top_indices]
 
-    print("Starting GLM-PCA...")
+    logging.info("Starting GLM-PCA...")
     res = glmpca(
         joint_matrix.T.cpu().numpy(),  # TODO: Use Tensors
         latent_dim,
         penalty=1,
-        verbose=verbose,
         ctl={"maxIter": maxIter, "eps": eps, "optimizeTheta": optimizeTheta},
     )
-    # res = glmpca(joint_matrix.T, latent_dim, fam='nb', penalty=1, verbose=True)
     reduced_joint_matrix = res["factors"]
-    # print("GLM-PCA finished with joint matrix shape " + str(reduced_joint_matrix.shape))
-    print("GLM-PCA finished.")
+    logging.info("GLM-PCA finished.")
 
     X = reduced_joint_matrix[: X.shape[0], :]
     Y = reduced_joint_matrix[X.shape[0] :, :]
@@ -155,10 +153,6 @@ def to_dense_array(X):
     return torch.Tensor(np_array).double()
 
 
-def extract_data_matrix(adata, rep=None):
-    return adata.X if rep is None else adata.obsm[rep]
-
-
 def filter_for_common_genes(slices: List[AnnData]) -> None:
     """
     Filters for the intersection of genes between all slices.
@@ -173,7 +167,7 @@ def filter_for_common_genes(slices: List[AnnData]) -> None:
         common_genes = intersect(common_genes, s.var.index)
     for i in range(len(slices)):
         slices[i] = slices[i][:, common_genes]
-    print(
+    logging.info(
         "Filtered all slices for common genes. There are "
         + str(len(common_genes))
         + " common genes."

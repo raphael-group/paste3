@@ -10,10 +10,12 @@ import matplotlib.pyplot as plt
 from paste3.helper import (
     intersect,
     to_dense_array,
-    extract_data_matrix,
     glmpca_distance,
 )
 from paste3.paste import pairwise_align
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 """
@@ -193,17 +195,16 @@ def select_overlap_fraction(sliceA, sliceB, alpha=0.1, show_plot=True, numIterma
     sliceA = sliceA[:, common_genes]
     sliceB = sliceB[:, common_genes]
     # Get transport cost matrix
-    A_X, B_X = (
-        to_dense_array(extract_data_matrix(sliceA, None)),
-        to_dense_array(extract_data_matrix(sliceB, None)),
-    )
+    A_X = to_dense_array(sliceA.X)
+    B_X = to_dense_array(sliceB.X)
+
     M = torch.Tensor(
         glmpca_distance(A_X, B_X, latent_dim=50, filter=True, maxIter=numItermax)
     ).double()
 
     m_to_pi = {}
     for m in overlap_to_check:
-        print("Running PASTE2 with s = " + str(m) + "...")
+        logger.info("Running PASTE2 with s = " + str(m) + "...")
         pi, log = pairwise_align(
             sliceA,
             sliceB,
@@ -213,7 +214,6 @@ def select_overlap_fraction(sliceA, sliceB, alpha=0.1, show_plot=True, numIterma
             armijo=False,
             norm=True,
             return_obj=True,
-            verbose=False,
             numItermax=numItermax,
             maxIter=numItermax,
         )
@@ -241,7 +241,7 @@ def select_overlap_fraction(sliceA, sliceB, alpha=0.1, show_plot=True, numIterma
         m_to_edge_inconsistency_B.index(max(m_to_edge_inconsistency_B))
     ]
 
-    print(
+    logger.info(
         "Estimation of overlap percentage is "
         + str(min(2 * min(half_estimate_A, half_estimate_B), 1))
     )

@@ -76,7 +76,6 @@ def test_glmpca(fam):
         joint_matrix_T,
         L=50,
         penalty=1,
-        verbose=True,
         fam=fam,
         ctl={"maxIter": 10, "eps": 1e-4, "optimizeTheta": True},
     )
@@ -97,7 +96,6 @@ def test_glmpca_covariates():
         joint_matrix_T,
         L=50,
         penalty=1,
-        verbose=True,
         fam="poi",
         X=X[:, None],
         Z=Z[:, None],
@@ -119,7 +117,6 @@ def test_glmpca_with_init():
         joint_matrix_T,
         L=50,
         penalty=1,
-        verbose=True,
         fam="poi",
         init={"factors": data["factors"], "loadings": data["loadings"]},
         ctl={"maxIter": 10, "eps": 1e-4, "optimizeTheta": True},

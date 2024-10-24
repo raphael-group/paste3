@@ -27,7 +27,6 @@ def test_partial_pairwise_align_glmpca(fn, slices2):
         s=0.7,
         dissimilarity="glmpca",
         norm=True,
-        verbose=True,
         maxIter=10,
     )
 
@@ -54,7 +53,6 @@ def test_partial_pairwise_align_given_cost_matrix(slices):
         armijo=False,
         norm=True,
         return_obj=True,
-        verbose=True,
         numItermax=10,
         maxIter=10,
     )
@@ -76,7 +74,6 @@ def test_partial_pairwise_align_histology(slices2):
         return_obj=True,
         dissimilarity="euclidean",
         norm=True,
-        verbose=True,
         numItermax=10,
         maxIter=10,
         is_histology=True,
@@ -168,7 +165,6 @@ def test_partial_fused_gromov_wasserstein(slices, armijo, expected_log, filename
         G0=None,
         loss_fun="square_loss",
         armijo=armijo,
-        log=True,
     )
 
     assert np.allclose(

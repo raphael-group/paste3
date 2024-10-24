@@ -4,6 +4,10 @@ import numpy as np
 import torch
 import seaborn as sns
 import matplotlib.pyplot as plt
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 """
     Functions to plot slices and align spatial coordinates after obtaining a mapping from PASTE.

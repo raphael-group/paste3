@@ -14,6 +14,9 @@ from paste3.helper import (
     glmpca_distance,
 )
 from paste3.paste import pairwise_align
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 """
@@ -203,7 +206,7 @@ def select_overlap_fraction(sliceA, sliceB, alpha=0.1, show_plot=True, numIterma
 
     m_to_pi = {}
     for m in overlap_to_check:
-        print("Running PASTE2 with s = " + str(m) + "...")
+        logger.info("Running PASTE2 with s = " + str(m) + "...")
         pi, log = pairwise_align(
             sliceA,
             sliceB,
@@ -213,7 +216,6 @@ def select_overlap_fraction(sliceA, sliceB, alpha=0.1, show_plot=True, numIterma
             armijo=False,
             norm=True,
             return_obj=True,
-            verbose=False,
             numItermax=numItermax,
             maxIter=numItermax,
         )
@@ -241,7 +243,7 @@ def select_overlap_fraction(sliceA, sliceB, alpha=0.1, show_plot=True, numIterma
         m_to_edge_inconsistency_B.index(max(m_to_edge_inconsistency_B))
     ]
 
-    print(
+    logger.info(
         "Estimation of overlap percentage is "
         + str(min(2 * min(half_estimate_A, half_estimate_B), 1))
     )

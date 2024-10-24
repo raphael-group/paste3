@@ -32,7 +32,6 @@ def pairwise_align(
     backend=ot.backend.TorchBackend(),
     use_gpu: bool = True,
     return_obj: bool = False,
-    verbose: bool = False,
     maxIter=1000,
     optimizeTheta=True,
     eps=1e-4,
@@ -57,8 +56,6 @@ def pairwise_align(
         backend: Type of backend to run calculations. For list of backends available on system: ``ot.backend.get_backend_list()``.
         use_gpu: If ``True``, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.
         return_obj: If ``True``, additionally returns objective function output of FGW-OT.
-        verbose: If ``True``, FGW-OT is verbose.
-        : If ``True``, print whether gpu is being used to user.
 
     Returns:
         - Alignment of spots.
@@ -120,7 +117,6 @@ def pairwise_align(
             B_X,
             latent_dim=50,
             filter=True,
-            verbose=verbose,
             maxIter=maxIter,
             eps=eps,
             optimizeTheta=optimizeTheta,
@@ -187,7 +183,6 @@ def pairwise_align(
         log=True,
         numItermax=maxIter if s else numItermax,
         use_gpu=use_gpu,
-        verbose=verbose,
     )
     if not s:
         log = log["fgw_dist"].item()
@@ -212,7 +207,6 @@ def center_align(
     distributions=None,
     backend=ot.backend.TorchBackend(),
     use_gpu: bool = True,
-    verbose: bool = False,
 ) -> Tuple[AnnData, List[np.ndarray]]:
     """
     Computes center alignment of slices.
@@ -232,8 +226,6 @@ def center_align(
         distributions (List[array-like], optional): Distributions of spots for each slice. Otherwise, default is uniform.
         backend: Type of backend to run calculations. For list of backends available on system: ``ot.backend.get_backend_list()``.
         use_gpu: If ``True``, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.
-        verbose: If ``True``, FGW-OT is verbose.
-        : If ``True``, print whether gpu is being used to user.
 
     Returns:
         - Inferred center slice with full and low dimensional representations (W, H) of the gene expression matrix.
@@ -259,7 +251,7 @@ def center_align(
     A = A[:, common_genes]
     for i in range(len(slices)):
         slices[i] = slices[i][:, common_genes]
-    print(
+    logger.info(
         "Filtered all slices for common genes. There are "
         + str(len(common_genes))
         + " common genes."
@@ -271,7 +263,6 @@ def center_align(
             n_components=n_components,
             init="random",
             random_state=random_seed,
-            verbose=verbose,
         )
     else:
         model = NMF(
@@ -280,7 +271,6 @@ def center_align(
             beta_loss="kullback-leibler",
             init="random",
             random_state=random_seed,
-            verbose=verbose,
         )
 
     if pis_init is None:
@@ -301,7 +291,7 @@ def center_align(
     center_coordinates = A.obsm["spatial"]
 
     if not isinstance(center_coordinates, np.ndarray):
-        print("Warning: A.obsm['spatial'] is not of type numpy array.")
+        logger.warning("A.obsm['spatial'] is not of type numpy array.")
 
     # Initialize center_slice
     center_slice = AnnData(np.dot(W, H))
@@ -314,7 +304,7 @@ def center_align(
     R = 0
     R_diff = 100
     while R_diff > threshold and iteration_count < max_iter:
-        print("Iteration: " + str(iteration_count))
+        logger.info("Iteration: " + str(iteration_count))
         pis, r = center_ot(
             W,
             H,
@@ -328,7 +318,6 @@ def center_align(
             norm=norm,
             G_inits=pis,
             distributions=distributions,
-            verbose=verbose,
         )
         W, H = center_NMF(
             W,
@@ -339,13 +328,12 @@ def center_align(
             n_components,
             random_seed,
             dissimilarity=dissimilarity,
-            verbose=verbose,
         )
         R_new = np.dot(r, lmbda)
         iteration_count += 1
         R_diff = abs(R - R_new)
-        print("Objective ", R_new)
-        print("Difference: " + str(R_diff) + "\n")
+        logger.info("Objective ", R_new)
+        logger.info("Difference: " + str(R_diff) + "\n")
         R = R_new
     center_slice = A.copy()
     center_slice.X = np.dot(W, H)
@@ -383,7 +371,6 @@ def center_ot(
     norm=False,
     G_inits=None,
     distributions=None,
-    verbose=False,
     numItermax=200,
 ):
     center_slice = AnnData(np.dot(W, H))
@@ -395,7 +382,7 @@ def center_ot(
 
     pis = []
     r = []
-    print("Solving Pairwise Slice Alignment Problem.")
+    logger.info("Solving Pairwise Slice Alignment Problem.")
     for i in range(len(slices)):
         p, r_q = pairwise_align(
             center_slice,
@@ -409,7 +396,6 @@ def center_ot(
             b_distribution=distributions[i],
             backend=backend,
             use_gpu=use_gpu,
-            verbose=verbose,
         )
         pis.append(p)
         r.append(r_q)
@@ -425,9 +411,8 @@ def center_NMF(
     n_components,
     random_seed,
     dissimilarity="kl",
-    verbose=False,
 ):
-    print("Solving Center Mapping NMF Problem.")
+    logger.info("Solving Center Mapping NMF Problem.")
     n = W.shape[0]
     B = n * sum(
         [
@@ -441,7 +426,6 @@ def center_NMF(
             n_components=n_components,
             init="random",
             random_state=random_seed,
-            verbose=verbose,
         )
     else:
         model = NMF(
@@ -450,7 +434,6 @@ def center_NMF(
             beta_loss="kullback-leibler",
             init="random",
             random_state=random_seed,
-            verbose=verbose,
         )
     W_new = model.fit_transform(B.cpu().numpy())
     H_new = model.components_

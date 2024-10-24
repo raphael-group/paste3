@@ -88,7 +88,6 @@ class AlignmentDataset:
                     s=overlap_fraction,
                     numItermax=max_iters,
                     maxIter=max_iters,
-                    verbose=True,
                 )
             )
         return pis

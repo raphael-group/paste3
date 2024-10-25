@@ -114,26 +114,51 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculates and returns optimal alignment of two slices.</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        sliceA: Slice A to align.</span>
-<span class="sd">        sliceB: Slice B to align.</span>
-<span class="sd">        alpha:  Alignment tuning parameter. Note: 0 &lt;= alpha &lt;= 1.</span>
-<span class="sd">        dissimilarity: Expression dissimilarity measure: ``&#39;kl&#39;`` or ``&#39;euclidean&#39;``.</span>
-<span class="sd">        G_init (array-like, optional): Initial mapping to be used in FGW-OT, otherwise default is uniform mapping.</span>
-<span class="sd">        a_distribution (array-like, optional): Distribution of sliceA spots, otherwise default is uniform.</span>
-<span class="sd">        b_distribution (array-like, optional): Distribution of sliceB spots, otherwise default is uniform.</span>
-<span class="sd">        numItermax: Max number of iterations during FGW-OT.</span>
-<span class="sd">        norm: If ``True``, scales spatial distances such that neighboring spots are at distance 1. Otherwise, spatial distances remain unchanged.</span>
-<span class="sd">        backend: Type of backend to run calculations. For list of backends available on system: ``ot.backend.get_backend_list()``.</span>
-<span class="sd">        use_gpu: If ``True``, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.</span>
-<span class="sd">        return_obj: If ``True``, additionally returns objective function output of FGW-OT.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sliceA : AnnData</span>
+<span class="sd">        First slice to align.</span>
+<span class="sd">    sliceB : AnnData</span>
+<span class="sd">        Second slice to align.</span>
+<span class="sd">    s : float, optional</span>
+<span class="sd">        Overlap fraction between sliceA and sliceB</span>
+<span class="sd">    M : np.ndarray, optional</span>
+<span class="sd">        Cost matrix for the dissimilarity metric.</span>
+<span class="sd">    alpha : float, optional</span>
+<span class="sd">        Regularization parameter for the optimal transport problem.</span>
+<span class="sd">    dissimilarity : str, optional</span>
+<span class="sd">        Dissimilarity metric to use.</span>
+<span class="sd">    G_init : np.ndarray, optional</span>
+<span class="sd">        Initial transport plan.</span>
+<span class="sd">    a_distribution : np.ndarray, optional</span>
+<span class="sd">        Distribution of points in sliceA.</span>
+<span class="sd">    b_distribution :  np.ndarray, optional</span>
+<span class="sd">        Distribution of points in sliceB.</span>
+<span class="sd">    norm : str, optional</span>
+<span class="sd">        Whether to normalize the spatial distances.</span>
+<span class="sd">    numItermax : int, optional</span>
+<span class="sd">        Maximum number of iterations for the optimization.</span>
+<span class="sd">    backend : ot.backend, optional</span>
+<span class="sd">        Backend to use for the optimal transport calculations.</span>
+<span class="sd">    use_gpu : bool, optional</span>
+<span class="sd">        Whether to use GPU for calculations.</span>
+<span class="sd">    return_obj : bool, optional</span>
+<span class="sd">        Whether to return the log object.</span>
+<span class="sd">    maxIter : int, optional</span>
+<span class="sd">        Maximum number of iterations for the dissimilarity metric.</span>
+<span class="sd">    optimizeTheta : bool, optional</span>
+<span class="sd">        Whether to optimize the theta parameter.</span>
+<span class="sd">    eps : float, optional</span>
+<span class="sd">        Epsilon for the dissimilarity metric.</span>
+<span class="sd">    is_histology : bool, optional</span>
+<span class="sd">        Whether the slices has histology images.</span>
+<span class="sd">    armijo : bool, optional</span>
+<span class="sd">        Whether to use Armijo line search.</span>
 
-<span class="sd">    Returns:</span>
-<span class="sd">        - Alignment of spots.</span>
-
-<span class="sd">        If ``return_obj = True``, additionally returns:</span>
-
-<span class="sd">        - Objective function output of FGW-OT.</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pi : np.ndarray</span>
+<span class="sd">        Optimal transport plan.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">use_gpu</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
@@ -278,7 +303,6 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">AnnData</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes center alignment of slices.</span>
-
 <span class="sd">    Args:</span>
 <span class="sd">        A: Slice to use as the initialization for center alignment; Make sure to include gene expression and spatial information.</span>
 <span class="sd">        slices: List of slices to use in the center alignment.</span>
@@ -294,7 +318,6 @@
 <span class="sd">        distributions (List[array-like], optional): Distributions of spots for each slice. Otherwise, default is uniform.</span>
 <span class="sd">        backend: Type of backend to run calculations. For list of backends available on system: ``ot.backend.get_backend_list()``.</span>
 <span class="sd">        use_gpu: If ``True``, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.</span>
-
 <span class="sd">    Returns:</span>
 <span class="sd">        - Inferred center slice with full and low dimensional representations (W, H) of the gene expression matrix.</span>
 <span class="sd">        - List of pairwise alignment mappings of the center slice (rows) to each input slice (columns).</span>

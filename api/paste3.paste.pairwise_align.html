@@ -98,32 +98,32 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sliceA</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code>) -- Slice A to align.</p></li>
-<li><p><strong>sliceB</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code>) -- Slice B to align.</p></li>
-<li><p><strong>alpha</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) -- Alignment tuning parameter. Note: 0 &lt;= alpha &lt;= 1.</p></li>
-<li><p><strong>dissimilarity</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) -- Expression dissimilarity measure: <code class="docutils literal notranslate"><span class="pre">'kl'</span></code> or <code class="docutils literal notranslate"><span class="pre">'euclidean'</span></code>.</p></li>
-<li><p><strong>G_init</strong> (<em>array-like</em><em>, </em><em>optional</em>) -- Initial mapping to be used in FGW-OT, otherwise default is uniform mapping.</p></li>
-<li><p><strong>a_distribution</strong> (<em>array-like</em><em>, </em><em>optional</em>) -- Distribution of sliceA spots, otherwise default is uniform.</p></li>
-<li><p><strong>b_distribution</strong> (<em>array-like</em><em>, </em><em>optional</em>) -- Distribution of sliceB spots, otherwise default is uniform.</p></li>
-<li><p><strong>numItermax</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) -- Max number of iterations during FGW-OT.</p></li>
-<li><p><strong>norm</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) -- If <code class="docutils literal notranslate"><span class="pre">True</span></code>, scales spatial distances such that neighboring spots are at distance 1. Otherwise, spatial distances remain unchanged.</p></li>
-<li><p><strong>backend</strong> -- Type of backend to run calculations. For list of backends available on system: <code class="docutils literal notranslate"><span class="pre">ot.backend.get_backend_list()</span></code>.</p></li>
-<li><p><strong>use_gpu</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) -- If <code class="docutils literal notranslate"><span class="pre">True</span></code>, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.</p></li>
-<li><p><strong>return_obj</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) -- If <code class="docutils literal notranslate"><span class="pre">True</span></code>, additionally returns objective function output of FGW-OT.</p></li>
+<li><p><strong>sliceA</strong> (<em>AnnData</em>) -- First slice to align.</p></li>
+<li><p><strong>sliceB</strong> (<em>AnnData</em>) -- Second slice to align.</p></li>
+<li><p><strong>s</strong> (<em>float</em><em>, </em><em>optional</em>) -- Overlap fraction between sliceA and sliceB</p></li>
+<li><p><strong>M</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) -- Cost matrix for the dissimilarity metric.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em>) -- Regularization parameter for the optimal transport problem.</p></li>
+<li><p><strong>dissimilarity</strong> (<em>str</em><em>, </em><em>optional</em>) -- Dissimilarity metric to use.</p></li>
+<li><p><strong>G_init</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) -- Initial transport plan.</p></li>
+<li><p><strong>a_distribution</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) -- Distribution of points in sliceA.</p></li>
+<li><p><strong>b_distribution</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) -- Distribution of points in sliceB.</p></li>
+<li><p><strong>norm</strong> (<em>str</em><em>, </em><em>optional</em>) -- Whether to normalize the spatial distances.</p></li>
+<li><p><strong>numItermax</strong> (<em>int</em><em>, </em><em>optional</em>) -- Maximum number of iterations for the optimization.</p></li>
+<li><p><strong>backend</strong> (<em>ot.backend</em><em>, </em><em>optional</em>) -- Backend to use for the optimal transport calculations.</p></li>
+<li><p><strong>use_gpu</strong> (<em>bool</em><em>, </em><em>optional</em>) -- Whether to use GPU for calculations.</p></li>
+<li><p><strong>return_obj</strong> (<em>bool</em><em>, </em><em>optional</em>) -- Whether to return the log object.</p></li>
+<li><p><strong>maxIter</strong> (<em>int</em><em>, </em><em>optional</em>) -- Maximum number of iterations for the dissimilarity metric.</p></li>
+<li><p><strong>optimizeTheta</strong> (<em>bool</em><em>, </em><em>optional</em>) -- Whether to optimize the theta parameter.</p></li>
+<li><p><strong>eps</strong> (<em>float</em><em>, </em><em>optional</em>) -- Epsilon for the dissimilarity metric.</p></li>
+<li><p><strong>is_histology</strong> (<em>bool</em><em>, </em><em>optional</em>) -- Whether the slices has histology images.</p></li>
+<li><p><strong>armijo</strong> (<em>bool</em><em>, </em><em>optional</em>) -- Whether to use Armijo line search.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>pi</strong> -- Optimal transport plan.</p>
 </dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><ul class="simple">
-<li><p>Alignment of spots.</p></li>
-</ul>
-<p>If <code class="docutils literal notranslate"><span class="pre">return_obj</span> <span class="pre">=</span> <span class="pre">True</span></code>, additionally returns:</p>
-<ul class="simple">
-<li><p>Objective function output of FGW-OT.</p></li>
-</ul>
-</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>

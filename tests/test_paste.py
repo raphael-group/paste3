@@ -230,8 +230,8 @@ def test_gromov_linesearch(slices, spot_distance_matrix):
         costG,
         spot_distance_matrix[1],
         spot_distance_matrix[2],
-        M=0.0,
-        reg=1.0,
+        exp_dissim_matrix=0.0,
+        alpha=1.0,
         nx=nx,
     )
     assert alpha == 1.0

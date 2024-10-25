@@ -40,26 +40,51 @@ def pairwise_align(
     """
     Calculates and returns optimal alignment of two slices.
 
-    Args:
-        sliceA: Slice A to align.
-        sliceB: Slice B to align.
-        alpha:  Alignment tuning parameter. Note: 0 <= alpha <= 1.
-        dissimilarity: Expression dissimilarity measure: ``'kl'`` or ``'euclidean'``.
-        G_init (array-like, optional): Initial mapping to be used in FGW-OT, otherwise default is uniform mapping.
-        a_distribution (array-like, optional): Distribution of sliceA spots, otherwise default is uniform.
-        b_distribution (array-like, optional): Distribution of sliceB spots, otherwise default is uniform.
-        numItermax: Max number of iterations during FGW-OT.
-        norm: If ``True``, scales spatial distances such that neighboring spots are at distance 1. Otherwise, spatial distances remain unchanged.
-        backend: Type of backend to run calculations. For list of backends available on system: ``ot.backend.get_backend_list()``.
-        use_gpu: If ``True``, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.
-        return_obj: If ``True``, additionally returns objective function output of FGW-OT.
+    Parameters
+    ----------
+    sliceA : AnnData
+        First slice to align.
+    sliceB : AnnData
+        Second slice to align.
+    s : float, optional
+        Overlap fraction between sliceA and sliceB
+    M : np.ndarray, optional
+        Cost matrix for the dissimilarity metric.
+    alpha : float, optional
+        Regularization parameter for the optimal transport problem.
+    dissimilarity : str, optional
+        Dissimilarity metric to use.
+    G_init : np.ndarray, optional
+        Initial transport plan.
+    a_distribution : np.ndarray, optional
+        Distribution of points in sliceA.
+    b_distribution :  np.ndarray, optional
+        Distribution of points in sliceB.
+    norm : str, optional
+        Whether to normalize the spatial distances.
+    numItermax : int, optional
+        Maximum number of iterations for the optimization.
+    backend : ot.backend, optional
+        Backend to use for the optimal transport calculations.
+    use_gpu : bool, optional
+        Whether to use GPU for calculations.
+    return_obj : bool, optional
+        Whether to return the log object.
+    maxIter : int, optional
+        Maximum number of iterations for the dissimilarity metric.
+    optimizeTheta : bool, optional
+        Whether to optimize the theta parameter.
+    eps : float, optional
+        Epsilon for the dissimilarity metric.
+    is_histology : bool, optional
+        Whether the slices has histology images.
+    armijo : bool, optional
+        Whether to use Armijo line search.
 
-    Returns:
-        - Alignment of spots.
-
-        If ``return_obj = True``, additionally returns:
-
-        - Objective function output of FGW-OT.
+    Returns
+    -------
+    pi : np.ndarray
+        Optimal transport plan.
     """
 
     if use_gpu and not torch.cuda.is_available():
@@ -204,7 +229,6 @@ def center_align(
 ) -> Tuple[AnnData, List[np.ndarray]]:
     """
     Computes center alignment of slices.
-
     Args:
         A: Slice to use as the initialization for center alignment; Make sure to include gene expression and spatial information.
         slices: List of slices to use in the center alignment.
@@ -220,7 +244,6 @@ def center_align(
         distributions (List[array-like], optional): Distributions of spots for each slice. Otherwise, default is uniform.
         backend: Type of backend to run calculations. For list of backends available on system: ``ot.backend.get_backend_list()``.
         use_gpu: If ``True``, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.
-
     Returns:
         - Inferred center slice with full and low dimensional representations (W, H) of the gene expression matrix.
         - List of pairwise alignment mappings of the center slice (rows) to each input slice (columns).

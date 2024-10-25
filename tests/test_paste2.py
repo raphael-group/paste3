@@ -161,8 +161,8 @@ def test_partial_fused_gromov_wasserstein(slices, armijo, expected_log, filename
         torch.ones((sliceA.shape[0],)).double() / sliceA.shape[0],
         torch.ones((sliceB.shape[0],)).double() / sliceB.shape[0],
         alpha=0.1,
-        m=0.7,
-        G0=None,
+        overlap_fraction=0.7,
+        pi_init=None,
         loss_fun="square_loss",
         armijo=armijo,
     )

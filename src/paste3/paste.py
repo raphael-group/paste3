@@ -172,8 +172,8 @@ def pairwise_align(
         a_spots_weight,
         b_spots_weight,
         alpha=alpha,
-        m=overlap_fraction,
-        G0=pi_init,
+        overlap_fraction=overlap_fraction,
+        pi_init=pi_init,
         loss_fun="square_loss",
         numItermax=maxIter if overlap_fraction else numItermax,
         use_gpu=use_gpu,
@@ -435,14 +435,14 @@ def center_NMF(
 
 
 def my_fused_gromov_wasserstein(
-    M,
-    C1,
-    C2,
-    p,
-    q,
+    exp_dissim_matrix,
+    a_spatial_dist,
+    b_spatial_dist,
+    a_spots_weight,
+    b_spots_weight,
     alpha=0.5,
-    m=None,
-    G0=None,
+    overlap_fraction=None,
+    pi_init=None,
     loss_fun="square_loss",
     armijo=False,
     numItermax=200,
@@ -450,6 +450,7 @@ def my_fused_gromov_wasserstein(
     tol_abs=1e-9,
     use_gpu=True,
     numItermaxEmd=100000,
+    dummy=1,
     **kwargs,
 ):
     """
@@ -458,101 +459,150 @@ def my_fused_gromov_wasserstein(
 
     For more info, see: https://pythonot.github.io/gen_modules/ot.gromov.html
     """
-    p, q = ot.utils.list_to_array(p, q)
-    nx = ot.backend.get_backend(p, q, C1, C2, M)
+    a_spots_weight, b_spots_weight = ot.utils.list_to_array(
+        a_spots_weight, b_spots_weight
+    )
+    nx = ot.backend.get_backend(
+        a_spots_weight,
+        b_spots_weight,
+        a_spatial_dist,
+        b_spatial_dist,
+        exp_dissim_matrix,
+    )
 
-    if m is not None:
-        if m < 0:
+    if overlap_fraction is not None:
+        if overlap_fraction < 0:
             raise ValueError(
-                "Problem infeasible. Parameter m should be greater" " than 0."
+                "Problem infeasible. Overlap fraction should be greater than 0."
             )
-        elif m > min(p.sum(), q.sum()):
+        elif overlap_fraction > min(a_spots_weight.sum(), b_spots_weight.sum()):
             raise ValueError(
-                "Problem infeasible. Parameter m should lower or"
+                "Problem infeasible. Overlap fraction should lower or"
                 " equal to min(|p|_1, |q|_1)."
             )
 
-        _log = {"err": []}
+        _info = {"err": []}
         count = 0
-        dummy = 1
-        _p = torch.cat([p, torch.Tensor([(q.sum() - m) / dummy] * dummy).to(p.device)])
-        _q = torch.cat([q, torch.Tensor([(q.sum() - m) / dummy] * dummy).to(p.device)])
+        _a_spots_weight = torch.cat(
+            [
+                a_spots_weight,
+                torch.Tensor(
+                    [(b_spots_weight.sum() - overlap_fraction) / dummy] * dummy
+                ).to(a_spots_weight.device),
+            ]
+        )
+        _b_spots_weight = torch.cat(
+            [
+                b_spots_weight,
+                torch.Tensor(
+                    [(b_spots_weight.sum() - overlap_fraction) / dummy] * dummy
+                ).to(a_spots_weight.device),
+            ]
+        )
 
-    if G0 is not None:
-        G0 = (1 / nx.sum(G0)) * G0
+    if pi_init is not None:
+        pi_init = (1 / nx.sum(pi_init)) * pi_init
         if use_gpu:
-            G0 = G0.cuda()
+            pi_init = pi_init.cuda()
 
-    def f(G):
-        constC, hC1, hC2 = ot.gromov.init_matrix(
-            C1,
-            C2,
-            nx.sum(G, axis=1).reshape(-1, 1).to(C1.dtype),
-            nx.sum(G, axis=0).reshape(1, -1).to(C2.dtype),
+    def f_loss(pi):
+        combined_spatial_cost, gradient_C1, gradient_C2 = ot.gromov.init_matrix(
+            a_spatial_dist,
+            b_spatial_dist,
+            nx.sum(pi, axis=1).reshape(-1, 1).to(a_spatial_dist.dtype),
+            nx.sum(pi, axis=0).reshape(1, -1).to(b_spatial_dist.dtype),
             loss_fun,
         )
-        return ot.gromov.gwloss(constC, hC1, hC2, G)
+        return ot.gromov.gwloss(combined_spatial_cost, gradient_C1, gradient_C2, pi)
 
-    def df(G):
-        constC, hC1, hC2 = ot.gromov.init_matrix(
-            C1,
-            C2,
-            nx.sum(G, axis=1).reshape(-1, 1),
-            nx.sum(G, axis=0).reshape(1, -1),
+    def f_gradient(pi):
+        combined_spatial_cost, gradient_C1, gradient_C2 = ot.gromov.init_matrix(
+            a_spatial_dist,
+            b_spatial_dist,
+            nx.sum(pi, axis=1).reshape(-1, 1),
+            nx.sum(pi, axis=0).reshape(1, -1),
             loss_fun,
         )
-        return ot.gromov.gwggrad(constC, hC1, hC2, G)
+        return ot.gromov.gwggrad(combined_spatial_cost, gradient_C1, gradient_C2, pi)
 
     if loss_fun == "kl_loss":
         armijo = True  # there is no closed form line-search with KL
 
-    def line_search(cost, G, deltaG, Mi, cost_G, **kwargs):
-        if m:
+    def line_search(f_cost, pi, pi_diff, linearized_matrix, cost_pi, **kwargs):
+        if overlap_fraction:
             nonlocal count
             # keep track of error only on every 10th iteration
             if count % 10 == 0:
-                _log["err"].append(torch.norm(deltaG))
+                _info["err"].append(torch.norm(pi_diff))
             count += 1
 
         if armijo:
             return ot.optim.line_search_armijo(
-                cost, G, deltaG, Mi, cost_G, nx=nx, **kwargs
+                f_cost, pi, pi_diff, linearized_matrix, cost_pi, nx=nx, **kwargs
             )
         else:
-            if m:
+            if overlap_fraction:
                 return line_search_partial(
-                    alpha, M, G, C1, C2, deltaG, loss_fun=loss_fun
+                    alpha,
+                    exp_dissim_matrix,
+                    pi,
+                    a_spatial_dist,
+                    b_spatial_dist,
+                    pi_diff,
+                    loss_fun=loss_fun,
                 )
             else:
                 return solve_gromov_linesearch(
-                    G, deltaG, cost_G, C1, C2, M=0.0, reg=1.0, nx=nx, **kwargs
+                    pi,
+                    pi_diff,
+                    cost_pi,
+                    a_spatial_dist,
+                    b_spatial_dist,
+                    M=0.0,
+                    reg=1.0,
+                    nx=nx,
+                    **kwargs,
                 )
 
-    def lp_solver(a, b, M, **kwargs):
-        if m:
-            _M = torch.nn.functional.pad(M, pad=(0, dummy, 0, dummy), mode="constant")
-            _M[-dummy:, -dummy:] = torch.max(M) * 1e2
+    def lp_solver(
+        a_spots_weight,
+        b_spots_weight,
+        exp_dissim_matrix,
+    ):
+        if overlap_fraction:
+            _exp_dissim_matrix = torch.nn.functional.pad(
+                exp_dissim_matrix, pad=(0, dummy, 0, dummy), mode="constant"
+            )
+            _exp_dissim_matrix[-dummy:, -dummy:] = torch.max(exp_dissim_matrix) * 1e2
 
-            Gc, innerlog_ = emd(_p, _q, _M, 1000000, log=True)
-            if innerlog_.get("warning"):
+            _pi, _innerlog = emd(
+                _a_spots_weight, _b_spots_weight, _exp_dissim_matrix, 1000000, log=True
+            )
+            if _innerlog.get("warning"):
                 raise ValueError(
                     "Error in EMD resolution: Increase the number of dummy points."
                 )
-            return Gc[: len(a), : len(b)], innerlog_
+            return _pi[: len(a_spots_weight), : len(b_spots_weight)], _innerlog
         else:
-            return emd(a, b, M, numItermaxEmd, log=True)
+            return emd(
+                a_spots_weight,
+                b_spots_weight,
+                exp_dissim_matrix,
+                numItermaxEmd,
+                log=True,
+            )
 
     return_val = ot.optim.generic_conditional_gradient(
-        p,
-        q,
-        (1 - alpha) * M,
-        f,
-        df,
-        alpha,
-        None,
-        lp_solver,
-        line_search,
-        G0,
+        a=a_spots_weight,
+        b=b_spots_weight,
+        M=(1 - alpha) * exp_dissim_matrix,
+        f=f_loss,
+        df=f_gradient,
+        reg1=alpha,
+        reg2=None,
+        lp_solver=lp_solver,
+        line_search=line_search,
+        G0=pi_init,
         log=True,
         numItermax=numItermax,
         stopThr=tol_rel,
@@ -560,15 +610,15 @@ def my_fused_gromov_wasserstein(
         **kwargs,
     )
 
-    res, log = return_val
-    if m:
-        log["partial_fgw_cost"] = log["loss"][-1]
-        log["err"] = _log["err"]
+    pi, info = return_val
+    if overlap_fraction:
+        info["partial_fgw_cost"] = info["loss"][-1]
+        info["err"] = _info["err"]
     else:
-        log["fgw_dist"] = log["loss"][-1]
-        log["u"] = log["u"]
-        log["v"] = log["v"]
-    return res, log
+        info["fgw_dist"] = info["loss"][-1]
+        info["u"] = info["u"]
+        info["v"] = info["v"]
+    return pi, info
 
 
 def solve_gromov_linesearch(

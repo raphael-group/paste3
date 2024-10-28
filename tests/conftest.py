@@ -6,8 +6,6 @@ import pytest
 import scanpy as sc
 import torch
 
-from paste3.helper import intersect
-
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
 
@@ -53,7 +51,7 @@ def intersecting_slices(slices):
 
     common_genes = slices[0].var.index
     for slice in slices[1:]:
-        common_genes = intersect(common_genes, slice.var.index)
+        common_genes = common_genes.intersection(slice.var.index)
 
     for i in range(len(slices)):
         slices[i] = slices[i][:, common_genes]

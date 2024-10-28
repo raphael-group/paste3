@@ -231,11 +231,6 @@ def high_umi_gene_distance(a_exp_dissim, b_exp_dissim, n):
     return kl_divergence(a_exp_dissim, b_exp_dissim)
 
 
-def intersect(a_list, b_list):
-    """Returns the intersection between two list."""
-    return [val for val in a_list if val in set(b_list)]
-
-
 def norm_and_center_coordinates(spatial_dist):
     """
     Normalizes and centers spatial coordinates by subtracting the mean and
@@ -276,7 +271,7 @@ def filter_for_common_genes(slices: list[AnnData]) -> None:
 
     common_genes = slices[0].var.index
     for s in slices:
-        common_genes = intersect(common_genes, s.var.index)
+        common_genes = common_genes.intersection(s.var.index)
     for i in range(len(slices)):
         slices[i] = slices[i][:, common_genes]
     logging.info(

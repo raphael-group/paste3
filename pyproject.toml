@@ -25,7 +25,8 @@ dependencies = [
     "scikit-learn",
     "IPython",
     "statsmodels",
-    "torch"
+    "torch",
+    "torchnmf"
 ]
 dynamic = ["version"]
 
@@ -41,6 +42,7 @@ dev = [
     "coveralls",
     "ruff",
     "pre-commit",
+    "napari"
 ]
 
 docs = [
@@ -55,6 +57,9 @@ docs = [
     "plotly",
     "squidpy"
 ]
+
+[project.entry-points."napari.manifest"]
+paste3 = "paste3.napari:napari.yaml"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

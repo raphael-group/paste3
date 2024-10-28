@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 def stack_slices_pairwise(
     slices: List[AnnData],
     pis: List[np.ndarray],
-    output_params: bool = False,
-    matrix: bool = False,
+    return_params: bool = False,
+    return_as_matrix: bool = False,
     is_partial: bool = False,
 ) -> Tuple[List[AnnData], Optional[List[float]], Optional[List[np.ndarray]]]:
     """
@@ -28,11 +28,13 @@ def stack_slices_pairwise(
 
         slices[0] --> slices[1] --> slices[2] --> ...
 
+
+
     Args:
         slices: List of slices.
         pis: List of pi (``pairwise_align()`` output) between consecutive slices.
-        output_params: If ``True``, addtionally return angles of rotation (theta) and translations for each slice.
-        matrix: If ``True`` and output_params is also ``True``, the rotation is
+        return_params: If ``True``, addtionally return angles of rotation (theta) and translations for each slice.
+        return_as_matrix: If ``True`` and output_params is also ``True``, the rotation is
             return as a matrix instead of an angle for each slice.
         is_partial: Boolean of whether this is partial pairwise analysis or a total one
 
@@ -48,57 +50,69 @@ def stack_slices_pairwise(
         len(slices) == len(pis) + 1
     ), "'slices' should have length one more than 'pis'. Please double check."
     assert len(slices) > 1, "You should have at least 2 layers."
-    new_coor = []
-    thetas = []
+    aligned_coordinates = []
+    rotation_angles = []
     translations = []
     result = generalized_procrustes_analysis(
         torch.Tensor(slices[0].obsm["spatial"]).to(pis[0].dtype).to(pis[0].device),
         torch.Tensor(slices[1].obsm["spatial"]).to(pis[0].dtype).to(pis[0].device),
         pis[0],
         is_partial=is_partial,
-        output_params=output_params,
+        return_params=return_params,
     )
-    if output_params:
-        S1, S2, theta, tX, tY = result
-        thetas.append(theta)
-        translations.append(tX)
-        translations.append(tY)
+    if return_params:
+        (
+            source_coordinates,
+            target_coordinates,
+            rotation_angle,
+            x_translation,
+            y_translation,
+        ) = result
+        rotation_angles.append(rotation_angle)
+        translations.append(x_translation)
+        translations.append(y_translation)
     else:
-        S1, S2 = result
-    new_coor.append(S1)
-    new_coor.append(S2)
+        source_coordinates, target_coordinates = result
+    aligned_coordinates.append(source_coordinates)
+    aligned_coordinates.append(target_coordinates)
     for i in range(1, len(slices) - 1):
         result = generalized_procrustes_analysis(
-            new_coor[i],
+            aligned_coordinates[i],
             torch.Tensor(slices[i + 1].obsm["spatial"])
             .to(pis[i].dtype)
             .to(pis[i].device),
             pis[i],
             is_partial=is_partial,
-            output_params=output_params,
+            return_params=return_params,
         )
-        if output_params:
-            x, y, theta, tX, tY = result
-            thetas.append(theta)
-            translations.append(tY)
+        if return_params:
+            (
+                source_coordinates,
+                target_coordinates,
+                rotation_angle,
+                x_translation,
+                y_translation,
+            ) = result
+            rotation_angles.append(rotation_angle)
+            translations.append(y_translation)
         else:
-            x, y = result
+            source_coordinates, target_coordinates = result
 
         if is_partial:
-            shift = new_coor[i][0, :] - x[0, :]
-            y = y + shift
-        new_coor.append(y)
+            shift = aligned_coordinates[i][0, :] - source_coordinates[0, :]
+            target_coordinates = target_coordinates + shift
+        aligned_coordinates.append(target_coordinates)
 
     new_slices = []
     for i in range(len(slices)):
-        s = slices[i].copy()
-        s.obsm["spatial"] = new_coor[i].cpu().numpy()
-        new_slices.append(s)
+        _slice = slices[i].copy()
+        _slice.obsm["spatial"] = aligned_coordinates[i].cpu().numpy()
+        new_slices.append(_slice)
 
-    if not output_params:
+    if not return_params:
         return new_slices
     else:
-        return new_slices, thetas, translations
+        return new_slices, rotation_angles, translations
 
 
 def stack_slices_center(
@@ -141,13 +155,13 @@ def stack_slices_center(
     assert len(slices) == len(
         pis
     ), "'slices' should have the same length 'pis'. Please double check."
-    new_coor = []
-    thetas = []
+    aligned_coordinates = []
+    rotation_angles = []
     translations = []
 
     for i in range(len(slices)):
         if not output_params:
-            c, y = generalized_procrustes_analysis(
+            source_coordinates, target_coordinates = generalized_procrustes_analysis(
                 torch.Tensor(center_slice.obsm["spatial"])
                 .to(pis[i].dtype)
                 .to(pis[i].device),
@@ -157,7 +171,13 @@ def stack_slices_center(
                 pis[i],
             )
         else:
-            c, y, theta, tX, tY = generalized_procrustes_analysis(
+            (
+                source_coordinates,
+                target_coordinates,
+                rotation_angle,
+                x_translation,
+                y_translation,
+            ) = generalized_procrustes_analysis(
                 torch.Tensor(center_slice.obsm["spatial"])
                 .to(pis[i].dtype)
                 .to(pis[i].device),
@@ -165,42 +185,42 @@ def stack_slices_center(
                 .to(pis[i].dtype)
                 .to(pis[i].device),
                 pis[i],
-                output_params=output_params,
-                matrix=matrix,
+                return_params=output_params,
+                return_as_matrix=matrix,
             )
-            thetas.append(theta)
-            translations.append(tY)
-        new_coor.append(y)
+            rotation_angles.append(rotation_angle)
+            translations.append(y_translation)
+        aligned_coordinates.append(target_coordinates)
 
     new_slices = []
     for i in range(len(slices)):
-        s = slices[i].copy()
-        s.obsm["spatial"] = new_coor[i].cpu().numpy()
-        new_slices.append(s)
+        _slice = slices[i].copy()
+        _slice.obsm["spatial"] = aligned_coordinates[i].cpu().numpy()
+        new_slices.append(_slice)
 
     new_center = center_slice.copy()
-    new_center.obsm["spatial"] = c.cpu().numpy()
+    new_center.obsm["spatial"] = source_coordinates.cpu().numpy()
     if not output_params:
         return new_center, new_slices
     else:
-        return new_center, new_slices, thetas, translations
+        return new_center, new_slices, rotation_angles, translations
 
 
 def plot_slice(
-    sliceX: AnnData, color, ax: Optional[plt.Axes] = None, s: float = 100
+    slice: AnnData, color, ax: Optional[plt.Axes] = None, s: float = 100
 ) -> None:
     """
     Plots slice spatial coordinates.
 
     Args:
-        sliceX: Slice to be plotted.
+        slice: Slice to be plotted.
         color: Scatterplot color, any format accepted by ``matplotlib``.
         ax: Pre-existing axes for the plot. Otherwise, call ``matplotlib.pyplot.gca()`` internally.
         s: Size of spots.
     """
     sns.scatterplot(
-        x=sliceX.obsm["spatial"][:, 0],
-        y=sliceX.obsm["spatial"][:, 1],
+        x=slice.obsm["spatial"][:, 0],
+        y=slice.obsm["spatial"][:, 1],
         linewidth=0,
         s=s,
         marker=".",
@@ -213,42 +233,61 @@ def plot_slice(
 
 
 def generalized_procrustes_analysis(
-    X, Y, pi, output_params=False, matrix=False, is_partial=False
+    source_coordinates,
+    target_coordinates,
+    pi,
+    return_params=False,
+    return_as_matrix=False,
+    is_partial=False,
 ):
     """
     Finds and applies optimal rotation between spatial coordinates of two layers (may also do a reflection).
 
     Args:
-        X: np array of spatial coordinates (ex: sliceA.obs['spatial'])
-        Y: np array of spatial coordinates (ex: sliceB.obs['spatial'])
+        source_coordinates: np array of spatial coordinates (ex: sliceA.obs['spatial'])
+        target_coordinates: np array of spatial coordinates (ex: sliceB.obs['spatial'])
         pi: mapping between the two layers output by PASTE
-        output_params: Boolean of whether to return rotation angle and translations along with spatial coordiantes.
-        matrix: Boolean of whether to return the rotation as a matrix or an angle.
+        return_params: Boolean of whether to return rotation angle and translations along with spatial coordiantes.
+        return_as_matrix: Boolean of whether to return the rotation as a matrix or an angle.
         is_partial: Boolean of whether this is partial pairwise analysis or a total one
 
 
     Returns:
         Aligned spatial coordinates of X, Y, rotation angle, translation of X, translation of Y.
     """
-    assert X.shape[1] == 2 and Y.shape[1] == 2
+    assert source_coordinates.shape[1] == 2 and target_coordinates.shape[1] == 2
 
-    tX = pi.sum(axis=1).matmul(X)
-    tY = pi.sum(axis=0).matmul(Y)
-    X = X - tX
-    Y = Y - tY
+    weighted_source = pi.sum(axis=1).matmul(source_coordinates)
+    weighted_targed = pi.sum(axis=0).matmul(target_coordinates)
+    source_coordinates = source_coordinates - weighted_source
+    target_coordinates = target_coordinates - weighted_targed
     if is_partial:
         m = torch.sum(pi)
-        X = X * (1.0 / m)
-        Y = Y * (1.0 / m)
-    H = Y.T.matmul(pi.T.matmul(X))
-    U, S, Vt = torch.linalg.svd(H, full_matrices=True)
-    R = Vt.T.matmul(U.T)
-    Y = R.matmul(Y.T).T
-    if output_params and not matrix:
+        source_coordinates = source_coordinates * (1.0 / m)
+        target_coordinates = target_coordinates * (1.0 / m)
+    covariance_matrix = target_coordinates.T.matmul(pi.T.matmul(source_coordinates))
+    U, S, Vt = torch.linalg.svd(covariance_matrix, full_matrices=True)
+    rotation_matrix = Vt.T.matmul(U.T)
+    target_coordinates = rotation_matrix.matmul(target_coordinates.T).T
+    if return_params and not return_as_matrix:
         M = torch.Tensor([[0, -1], [1, 0]]).double()
-        theta = torch.arctan(torch.trace(M.matmul(H)) / torch.trace(H))
-        return X, Y, theta, tX, tY
-    elif output_params and matrix:
-        return X, Y, R, tX, tY
+        rotation_angle = torch.arctan(
+            torch.trace(M.matmul(covariance_matrix)) / torch.trace(covariance_matrix)
+        )
+        return (
+            source_coordinates,
+            target_coordinates,
+            rotation_angle,
+            weighted_source,
+            weighted_targed,
+        )
+    elif return_params and return_as_matrix:
+        return (
+            source_coordinates,
+            target_coordinates,
+            rotation_matrix,
+            weighted_source,
+            weighted_targed,
+        )
     else:
-        return X, Y
+        return source_coordinates, target_coordinates

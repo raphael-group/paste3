@@ -249,12 +249,12 @@ def test_line_search_partial(slices, spot_distance_matrix):
     ).double()
 
     alpha, a, cost_G = line_search_partial(
-        reg=0.1,
-        M=M,
-        G=G,
-        C1=spot_distance_matrix[1],
-        C2=spot_distance_matrix[2],
-        deltaG=deltaG,
+        alpha=0.1,
+        exp_dissim_matrix=M,
+        pi=G,
+        a_spatial_dist=spot_distance_matrix[1],
+        b_spatial_dist=spot_distance_matrix[2],
+        pi_diff=deltaG,
     )
     assert alpha == 1.0
     assert pytest.approx(a) == 0.4858849047237918

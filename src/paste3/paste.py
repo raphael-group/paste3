@@ -506,24 +506,24 @@ def my_fused_gromov_wasserstein(
             pi_init = pi_init.cuda()
 
     def f_loss(pi):
-        combined_spatial_cost, gradient_C1, gradient_C2 = ot.gromov.init_matrix(
+        combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
             a_spatial_dist,
             b_spatial_dist,
             nx.sum(pi, axis=1).reshape(-1, 1).to(a_spatial_dist.dtype),
             nx.sum(pi, axis=0).reshape(1, -1).to(b_spatial_dist.dtype),
             loss_fun,
         )
-        return ot.gromov.gwloss(combined_spatial_cost, gradient_C1, gradient_C2, pi)
+        return ot.gromov.gwloss(combined_spatial_cost, a_gradient, b_gradient, pi)
 
     def f_gradient(pi):
-        combined_spatial_cost, gradient_C1, gradient_C2 = ot.gromov.init_matrix(
+        combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
             a_spatial_dist,
             b_spatial_dist,
             nx.sum(pi, axis=1).reshape(-1, 1),
             nx.sum(pi, axis=0).reshape(1, -1),
             loss_fun,
         )
-        return ot.gromov.gwggrad(combined_spatial_cost, gradient_C1, gradient_C2, pi)
+        return ot.gromov.gwggrad(combined_spatial_cost, a_gradient, b_gradient, pi)
 
     if loss_fun == "kl_loss":
         armijo = True  # there is no closed form line-search with KL
@@ -706,28 +706,40 @@ def solve_gromov_linesearch(
     return minimal_cost, 1, cost_pi
 
 
-def line_search_partial(reg, M, G, C1, C2, deltaG, loss_fun="square_loss"):
-    constC, hC1, hC2 = ot.gromov.init_matrix(
-        C1,
-        C2,
-        torch.sum(deltaG, axis=1).reshape(-1, 1),
-        torch.sum(deltaG, axis=0).reshape(1, -1),
+def line_search_partial(
+    alpha,
+    exp_dissim_matrix,
+    pi,
+    a_spatial_dist,
+    b_spatial_dist,
+    pi_diff,
+    loss_fun="square_loss",
+):
+    combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
+        a_spatial_dist,
+        b_spatial_dist,
+        torch.sum(pi_diff, axis=1).reshape(-1, 1),
+        torch.sum(pi_diff, axis=0).reshape(1, -1),
         loss_fun,
     )
 
-    dot = torch.matmul(torch.matmul(C1, deltaG), C2.T)
-    a = reg * torch.sum(dot * deltaG)
-    b = (1 - reg) * torch.sum(M * deltaG) + 2 * reg * torch.sum(
-        ot.gromov.gwggrad(constC, hC1, hC2, deltaG) * 0.5 * G
+    dot = torch.matmul(torch.matmul(a_spatial_dist, pi_diff), b_spatial_dist.T)
+    a = alpha * torch.sum(dot * pi_diff)
+    b = (1 - alpha) * torch.sum(exp_dissim_matrix * pi_diff) + 2 * alpha * torch.sum(
+        ot.gromov.gwggrad(combined_spatial_cost, a_gradient, b_gradient, pi_diff)
+        * 0.5
+        * pi
     )
-    alpha = ot.optim.solve_1d_linesearch_quad(a, b)
-    G = G + alpha * deltaG
-    constC, hC1, hC2 = ot.gromov.init_matrix(
-        C1,
-        C2,
-        torch.sum(G, axis=1).reshape(-1, 1),
-        torch.sum(G, axis=0).reshape(1, -1),
+    minimal_cost = ot.optim.solve_1d_linesearch_quad(a, b)
+    pi = pi + minimal_cost * pi_diff
+    combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
+        a_spatial_dist,
+        b_spatial_dist,
+        torch.sum(pi, axis=1).reshape(-1, 1),
+        torch.sum(pi, axis=0).reshape(1, -1),
         loss_fun,
     )
-    cost_G = (1 - reg) * torch.sum(M * G) + reg * ot.gromov.gwloss(constC, hC1, hC2, G)
-    return alpha, a, cost_G
+    cost_G = (1 - alpha) * torch.sum(exp_dissim_matrix * pi) + alpha * ot.gromov.gwloss(
+        combined_spatial_cost, a_gradient, b_gradient, pi
+    )
+    return minimal_cost, a, cost_G

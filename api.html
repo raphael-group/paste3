@@ -117,10 +117,10 @@
 <h2>PASTE Alignment<a class="headerlink" href="#paste-alignment" title="Permalink to this heading"></a></h2>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/paste3.paste.pairwise_align.html#paste3.paste.pairwise_align" title="paste3.paste.pairwise_align"><code class="xref py py-obj docutils literal notranslate"><span class="pre">paste.pairwise_align</span></code></a>(sliceA, sliceB[, s, M, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/paste3.paste.pairwise_align.html#paste3.paste.pairwise_align" title="paste3.paste.pairwise_align"><code class="xref py py-obj docutils literal notranslate"><span class="pre">paste.pairwise_align</span></code></a>(a_slice, b_slice[, ...])</p></td>
 <td><p>Calculates and returns optimal alignment of two slices.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/paste3.paste.center_align.html#paste3.paste.center_align" title="paste3.paste.center_align"><code class="xref py py-obj docutils literal notranslate"><span class="pre">paste.center_align</span></code></a>(A, slices[, lmbda, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/paste3.paste.center_align.html#paste3.paste.center_align" title="paste3.paste.center_align"><code class="xref py py-obj docutils literal notranslate"><span class="pre">paste.center_align</span></code></a>(initial_slice, slices[, ...])</p></td>
 <td><p>Computes center alignment of slices.</p></td>
 </tr>
 </tbody>
@@ -136,7 +136,7 @@
 <tr class="row-even"><td><p><a class="reference internal" href="api/paste3.visualization.stack_slices_center.html#paste3.visualization.stack_slices_center" title="paste3.visualization.stack_slices_center"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualization.stack_slices_center</span></code></a>(...[, ...])</p></td>
 <td><p>Align spatial coordinates of a list of slices to a center_slice.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/paste3.visualization.plot_slice.html#paste3.visualization.plot_slice" title="paste3.visualization.plot_slice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualization.plot_slice</span></code></a>(sliceX, color[, ax, s])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/paste3.visualization.plot_slice.html#paste3.visualization.plot_slice" title="paste3.visualization.plot_slice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualization.plot_slice</span></code></a>(slice, color[, ax, s])</p></td>
 <td><p>Plots slice spatial coordinates.</p></td>
 </tr>
 </tbody>
@@ -193,7 +193,7 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="api/paste3.helper.filter_for_common_genes.html#paste3.helper.filter_for_common_genes" title="paste3.helper.filter_for_common_genes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">helper.filter_for_common_genes</span></code></a>(slices)</p></td>
 <td><p>Filters for the intersection of genes between all slices.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/paste3.helper.match_spots_using_spatial_heuristic.html#paste3.helper.match_spots_using_spatial_heuristic" title="paste3.helper.match_spots_using_spatial_heuristic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">helper.match_spots_using_spatial_heuristic</span></code></a>(X, Y)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/paste3.helper.match_spots_using_spatial_heuristic.html#paste3.helper.match_spots_using_spatial_heuristic" title="paste3.helper.match_spots_using_spatial_heuristic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">helper.match_spots_using_spatial_heuristic</span></code></a>(...)</p></td>
 <td><p>Calculates and returns a mapping of spots using a spatial heuristic.</p></td>
 </tr>
 </tbody>

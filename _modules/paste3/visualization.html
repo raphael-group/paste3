@@ -91,8 +91,8 @@
 <div class="viewcode-block" id="stack_slices_pairwise"><a class="viewcode-back" href="../../api/paste3.visualization.stack_slices_pairwise.html#paste3.visualization.stack_slices_pairwise">[docs]</a><span class="k">def</span> <span class="nf">stack_slices_pairwise</span><span class="p">(</span>
     <span class="n">slices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">AnnData</span><span class="p">],</span>
     <span class="n">pis</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
-    <span class="n">output_params</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">matrix</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">return_params</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">return_as_matrix</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">is_partial</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">AnnData</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -102,11 +102,13 @@
 
 <span class="sd">        slices[0] --&gt; slices[1] --&gt; slices[2] --&gt; ...</span>
 
+
+
 <span class="sd">    Args:</span>
 <span class="sd">        slices: List of slices.</span>
 <span class="sd">        pis: List of pi (``pairwise_align()`` output) between consecutive slices.</span>
-<span class="sd">        output_params: If ``True``, addtionally return angles of rotation (theta) and translations for each slice.</span>
-<span class="sd">        matrix: If ``True`` and output_params is also ``True``, the rotation is</span>
+<span class="sd">        return_params: If ``True``, addtionally return angles of rotation (theta) and translations for each slice.</span>
+<span class="sd">        return_as_matrix: If ``True`` and output_params is also ``True``, the rotation is</span>
 <span class="sd">            return as a matrix instead of an angle for each slice.</span>
 <span class="sd">        is_partial: Boolean of whether this is partial pairwise analysis or a total one</span>
 
@@ -122,57 +124,69 @@
         <span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">pis</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
     <span class="p">),</span> <span class="s2">&quot;&#39;slices&#39; should have length one more than &#39;pis&#39;. Please double check.&quot;</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;You should have at least 2 layers.&quot;</span>
-    <span class="n">new_coor</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">thetas</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">aligned_coordinates</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">rotation_angles</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">translations</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">generalized_procrustes_analysis</span><span class="p">(</span>
         <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">slices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
         <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">slices</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
         <span class="n">pis</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
         <span class="n">is_partial</span><span class="o">=</span><span class="n">is_partial</span><span class="p">,</span>
-        <span class="n">output_params</span><span class="o">=</span><span class="n">output_params</span><span class="p">,</span>
+        <span class="n">return_params</span><span class="o">=</span><span class="n">return_params</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">if</span> <span class="n">output_params</span><span class="p">:</span>
-        <span class="n">S1</span><span class="p">,</span> <span class="n">S2</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">tX</span><span class="p">,</span> <span class="n">tY</span> <span class="o">=</span> <span class="n">result</span>
-        <span class="n">thetas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
-        <span class="n">translations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tX</span><span class="p">)</span>
-        <span class="n">translations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tY</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">return_params</span><span class="p">:</span>
+        <span class="p">(</span>
+            <span class="n">source_coordinates</span><span class="p">,</span>
+            <span class="n">target_coordinates</span><span class="p">,</span>
+            <span class="n">rotation_angle</span><span class="p">,</span>
+            <span class="n">x_translation</span><span class="p">,</span>
+            <span class="n">y_translation</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="n">rotation_angles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rotation_angle</span><span class="p">)</span>
+        <span class="n">translations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_translation</span><span class="p">)</span>
+        <span class="n">translations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_translation</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">S1</span><span class="p">,</span> <span class="n">S2</span> <span class="o">=</span> <span class="n">result</span>
-    <span class="n">new_coor</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">S1</span><span class="p">)</span>
-    <span class="n">new_coor</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">S2</span><span class="p">)</span>
+        <span class="n">source_coordinates</span><span class="p">,</span> <span class="n">target_coordinates</span> <span class="o">=</span> <span class="n">result</span>
+    <span class="n">aligned_coordinates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source_coordinates</span><span class="p">)</span>
+    <span class="n">aligned_coordinates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target_coordinates</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">generalized_procrustes_analysis</span><span class="p">(</span>
-            <span class="n">new_coor</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="n">aligned_coordinates</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">slices</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">])</span>
             <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
             <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
             <span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
             <span class="n">is_partial</span><span class="o">=</span><span class="n">is_partial</span><span class="p">,</span>
-            <span class="n">output_params</span><span class="o">=</span><span class="n">output_params</span><span class="p">,</span>
+            <span class="n">return_params</span><span class="o">=</span><span class="n">return_params</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="k">if</span> <span class="n">output_params</span><span class="p">:</span>
-            <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">tX</span><span class="p">,</span> <span class="n">tY</span> <span class="o">=</span> <span class="n">result</span>
-            <span class="n">thetas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
-            <span class="n">translations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tY</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">return_params</span><span class="p">:</span>
+            <span class="p">(</span>
+                <span class="n">source_coordinates</span><span class="p">,</span>
+                <span class="n">target_coordinates</span><span class="p">,</span>
+                <span class="n">rotation_angle</span><span class="p">,</span>
+                <span class="n">x_translation</span><span class="p">,</span>
+                <span class="n">y_translation</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">=</span> <span class="n">result</span>
+            <span class="n">rotation_angles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rotation_angle</span><span class="p">)</span>
+            <span class="n">translations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_translation</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">result</span>
+            <span class="n">source_coordinates</span><span class="p">,</span> <span class="n">target_coordinates</span> <span class="o">=</span> <span class="n">result</span>
 
         <span class="k">if</span> <span class="n">is_partial</span><span class="p">:</span>
-            <span class="n">shift</span> <span class="o">=</span> <span class="n">new_coor</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
-            <span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="n">shift</span>
-        <span class="n">new_coor</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">shift</span> <span class="o">=</span> <span class="n">aligned_coordinates</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">source_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">target_coordinates</span> <span class="o">=</span> <span class="n">target_coordinates</span> <span class="o">+</span> <span class="n">shift</span>
+        <span class="n">aligned_coordinates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target_coordinates</span><span class="p">)</span>
 
     <span class="n">new_slices</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)):</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">s</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_coor</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
-        <span class="n">new_slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">_slice</span> <span class="o">=</span> <span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">_slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">aligned_coordinates</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">new_slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_slice</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">output_params</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">return_params</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">new_slices</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">new_slices</span><span class="p">,</span> <span class="n">thetas</span><span class="p">,</span> <span class="n">translations</span></div>
+        <span class="k">return</span> <span class="n">new_slices</span><span class="p">,</span> <span class="n">rotation_angles</span><span class="p">,</span> <span class="n">translations</span></div>
 
 
 <div class="viewcode-block" id="stack_slices_center"><a class="viewcode-back" href="../../api/paste3.visualization.stack_slices_center.html#paste3.visualization.stack_slices_center">[docs]</a><span class="k">def</span> <span class="nf">stack_slices_center</span><span class="p">(</span>
@@ -215,13 +229,13 @@
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span>
         <span class="n">pis</span>
     <span class="p">),</span> <span class="s2">&quot;&#39;slices&#39; should have the same length &#39;pis&#39;. Please double check.&quot;</span>
-    <span class="n">new_coor</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">thetas</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">aligned_coordinates</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">rotation_angles</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">translations</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">output_params</span><span class="p">:</span>
-            <span class="n">c</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">generalized_procrustes_analysis</span><span class="p">(</span>
+            <span class="n">source_coordinates</span><span class="p">,</span> <span class="n">target_coordinates</span> <span class="o">=</span> <span class="n">generalized_procrustes_analysis</span><span class="p">(</span>
                 <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">center_slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">])</span>
                 <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
                 <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
@@ -231,7 +245,13 @@
                 <span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">c</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">tX</span><span class="p">,</span> <span class="n">tY</span> <span class="o">=</span> <span class="n">generalized_procrustes_analysis</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">source_coordinates</span><span class="p">,</span>
+                <span class="n">target_coordinates</span><span class="p">,</span>
+                <span class="n">rotation_angle</span><span class="p">,</span>
+                <span class="n">x_translation</span><span class="p">,</span>
+                <span class="n">y_translation</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">=</span> <span class="n">generalized_procrustes_analysis</span><span class="p">(</span>
                 <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">center_slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">])</span>
                 <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
                 <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
@@ -239,42 +259,42 @@
                 <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
                 <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
                 <span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-                <span class="n">output_params</span><span class="o">=</span><span class="n">output_params</span><span class="p">,</span>
-                <span class="n">matrix</span><span class="o">=</span><span class="n">matrix</span><span class="p">,</span>
+                <span class="n">return_params</span><span class="o">=</span><span class="n">output_params</span><span class="p">,</span>
+                <span class="n">return_as_matrix</span><span class="o">=</span><span class="n">matrix</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">thetas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
-            <span class="n">translations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tY</span><span class="p">)</span>
-        <span class="n">new_coor</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">rotation_angles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rotation_angle</span><span class="p">)</span>
+            <span class="n">translations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_translation</span><span class="p">)</span>
+        <span class="n">aligned_coordinates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target_coordinates</span><span class="p">)</span>
 
     <span class="n">new_slices</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)):</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">s</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_coor</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
-        <span class="n">new_slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">_slice</span> <span class="o">=</span> <span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">_slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">aligned_coordinates</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">new_slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_slice</span><span class="p">)</span>
 
     <span class="n">new_center</span> <span class="o">=</span> <span class="n">center_slice</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="n">new_center</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+    <span class="n">new_center</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">source_coordinates</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">output_params</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">new_center</span><span class="p">,</span> <span class="n">new_slices</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">new_center</span><span class="p">,</span> <span class="n">new_slices</span><span class="p">,</span> <span class="n">thetas</span><span class="p">,</span> <span class="n">translations</span></div>
+        <span class="k">return</span> <span class="n">new_center</span><span class="p">,</span> <span class="n">new_slices</span><span class="p">,</span> <span class="n">rotation_angles</span><span class="p">,</span> <span class="n">translations</span></div>
 
 
 <div class="viewcode-block" id="plot_slice"><a class="viewcode-back" href="../../api/paste3.visualization.plot_slice.html#paste3.visualization.plot_slice">[docs]</a><span class="k">def</span> <span class="nf">plot_slice</span><span class="p">(</span>
-    <span class="n">sliceX</span><span class="p">:</span> <span class="n">AnnData</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="nb">slice</span><span class="p">:</span> <span class="n">AnnData</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">100</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Plots slice spatial coordinates.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        sliceX: Slice to be plotted.</span>
+<span class="sd">        slice: Slice to be plotted.</span>
 <span class="sd">        color: Scatterplot color, any format accepted by ``matplotlib``.</span>
 <span class="sd">        ax: Pre-existing axes for the plot. Otherwise, call ``matplotlib.pyplot.gca()`` internally.</span>
 <span class="sd">        s: Size of spots.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">sns</span><span class="o">.</span><span class="n">scatterplot</span><span class="p">(</span>
-        <span class="n">x</span><span class="o">=</span><span class="n">sliceX</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">],</span>
-        <span class="n">y</span><span class="o">=</span><span class="n">sliceX</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">][:,</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="n">x</span><span class="o">=</span><span class="nb">slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="n">y</span><span class="o">=</span><span class="nb">slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">][:,</span> <span class="mi">1</span><span class="p">],</span>
         <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="n">s</span><span class="o">=</span><span class="n">s</span><span class="p">,</span>
         <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span>
@@ -287,45 +307,64 @@
 
 
 <span class="k">def</span> <span class="nf">generalized_procrustes_analysis</span><span class="p">(</span>
-    <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">output_params</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">matrix</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">is_partial</span><span class="o">=</span><span class="kc">False</span>
+    <span class="n">source_coordinates</span><span class="p">,</span>
+    <span class="n">target_coordinates</span><span class="p">,</span>
+    <span class="n">pi</span><span class="p">,</span>
+    <span class="n">return_params</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">return_as_matrix</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">is_partial</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Finds and applies optimal rotation between spatial coordinates of two layers (may also do a reflection).</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        X: np array of spatial coordinates (ex: sliceA.obs[&#39;spatial&#39;])</span>
-<span class="sd">        Y: np array of spatial coordinates (ex: sliceB.obs[&#39;spatial&#39;])</span>
+<span class="sd">        source_coordinates: np array of spatial coordinates (ex: sliceA.obs[&#39;spatial&#39;])</span>
+<span class="sd">        target_coordinates: np array of spatial coordinates (ex: sliceB.obs[&#39;spatial&#39;])</span>
 <span class="sd">        pi: mapping between the two layers output by PASTE</span>
-<span class="sd">        output_params: Boolean of whether to return rotation angle and translations along with spatial coordiantes.</span>
-<span class="sd">        matrix: Boolean of whether to return the rotation as a matrix or an angle.</span>
+<span class="sd">        return_params: Boolean of whether to return rotation angle and translations along with spatial coordiantes.</span>
+<span class="sd">        return_as_matrix: Boolean of whether to return the rotation as a matrix or an angle.</span>
 <span class="sd">        is_partial: Boolean of whether this is partial pairwise analysis or a total one</span>
 
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Aligned spatial coordinates of X, Y, rotation angle, translation of X, translation of Y.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">assert</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span>
+    <span class="k">assert</span> <span class="n">source_coordinates</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">target_coordinates</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span>
 
-    <span class="n">tX</span> <span class="o">=</span> <span class="n">pi</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-    <span class="n">tY</span> <span class="o">=</span> <span class="n">pi</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
-    <span class="n">X</span> <span class="o">=</span> <span class="n">X</span> <span class="o">-</span> <span class="n">tX</span>
-    <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">-</span> <span class="n">tY</span>
+    <span class="n">weighted_source</span> <span class="o">=</span> <span class="n">pi</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">source_coordinates</span><span class="p">)</span>
+    <span class="n">weighted_targed</span> <span class="o">=</span> <span class="n">pi</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">target_coordinates</span><span class="p">)</span>
+    <span class="n">source_coordinates</span> <span class="o">=</span> <span class="n">source_coordinates</span> <span class="o">-</span> <span class="n">weighted_source</span>
+    <span class="n">target_coordinates</span> <span class="o">=</span> <span class="n">target_coordinates</span> <span class="o">-</span> <span class="n">weighted_targed</span>
     <span class="k">if</span> <span class="n">is_partial</span><span class="p">:</span>
         <span class="n">m</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">m</span><span class="p">)</span>
-        <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">m</span><span class="p">)</span>
-    <span class="n">H</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">pi</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
-    <span class="n">U</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">Vt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">R</span> <span class="o">=</span> <span class="n">Vt</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-    <span class="n">Y</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
-    <span class="k">if</span> <span class="n">output_params</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">matrix</span><span class="p">:</span>
+        <span class="n">source_coordinates</span> <span class="o">=</span> <span class="n">source_coordinates</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">m</span><span class="p">)</span>
+        <span class="n">target_coordinates</span> <span class="o">=</span> <span class="n">target_coordinates</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">m</span><span class="p">)</span>
+    <span class="n">covariance_matrix</span> <span class="o">=</span> <span class="n">target_coordinates</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">pi</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">source_coordinates</span><span class="p">))</span>
+    <span class="n">U</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">Vt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">covariance_matrix</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">rotation_matrix</span> <span class="o">=</span> <span class="n">Vt</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">target_coordinates</span> <span class="o">=</span> <span class="n">rotation_matrix</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">target_coordinates</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">if</span> <span class="n">return_params</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">return_as_matrix</span><span class="p">:</span>
         <span class="n">M</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
-        <span class="n">theta</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">H</span><span class="p">))</span> <span class="o">/</span> <span class="n">torch</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">H</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">tX</span><span class="p">,</span> <span class="n">tY</span>
-    <span class="k">elif</span> <span class="n">output_params</span> <span class="ow">and</span> <span class="n">matrix</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">tX</span><span class="p">,</span> <span class="n">tY</span>
+        <span class="n">rotation_angle</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">covariance_matrix</span><span class="p">))</span> <span class="o">/</span> <span class="n">torch</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">covariance_matrix</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">source_coordinates</span><span class="p">,</span>
+            <span class="n">target_coordinates</span><span class="p">,</span>
+            <span class="n">rotation_angle</span><span class="p">,</span>
+            <span class="n">weighted_source</span><span class="p">,</span>
+            <span class="n">weighted_targed</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">return_params</span> <span class="ow">and</span> <span class="n">return_as_matrix</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">source_coordinates</span><span class="p">,</span>
+            <span class="n">target_coordinates</span><span class="p">,</span>
+            <span class="n">rotation_matrix</span><span class="p">,</span>
+            <span class="n">weighted_source</span><span class="p">,</span>
+            <span class="n">weighted_targed</span><span class="p">,</span>
+        <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span>
+        <span class="k">return</span> <span class="n">source_coordinates</span><span class="p">,</span> <span class="n">target_coordinates</span>
 </pre></div>
 
            </div>

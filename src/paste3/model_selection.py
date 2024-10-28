@@ -208,8 +208,8 @@ def select_overlap_fraction(sliceA, sliceB, alpha=0.1, show_plot=True, numIterma
         pi, log = pairwise_align(
             sliceA,
             sliceB,
-            s=m,
-            M=M,
+            overlap_fraction=m,
+            exp_dissim_matrix=M,
             alpha=alpha,
             armijo=False,
             norm=True,

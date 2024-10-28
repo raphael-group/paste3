@@ -24,8 +24,8 @@ def test_partial_pairwise_align_glmpca(fn, slices2):
     pi_BC = pairwise_align(
         slices2[0],
         slices2[1],
-        s=0.7,
-        dissimilarity="glmpca",
+        overlap_fraction=0.7,
+        exp_dissim_metric="glmpca",
         norm=True,
         maxIter=10,
     )
@@ -47,8 +47,8 @@ def test_partial_pairwise_align_given_cost_matrix(slices):
     pairwise_info, log = pairwise_align(
         sliceA,
         sliceB,
-        s=0.85,
-        M=glmpca_distance_matrix,
+        overlap_fraction=0.85,
+        exp_dissim_matrix=glmpca_distance_matrix,
         alpha=0.1,
         armijo=False,
         norm=True,
@@ -69,14 +69,14 @@ def test_partial_pairwise_align_histology(slices2):
     pairwise_info, log = pairwise_align(
         slices2[0],
         slices2[1],
-        s=0.7,
+        overlap_fraction=0.7,
         alpha=0.1,
         return_obj=True,
-        dissimilarity="euclidean",
+        exp_dissim_metric="euclidean",
         norm=True,
         numItermax=10,
         maxIter=10,
-        is_histology=True,
+        do_histology=True,
     )
     assert log["partial_fgw_cost"].cpu().numpy() == pytest.approx(88.06713721008786)
     assert np.allclose(
@@ -161,8 +161,8 @@ def test_partial_fused_gromov_wasserstein(slices, armijo, expected_log, filename
         torch.ones((sliceA.shape[0],)).double() / sliceA.shape[0],
         torch.ones((sliceB.shape[0],)).double() / sliceB.shape[0],
         alpha=0.1,
-        m=0.7,
-        G0=None,
+        overlap_fraction=0.7,
+        pi_init=None,
         loss_fun="square_loss",
         armijo=armijo,
     )

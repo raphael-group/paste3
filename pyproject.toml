@@ -19,9 +19,9 @@ classifiers = [
 dependencies = [
     "anndata",
     "scanpy",
-    "POT==0.9.4",
+    "POT",
     "numpy<2",
-    "scipy",
+    "scipy==1.14.1",
     "scikit-learn",
     "IPython",
     "statsmodels",

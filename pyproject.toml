@@ -21,8 +21,8 @@ dependencies = [
     "scanpy",
     "POT",
     "numpy<2",
-    "scipy==1.14.1",
-    "scikit-learn",
+    "scipy",
+    "scikit-learn==1.5.2",
     "IPython",
     "statsmodels",
     "torch"

@@ -8,6 +8,9 @@ from paste3.align import align
 import sys
 import subprocess as sp
 import paste3
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 test_dir = Path(__file__).parent
@@ -16,7 +19,7 @@ output_dir = test_dir / "data/output"
 
 
 def test_cmd_line_center(tmp_path):
-    print(f"Running command in {tmp_path}")
+    logger.info(f"Running command in {tmp_path}")
     result = align(
         "center",
         [f"{input_dir}/slice{i}.csv" for i in range(1, 4)],
@@ -68,7 +71,7 @@ def test_cmd_line_center(tmp_path):
 
 
 def test_cmd_line_pairwise_csv(tmp_path):
-    print(f"Running command in {tmp_path}")
+    logger.info(f"Running command in {tmp_path}")
     result = align(
         "pairwise",
         [

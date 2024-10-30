@@ -45,10 +45,10 @@ def test_pairwise_alignment(slices):
         slices[0],
         slices[1],
         alpha=0.1,
-        dissimilarity="kl",
-        a_distribution=slices[0].obsm["weights"].astype(slices[0].X.dtype),
-        b_distribution=slices[1].obsm["weights"].astype(slices[1].X.dtype),
-        G_init=None,
+        exp_dissim_metric="kl",
+        a_spots_weight=slices[0].obsm["weights"].astype(slices[0].X.dtype),
+        b_spots_weight=slices[1].obsm["weights"].astype(slices[1].X.dtype),
+        pi_init=None,
         use_gpu=True,
         backend=ot.backend.TorchBackend(),
     )
@@ -68,16 +68,16 @@ def test_center_alignment(slices):
     center_slice, pairwise_info = center_align(
         slices[0],
         slices,
-        lmbda=n_slices * [1.0 / n_slices],
+        slice_weights=n_slices * [1.0 / n_slices],
         alpha=0.1,
         n_components=15,
         random_seed=0,
         threshold=0.001,
         max_iter=2,
-        dissimilarity="kl",
+        exp_dissim_metric="kl",
         use_gpu=True,
         backend=ot.backend.TorchBackend(),
-        distributions=[
+        spots_weights=[
             slices[i].obsm["weights"].astype(slices[i].X.dtype)
             for i in range(len(slices))
         ],
@@ -121,17 +121,17 @@ def test_center_ot(slices):
 
     intersecting_slice = slices[0][:, common_genes]
     pairwise_info, r = center_ot(
-        W=np.genfromtxt(input_dir / "W_intermediate.csv", delimiter=","),
-        H=np.genfromtxt(input_dir / "H_intermediate.csv", delimiter=","),
+        feature_matrix=np.genfromtxt(input_dir / "W_intermediate.csv", delimiter=","),
+        coeff_matrix=np.genfromtxt(input_dir / "H_intermediate.csv", delimiter=","),
         slices=slices,
         center_coordinates=intersecting_slice.obsm["spatial"],
         common_genes=common_genes,
         use_gpu=True,
         alpha=0.1,
         backend=ot.backend.TorchBackend(),
-        dissimilarity="kl",
+        exp_dissim_metric="kl",
         norm=False,
-        G_inits=[None for _ in range(len(slices))],
+        pi_inits=[None for _ in range(len(slices))],
     )
 
     expected_r = [
@@ -163,11 +163,11 @@ def test_center_NMF(intersecting_slices):
     ]
 
     _W, _H = center_NMF(
-        W=np.genfromtxt(input_dir / "W_intermediate.csv", delimiter=","),
-        H=np.genfromtxt(input_dir / "H_intermediate.csv", delimiter=","),
+        feature_matrix=np.genfromtxt(input_dir / "W_intermediate.csv", delimiter=","),
+        coeff_matrix=np.genfromtxt(input_dir / "H_intermediate.csv", delimiter=","),
         slices=intersecting_slices,
         pis=pairwise_info,
-        lmbda=n_slices * [1.0 / n_slices],
+        slice_weights=n_slices * [1.0 / n_slices],
         n_components=15,
         random_seed=0,
     )
@@ -202,12 +202,11 @@ def test_fused_gromov_wasserstein(slices, spot_distance_matrix):
         M,
         spot_distance_matrix[0],
         spot_distance_matrix[1],
-        p=nx.ones((254,)).double() / 254,
-        q=nx.ones((251,)).double() / 251,
+        a_spots_weight=nx.ones((254,)).double() / 254,
+        b_spots_weight=nx.ones((251,)).double() / 251,
         alpha=0.1,
-        G0=None,
+        pi_init=None,
         loss_fun="square_loss",
-        log=True,
         numItermax=10,
     )
     pd.DataFrame(pairwise_info).to_csv(
@@ -231,8 +230,8 @@ def test_gromov_linesearch(slices, spot_distance_matrix):
         costG,
         spot_distance_matrix[1],
         spot_distance_matrix[2],
-        M=0.0,
-        reg=1.0,
+        exp_dissim_matrix=0.0,
+        alpha=1.0,
         nx=nx,
     )
     assert alpha == 1.0
@@ -250,12 +249,12 @@ def test_line_search_partial(slices, spot_distance_matrix):
     ).double()
 
     alpha, a, cost_G = line_search_partial(
-        reg=0.1,
-        M=M,
-        G=G,
-        C1=spot_distance_matrix[1],
-        C2=spot_distance_matrix[2],
-        deltaG=deltaG,
+        alpha=0.1,
+        exp_dissim_matrix=M,
+        pi=G,
+        a_spatial_dist=spot_distance_matrix[1],
+        b_spatial_dist=spot_distance_matrix[2],
+        pi_diff=deltaG,
     )
     assert alpha == 1.0
     assert pytest.approx(a) == 0.4858849047237918

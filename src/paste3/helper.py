@@ -8,9 +8,12 @@ import numpy as np
 import torch
 import scipy
 import ot
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-def kl_divergence(X, Y):
+def kl_divergence(a_exp_dissim, b_exp_dissim):
     """
     Returns pairwise KL divergence (over all pairs of samples) of two matrices X and Y.
 
@@ -19,18 +22,24 @@ def kl_divergence(X, Y):
 
     return: D - np array with dim (n_samples by m_samples). Pairwise KL divergence matrix.
     """
-    assert X.shape[1] == Y.shape[1], "X and Y do not have the same number of features."
+    assert (
+        a_exp_dissim.shape[1] == b_exp_dissim.shape[1]
+    ), "X and Y do not have the same number of features."
 
-    X = X / X.sum(axis=1, keepdims=True)
-    Y = Y / Y.sum(axis=1, keepdims=True)
-    log_X = X.log()
-    log_Y = Y.log()
-    X_log_X = torch.sum(X * log_X, axis=1)[torch.newaxis, :]
-    D = X_log_X.T - torch.matmul(X, log_Y.T)
-    return D
+    a_exp_dissim = a_exp_dissim / a_exp_dissim.sum(axis=1, keepdims=True)
+    b_exp_dissim = b_exp_dissim / b_exp_dissim.sum(axis=1, keepdims=True)
+    a_log_exp_dissim = a_exp_dissim.log()
+    b_log_exp_dissim = b_exp_dissim.log()
+    a_weighted_dissim_sum = torch.sum(a_exp_dissim * a_log_exp_dissim, axis=1)[
+        torch.newaxis, :
+    ]
+    divergence = a_weighted_dissim_sum.T - torch.matmul(
+        a_exp_dissim, b_log_exp_dissim.T
+    )
+    return divergence
 
 
-def generalized_kl_divergence(X, Y):
+def generalized_kl_divergence(a_exp_dissim, b_exp_dissim):
     """
     Returns pairwise generalized KL divergence (over all pairs of samples) of two matrices X and Y.
 
@@ -39,24 +48,29 @@ def generalized_kl_divergence(X, Y):
 
     return: D - np array with dim (n_samples by m_samples). Pairwise generalized KL divergence matrix.
     """
-    assert X.shape[1] == Y.shape[1], "X and Y do not have the same number of features."
+    assert (
+        a_exp_dissim.shape[1] == b_exp_dissim.shape[1]
+    ), "X and Y do not have the same number of features."
 
-    log_X = X.log()
-    log_Y = Y.log()
-    X_log_X = torch.sum(X * log_X, axis=1)[torch.newaxis, :]
-    D = X_log_X.T - torch.matmul(X, log_Y.T)
-    sum_X = torch.sum(X, axis=1)
-    sum_Y = torch.sum(Y, axis=1)
-    D = (D.T - sum_X).T + sum_Y.T
-    return D
+    a_log_exp_dissim = a_exp_dissim.log()
+    b_log_exp_dissim = b_exp_dissim.log()
+    a_weighted_dissim_sum = torch.sum(a_exp_dissim * a_log_exp_dissim, axis=1)[
+        torch.newaxis, :
+    ]
+    divergence = a_weighted_dissim_sum.T - torch.matmul(
+        a_exp_dissim, b_log_exp_dissim.T
+    )
+    sum_a_exp_dissim = torch.sum(a_exp_dissim, axis=1)
+    sum_b_exp_dissim = torch.sum(b_exp_dissim, axis=1)
+    divergence = (divergence.T - sum_a_exp_dissim).T + sum_b_exp_dissim.T
+    return divergence
 
 
 def glmpca_distance(
-    X,
-    Y,
+    a_exp_dissim,
+    b_exp_dissim,
     latent_dim=50,
     filter=True,
-    verbose=True,
     maxIter=1000,
     eps=1e-4,
     optimizeTheta=True,
@@ -66,97 +80,99 @@ def glmpca_distance(
     param: Y - np array with dim (m_samples by n_features)
     param: latent_dim - number of latent dimensions in glm-pca
     param: filter - whether to first select genes with highest UMI counts
-    param: verbose - whether to print glmpca progress
     param maxIter - maximum number of iterations for glmpca
     param eps - convergence threshold for glmpca
     param optimizeTheta - whether to optimize overdispersion in glmpca
     """
-    assert X.shape[1] == Y.shape[1], "X and Y do not have the same number of features."
+    assert (
+        a_exp_dissim.shape[1] == b_exp_dissim.shape[1]
+    ), "X and Y do not have the same number of features."
 
-    joint_matrix = torch.vstack((X, Y))
+    joint_dissim_matrix = torch.vstack((a_exp_dissim, b_exp_dissim))
     if filter:
-        gene_umi_counts = torch.sum(joint_matrix, axis=0).cpu().numpy()
+        gene_umi_counts = torch.sum(joint_dissim_matrix, axis=0).cpu().numpy()
         top_indices = np.sort((-gene_umi_counts).argsort(kind="stable")[:2000])
-        joint_matrix = joint_matrix[:, top_indices]
+        joint_dissim_matrix = joint_dissim_matrix[:, top_indices]
 
-    print("Starting GLM-PCA...")
+    logging.info("Starting GLM-PCA...")
     res = glmpca(
-        joint_matrix.T.cpu().numpy(),  # TODO: Use Tensors
+        joint_dissim_matrix.T.cpu().numpy(),  # TODO: Use Tensors
         latent_dim,
         penalty=1,
-        verbose=verbose,
         ctl={"maxIter": maxIter, "eps": eps, "optimizeTheta": optimizeTheta},
     )
-    # res = glmpca(joint_matrix.T, latent_dim, fam='nb', penalty=1, verbose=True)
-    reduced_joint_matrix = res["factors"]
-    # print("GLM-PCA finished with joint matrix shape " + str(reduced_joint_matrix.shape))
-    print("GLM-PCA finished.")
+    reduced_joint_dissim_matrix = res["factors"]
+    logging.info("GLM-PCA finished.")
 
-    X = reduced_joint_matrix[: X.shape[0], :]
-    Y = reduced_joint_matrix[X.shape[0] :, :]
-    return distance.cdist(X, Y)
+    a_exp_dissim = reduced_joint_dissim_matrix[: a_exp_dissim.shape[0], :]
+    b_exp_dissim = reduced_joint_dissim_matrix[a_exp_dissim.shape[0] :, :]
+    return distance.cdist(a_exp_dissim, b_exp_dissim)
 
 
-def pca_distance(sliceA, sliceB, n, latent_dim):
-    joint_adata = ad.concat([sliceA, sliceB])
+def pca_distance(a_slice, b_slice, n_top_genes, latent_dim):
+    joint_adata = ad.concat([a_slice, b_slice])
     sc.pp.normalize_total(joint_adata, inplace=True)
     sc.pp.log1p(joint_adata)
     sc.pp.highly_variable_genes(
-        joint_adata, flavor="seurat", n_top_genes=n, inplace=True, subset=True
+        joint_adata, flavor="seurat", n_top_genes=n_top_genes, inplace=True, subset=True
     )
     sc.pp.pca(joint_adata, latent_dim)
-    joint_datamatrix = joint_adata.obsm["X_pca"]
-    X = joint_datamatrix[: sliceA.shape[0], :]
-    Y = joint_datamatrix[sliceA.shape[0] :, :]
-    return distance.cdist(X, Y)
+    joint_data_matrix = joint_adata.obsm["X_pca"]
+    return distance.cdist(
+        joint_data_matrix[: a_slice.shape[0], :],
+        joint_data_matrix[a_slice.shape[0] :, :],
+    )
 
 
-def high_umi_gene_distance(X, Y, n):
+def high_umi_gene_distance(a_exp_dissim, b_exp_dissim, n):
     """
     n: number of highest umi count genes to keep
     """
-    assert X.shape[1] == Y.shape[1], "X and Y do not have the same number of features."
+    assert (
+        a_exp_dissim.shape[1] == b_exp_dissim.shape[1]
+    ), "X and Y do not have the same number of features."
 
-    joint_matrix = torch.vstack((X, Y))
-    gene_umi_counts = torch.sum(joint_matrix, axis=0).cpu().numpy()
+    joint_dissim_matrix = torch.vstack((a_exp_dissim, b_exp_dissim))
+    gene_umi_counts = torch.sum(joint_dissim_matrix, axis=0).cpu().numpy()
     top_indices = np.sort((-gene_umi_counts).argsort(kind="stable")[:n])
-    X = X[:, top_indices]
-    Y = Y[:, top_indices]
-    X += torch.tile(0.01 * (torch.sum(X, axis=1) / X.shape[1]), (X.shape[1], 1)).T
-    Y += torch.tile(0.01 * (torch.sum(Y, axis=1) / Y.shape[1]), (Y.shape[1], 1)).T
-    return kl_divergence(X, Y)
+    a_exp_dissim = a_exp_dissim[:, top_indices]
+    b_exp_dissim = b_exp_dissim[:, top_indices]
+    a_exp_dissim += torch.tile(
+        0.01 * (torch.sum(a_exp_dissim, axis=1) / a_exp_dissim.shape[1]),
+        (a_exp_dissim.shape[1], 1),
+    ).T
+    b_exp_dissim += torch.tile(
+        0.01 * (torch.sum(b_exp_dissim, axis=1) / b_exp_dissim.shape[1]),
+        (b_exp_dissim.shape[1], 1),
+    ).T
+    return kl_divergence(a_exp_dissim, b_exp_dissim)
 
 
-def intersect(lst1, lst2):
+def intersect(a_list, b_list):
     """
     param: lst1 - list
     param: lst2 - list
 
     return: list of common elements
     """
-
-    temp = set(lst2)
-    lst3 = [value for value in lst1 if value in temp]
-    return lst3
+    return [val for val in a_list if val in set(b_list)]
 
 
-def norm_and_center_coordinates(X):
+def norm_and_center_coordinates(spatial_dist):
     """
     param: X - numpy array
 
     return:
     """
-    return (X - X.mean(axis=0)) / min(scipy.spatial.distance.pdist(X))
+    return (spatial_dist - spatial_dist.mean(axis=0)) / min(
+        scipy.spatial.distance.pdist(spatial_dist)
+    )
 
 
 ## Covert a sparse matrix into a dense matrix
 def to_dense_array(X):
     np_array = np.array(X.todense()) if isinstance(X, scipy.sparse.csr.spmatrix) else X
     return torch.Tensor(np_array).double()
-
-
-def extract_data_matrix(adata, rep=None):
-    return adata.X if rep is None else adata.obsm[rep]
 
 
 def filter_for_common_genes(slices: List[AnnData]) -> None:
@@ -173,94 +189,108 @@ def filter_for_common_genes(slices: List[AnnData]) -> None:
         common_genes = intersect(common_genes, s.var.index)
     for i in range(len(slices)):
         slices[i] = slices[i][:, common_genes]
-    print(
+    logging.info(
         "Filtered all slices for common genes. There are "
         + str(len(common_genes))
         + " common genes."
     )
 
 
-def match_spots_using_spatial_heuristic(X, Y, use_ot: bool = True) -> np.ndarray:
+def match_spots_using_spatial_heuristic(
+    a_spatial_dist, b_spatial_dist, use_ot: bool = True
+) -> np.ndarray:
     """
     Calculates and returns a mapping of spots using a spatial heuristic.
 
     Args:
-        X (array-like, optional): Coordinates for spots X.
-        Y (array-like, optional): Coordinates for spots Y.
+        a_spatial_dist (array-like, optional): Coordinates for spots X.
+        b_spatial_dist (array-like, optional): Coordinates for spots Y.
         use_ot: If ``True``, use optimal transport ``ot.emd()`` to calculate mapping. Otherwise, use Scipy's ``min_weight_full_bipartite_matching()`` algorithm.
 
     Returns:
         Mapping of spots using a spatial heuristic.
     """
-    # X, Y = X.todense(), Y.todense()
-    n1, n2 = len(X), len(Y)
-    X, Y = norm_and_center_coordinates(X), norm_and_center_coordinates(Y)
-    dist = scipy.spatial.distance_matrix(X, Y)
+    len_a, len_b = len(a_spatial_dist), len(b_spatial_dist)
+    a_spatial_dist, b_spatial_dist = (
+        norm_and_center_coordinates(a_spatial_dist),
+        norm_and_center_coordinates(b_spatial_dist),
+    )
+    inter_slice_spot_dist = scipy.spatial.distance_matrix(
+        a_spatial_dist, b_spatial_dist
+    )
     if use_ot:
-        pi = ot.emd(np.ones(n1) / n1, np.ones(n2) / n2, dist)
+        pi = ot.emd(
+            np.ones(len_a) / len_a, np.ones(len_b) / len_b, inter_slice_spot_dist
+        )
     else:
         row_ind, col_ind = scipy.sparse.csgraph.min_weight_full_bipartite_matching(
-            scipy.sparse.csr_matrix(dist)
+            scipy.sparse.csr_matrix(inter_slice_spot_dist)
         )
-        pi = np.zeros((n1, n2))
-        pi[row_ind, col_ind] = 1 / max(n1, n2)
-        if n1 < n2:
-            pi[:, [(j not in col_ind) for j in range(n2)]] = 1 / (n1 * n2)
-        elif n2 < n1:
-            pi[[(i not in row_ind) for i in range(n1)], :] = 1 / (n1 * n2)
+        pi = np.zeros((len_a, len_b))
+        pi[row_ind, col_ind] = 1 / max(len_a, len_b)
+        if len_a < len_b:
+            pi[:, [(j not in col_ind) for j in range(len_b)]] = 1 / (len_a * len_b)
+        elif len_b < len_a:
+            pi[[(i not in row_ind) for i in range(len_a)], :] = 1 / (len_a * len_b)
     return pi
 
 
-def kl_divergence_backend(X, Y):
+def kl_divergence_backend(a_exp_dissim, b_exp_dissim):
     """
     Returns pairwise KL divergence (over all pairs of samples) of two matrices X and Y.
 
     Takes advantage of POT backend to speed up computation.
 
     Args:
-        X: np array with dim (n_samples by n_features)
-        Y: np array with dim (m_samples by n_features)
+        a_exp_dissim: np array with dim (n_samples by n_features)
+        b_exp_dissim: np array with dim (m_samples by n_features)
 
     Returns:
         D: np array with dim (n_samples by m_samples). Pairwise KL divergence matrix.
     """
-    assert X.shape[1] == Y.shape[1], "X and Y do not have the same number of features."
+    assert (
+        a_exp_dissim.shape[1] == b_exp_dissim.shape[1]
+    ), "X and Y do not have the same number of features."
 
-    nx = ot.backend.get_backend(X, Y)
+    nx = ot.backend.get_backend(a_exp_dissim, b_exp_dissim)
 
-    X = X / nx.sum(X, axis=1, keepdims=True)
-    Y = Y / nx.sum(Y, axis=1, keepdims=True)
-    log_X = nx.log(X)
-    log_Y = nx.log(Y)
-    X_log_X = nx.einsum("ij,ij->i", X, log_X)
-    X_log_X = nx.reshape(X_log_X, (1, X_log_X.shape[0]))
-    D = X_log_X.T - nx.dot(X, log_Y.T)
-    return nx.to_numpy(D)
+    a_exp_dissim = a_exp_dissim / nx.sum(a_exp_dissim, axis=1, keepdims=True)
+    b_exp_dissim = b_exp_dissim / nx.sum(b_exp_dissim, axis=1, keepdims=True)
+    a_log_exp_dissim = nx.log(a_exp_dissim)
+    b_log_exp_dissim = nx.log(b_exp_dissim)
+    a_weighted_dissim_sum = nx.einsum("ij,ij->i", a_exp_dissim, a_log_exp_dissim)
+    a_weighted_dissim_sum = nx.reshape(
+        a_weighted_dissim_sum, (1, a_weighted_dissim_sum.shape[0])
+    )
+    divergence = a_weighted_dissim_sum.T - nx.dot(a_exp_dissim, b_log_exp_dissim.T)
+    return nx.to_numpy(divergence)
 
 
-def dissimilarity_metric(which, sliceA, sliceB, A, B, **kwargs):
+def dissimilarity_metric(which, a_slice, b_slice, a_exp_dissim, b_exp_dissim, **kwargs):
     match which:
         case "euc" | "euclidean":
-            return torch.cdist(A, B)
+            return torch.cdist(a_exp_dissim, b_exp_dissim)
         case "gkl":
-            s_A = A + 0.01
-            s_B = B + 0.01
-            M = generalized_kl_divergence(s_A, s_B)
-            M /= M[M > 0].max()
-            M *= 10
-            return M
+            a_exp_dissim = a_exp_dissim + 0.01
+            b_exp_dissim = b_exp_dissim + 0.01
+            exp_dissim_matrix = generalized_kl_divergence(a_exp_dissim, b_exp_dissim)
+            exp_dissim_matrix /= exp_dissim_matrix[exp_dissim_matrix > 0].max()
+            exp_dissim_matrix *= 10
+            return exp_dissim_matrix
         case "kl":
-            s_A = A + 0.01
-            s_B = B + 0.01
-            M = kl_divergence(s_A, s_B)
-            return M
+            a_exp_dissim = a_exp_dissim + 0.01
+            b_exp_dissim = b_exp_dissim + 0.01
+            exp_dissim_matrix = kl_divergence(a_exp_dissim, b_exp_dissim)
+            return exp_dissim_matrix
         case "selection_kl":
-            return high_umi_gene_distance(A, B, 2000)
+            return high_umi_gene_distance(a_exp_dissim, b_exp_dissim, 2000)
         case "pca":
             # TODO: Modify this function to work with Tensors
-            return torch.Tensor(pca_distance(sliceA, sliceB, 2000, 20)).double()
+            return torch.Tensor(pca_distance(a_slice, b_slice, 2000, 20)).double()
         case "glmpca":
             # TODO: Modify this function to work with Tensors
-            return torch.Tensor(glmpca_distance(A, B, **kwargs)).double()
+            return torch.Tensor(
+                glmpca_distance(a_exp_dissim, b_exp_dissim, **kwargs)
+            ).double()
         case _:
             raise RuntimeError(f"Error: Invalid dissimilarity metric {which}")

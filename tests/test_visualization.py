@@ -26,7 +26,7 @@ def test_stack_slices_pairwise(slices):
     ]
 
     new_slices, thetas, translations = stack_slices_pairwise(
-        slices, pairwise_info, output_params=True
+        slices, pairwise_info, return_params=True
     )
 
     for i, slice in enumerate(new_slices, start=1):
@@ -115,7 +115,7 @@ def test_generalized_procrustes_analysis(slices):
             torch.Tensor(center_slice.obsm["spatial"]).double(),
             torch.Tensor(slices[0].obsm["spatial"]).double(),
             pairwise_info,
-            output_params=True,
+            return_params=True,
         )
     )
 

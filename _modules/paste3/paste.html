@@ -72,13 +72,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for paste3.paste</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">This module provides functions to compute an optimal transport plan that aligns multiple tissue slices</span>
-<span class="sd">using result of an ST experiment that includes a p genes by n spots transcript count matrix and coordinate</span>
-<span class="sd">matrix of the spots</span>
-<span class="sd">&quot;&quot;&quot;</span>
-
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">anndata</span> <span class="kn">import</span> <span class="n">AnnData</span>
@@ -99,7 +93,7 @@
     <span class="n">a_slice</span><span class="p">:</span> <span class="n">AnnData</span><span class="p">,</span>
     <span class="n">b_slice</span><span class="p">:</span> <span class="n">AnnData</span><span class="p">,</span>
     <span class="n">overlap_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">exp_dissim_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">exp_dissim_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
     <span class="n">exp_dissim_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;kl&quot;</span><span class="p">,</span>
     <span class="n">pi_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -118,65 +112,30 @@
     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Computes the optimal transport mapping between two slices by minimizing a transport cost</span>
-<span class="sd">    that balances expression similarity and spatial proximity</span>
+<span class="sd">    Calculates and returns optimal alignment of two slices.</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    a_slice : AnnData</span>
-<span class="sd">        AnnData object containing data for the first slice.</span>
-<span class="sd">    b_slice : AnnData</span>
-<span class="sd">        AnnData object containing data for the second slice.</span>
-<span class="sd">    overlap_fraction : float, optional</span>
-<span class="sd">        Fraction of overlap between the two slices, must be between 0 and 1. If None, full alignment is performed.</span>
-<span class="sd">    exp_dissim_matrix : np.ndarray, optional</span>
-<span class="sd">        Precomputed expression dissimilarity matrix between two slices. If None, it will be computed.</span>
-<span class="sd">    alpha : float, default=0.1</span>
-<span class="sd">        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.</span>
-<span class="sd">        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.</span>
-<span class="sd">    exp_dissim_metric : str, default=&quot;kl&quot;</span>
-<span class="sd">        Metric used to compute the expression dissimilarity with the following options:</span>
-<span class="sd">        - &#39;kl&#39; for Kullback-Leibler divergence between slices,</span>
-<span class="sd">        - &#39;euc&#39; for Euclidean distance,</span>
-<span class="sd">        - &#39;gkl&#39; for generalized Kullback-Leibler divergence,</span>
-<span class="sd">        - &#39;selection_kl&#39; for a selection-based KL approach,</span>
-<span class="sd">        - &#39;pca&#39; for Principal Component Analysis,</span>
-<span class="sd">        - &#39;glmpca&#39; for Generalized Linear Model PCA.</span>
-<span class="sd">    pi_init : np.ndarray, optional</span>
-<span class="sd">        Initial transport plan. If None, it will be computed.</span>
-<span class="sd">    a_spots_weight : np.ndarray, optional</span>
-<span class="sd">        Weight distribution for the spots in the first slice. If None, uniform weights are used.</span>
-<span class="sd">    b_spots_weight : np.ndarray, optional</span>
-<span class="sd">        Weight distribution for the spots in the second slice. If None, uniform weights are used.</span>
-<span class="sd">    norm : bool, default=False</span>
-<span class="sd">        If True, normalizes spatial distances.</span>
-<span class="sd">    numItermax : int, default=200</span>
-<span class="sd">        Maximum number of iterations for the optimization.</span>
-<span class="sd">    backend : Backend, default=ot.backend.TorchBackend()</span>
-<span class="sd">        Backend to be used for computations.</span>
-<span class="sd">    use_gpu : bool, default=True</span>
-<span class="sd">        Whether to use GPU for computations. If True but no GPU is available, will default to CPU.</span>
-<span class="sd">    return_obj : bool, default=False</span>
-<span class="sd">        If True, returns the optimization object along with the transport plan.</span>
-<span class="sd">    maxIter : int, default=1000</span>
-<span class="sd">        Maximum number of iterations for the dissimilarity calculation.</span>
-<span class="sd">    optimizeTheta : bool, default=True</span>
-<span class="sd">        Whether to optimize theta during dissimilarity calculation.</span>
-<span class="sd">    eps : float, default=1e-4</span>
-<span class="sd">        Tolerance level for convergence.</span>
-<span class="sd">    do_histology : bool, default=False</span>
-<span class="sd">        If True, incorporates RGB dissimilarity from histology data.</span>
-<span class="sd">    armijo : bool, default=False</span>
-<span class="sd">        If True, uses Armijo rule for line search during optimization.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        a_slice: Slice A to align.</span>
+<span class="sd">        b_slice: Slice B to align.</span>
+<span class="sd">        alpha:  Alignment tuning parameter. Note: 0 &lt;= alpha &lt;= 1.</span>
+<span class="sd">        exp_dissim_metric: Expression dissimilarity measure: ``&#39;kl&#39;`` or ``&#39;euclidean&#39;``.</span>
+<span class="sd">        pi_init (array-like, optional): Initial mapping to be used in FGW-OT, otherwise default is uniform mapping.</span>
+<span class="sd">        a_spots_weight (array-like, optional): Distribution of sliceA spots, otherwise default is uniform.</span>
+<span class="sd">        b_spots_weight (array-like, optional): Distribution of sliceB spots, otherwise default is uniform.</span>
+<span class="sd">        numItermax: Max number of iterations during FGW-OT.</span>
+<span class="sd">        norm: If ``True``, scales spatial distances such that neighboring spots are at distance 1. Otherwise, spatial distances remain unchanged.</span>
+<span class="sd">        backend: Type of backend to run calculations. For list of backends available on system: ``ot.backend.get_backend_list()``.</span>
+<span class="sd">        use_gpu: If ``True``, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.</span>
+<span class="sd">        return_obj: If ``True``, additionally returns objective function output of FGW-OT.</span>
 
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    Tuple[np.ndarray, Optional[int]]</span>
-<span class="sd">        - pi : np.ndarray</span>
-<span class="sd">          Optimal transport plan for aligning the two slices.</span>
-<span class="sd">        - info : Optional[int]</span>
-<span class="sd">          Information on the optimization process (if `return_obj` is True), else None.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        - Alignment of spots.</span>
+
+<span class="sd">        If ``return_obj = True``, additionally returns:</span>
+
+<span class="sd">        - Objective function output of FGW-OT.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">if</span> <span class="n">use_gpu</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;GPU is not available, resorting to torch CPU.&quot;</span><span class="p">)</span>
         <span class="n">use_gpu</span> <span class="o">=</span> <span class="kc">False</span>
@@ -318,56 +277,29 @@
     <span class="n">use_gpu</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">AnnData</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Solves for an expression matrix \( X = WH \) and optimal mappings across multiple slices</span>
-<span class="sd">    by minimizing an objective function that balances expression cost and spatial proximity.</span>
+<span class="sd">    Computes center alignment of slices.</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    initial_slice : AnnData</span>
-<span class="sd">        An AnnData object that represent a slice to be used as a reference data for alignment</span>
-<span class="sd">    slices : List[AnnData]</span>
-<span class="sd">        A list of AnnData objects that represent different slices to be aligned with the initial slice.</span>
-<span class="sd">    slice_weights : List[float], optional</span>
-<span class="sd">        Weights for each slice in the alignment process. If None, all slices are treated equally.</span>
-<span class="sd">    alpha : float, default=0.1</span>
-<span class="sd">        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.</span>
-<span class="sd">        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.</span>
-<span class="sd">    n_components : int, default=15</span>
-<span class="sd">        Number of components to use for the NMF.</span>
-<span class="sd">    threshold : float, default=0.001</span>
-<span class="sd">        Convergence threshold for the optimization process. The process stops when the change</span>
-<span class="sd">        in loss is below this threshold.</span>
-<span class="sd">    max_iter : int, default=10</span>
-<span class="sd">        Maximum number of iterations for the optimization process.</span>
-<span class="sd">    exp_dissim_metric : str, default=&quot;kl&quot;</span>
-<span class="sd">        The metric used to compute dissimilarity. Options include &quot;euclidean&quot; or &quot;kl&quot; for</span>
-<span class="sd">        Kullback-Leibler divergence.</span>
-<span class="sd">    norm : bool, default=False</span>
-<span class="sd">        If True, normalizes spatial distances.</span>
-<span class="sd">    random_seed : Optional[int], default=None</span>
-<span class="sd">        Random seed for reproducibility.</span>
-<span class="sd">    pi_inits : Optional[List[np.ndarray]], default=None</span>
-<span class="sd">        Initial transport plans for each slice. If None, it will be computed.</span>
-<span class="sd">    spots_weights : List[float], optional</span>
-<span class="sd">        Weights for individual spots in each slices. If None, uniform distribution is used.</span>
-<span class="sd">    backend : Backend, default=ot.backend.TorchBackend()</span>
-<span class="sd">        Backend to be used for computations (default is TorchBackend).</span>
-<span class="sd">    use_gpu : bool, default=True</span>
-<span class="sd">        Whether to use GPU for computations. If True but no GPU is available, will default to CPU.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    Tuple[AnnData, List[np.ndarray]]</span>
-<span class="sd">        A tuple containing:</span>
-<span class="sd">        - center_slice : AnnData</span>
-<span class="sd">            The aligned AnnData object representing the center slice after optimization.</span>
-<span class="sd">        - pis : List[np.ndarray]</span>
-<span class="sd">            List of optimal transport distributions for each slice after alignment.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        initial_slice: Slice to use as the initialization for center alignment; Make sure to include gene expression and spatial information.</span>
+<span class="sd">        slices: List of slices to use in the center alignment.</span>
+<span class="sd">        slice_weights (array-like, optional): List of probability weights assigned to each slice; If ``None``, use uniform weights.</span>
+<span class="sd">        alpha:  Alignment tuning parameter. Note: 0 &lt;= alpha &lt;= 1.</span>
+<span class="sd">        n_components: Number of components in NMF decomposition.</span>
+<span class="sd">        threshold: Threshold for convergence of feature_matrix and coeff_matrix during NMF decomposition.</span>
+<span class="sd">        max_iter: Maximum number of iterations for our center alignment algorithm.</span>
+<span class="sd">        exp_dissim_metric: Expression dissimilarity measure: ``&#39;kl&#39;`` or ``&#39;euclidean&#39;``.</span>
+<span class="sd">        norm:  If ``True``, scales spatial distances such that neighboring spots are at distance 1. Otherwise, spatial distances remain unchanged.</span>
+<span class="sd">        random_seed: Set random seed for reproducibility.</span>
+<span class="sd">        pi_inits: Initial list of mappings between &#39;A&#39; and &#39;slices&#39; to solver. Otherwise, default will automatically calculate mappings.</span>
+<span class="sd">        spots_weights (List[array-like], optional): Distributions of spots for each slice. Otherwise, default is uniform.</span>
+<span class="sd">        backend: Type of backend to run calculations. For list of backends available on system: ``ot.backend.get_backend_list()``.</span>
+<span class="sd">        use_gpu: If ``True``, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        - Inferred center slice with full and low dimensional representations (feature_matrix, coeff_matrix) of the gene expression matrix.</span>
 <span class="sd">        - List of pairwise alignment mappings of the center slice (rows) to each input slice (columns).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">if</span> <span class="n">use_gpu</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;GPU is not available, resorting to torch CPU.&quot;</span><span class="p">)</span>
         <span class="n">use_gpu</span> <span class="o">=</span> <span class="kc">False</span>
@@ -495,64 +427,20 @@
 
 
 <span class="k">def</span> <span class="nf">center_ot</span><span class="p">(</span>
-    <span class="n">feature_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-    <span class="n">coeff_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-    <span class="n">slices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">AnnData</span><span class="p">],</span>
-    <span class="n">center_coordinates</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-    <span class="n">common_genes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">feature_matrix</span><span class="p">,</span>
+    <span class="n">coeff_matrix</span><span class="p">,</span>
+    <span class="n">slices</span><span class="p">,</span>
+    <span class="n">center_coordinates</span><span class="p">,</span>
+    <span class="n">common_genes</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">,</span>
     <span class="n">backend</span><span class="p">,</span>
-    <span class="n">use_gpu</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-    <span class="n">exp_dissim_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;kl&quot;</span><span class="p">,</span>
-    <span class="n">norm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">pi_inits</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">spot_weights</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">numItermax</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the optimal mappings \Pi^{(1)}, \ldots, \Pi^{(t)} given W (specified features)</span>
-<span class="sd">    and H (coefficient matrix) by solving the pairwise slice alignment problem between the</span>
-<span class="sd">    center slice and each slices separately</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    feature_matrix : np.ndarray</span>
-<span class="sd">        The matrix representing features extracted from the initial slice.</span>
-<span class="sd">    coeff_matrix : np.ndarray</span>
-<span class="sd">        The matrix representing the coefficients corresponding to the features.</span>
-<span class="sd">    slices : List[AnnData]</span>
-<span class="sd">        A list of AnnData objects representing the slices to be aligned with the center slice.</span>
-<span class="sd">    center_coordinates : np.ndarray</span>
-<span class="sd">        Spatial coordinates of the center slice.</span>
-<span class="sd">    common_genes : Index</span>
-<span class="sd">        Index of common genes shared among all slices for alignment.</span>
-<span class="sd">    alpha : float</span>
-<span class="sd">        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.</span>
-<span class="sd">        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.</span>
-<span class="sd">    backend : Backend</span>
-<span class="sd">        Backend to be used for computations.</span>
-<span class="sd">    use_gpu : bool</span>
-<span class="sd">        Whether to use GPU for computations. If True but no GPU is available, will default to CPU.</span>
-<span class="sd">    exp_dissim_metric : str, default=&quot;kl&quot;</span>
-<span class="sd">        Metric used to compute the expression dissimilarity between slices. Options include &quot;euclidean&quot; and &quot;kl&quot;.</span>
-<span class="sd">    norm : bool, default=False</span>
-<span class="sd">        If True, normalizes spatial distances.</span>
-<span class="sd">    pi_inits : Optional[List[np.ndarray]], default=None</span>
-<span class="sd">        Initial transport plans for each slice. If None, it will be computed.</span>
-<span class="sd">    spot_weights : Optional[List[float]], default=None</span>
-<span class="sd">        Weights for individual spots in each slice. If None, uniform distribution is used.</span>
-<span class="sd">    numItermax : int, default=200</span>
-<span class="sd">        Maximum number of iterations allowed for the optimization process.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    Tuple[List[np.ndarray], np.ndarray]</span>
-<span class="sd">        A tuple containing:</span>
-<span class="sd">        - pis : List[np.ndarray]</span>
-<span class="sd">            List of optimal transport plans for aligning each slice to the center slice.</span>
-<span class="sd">        - losses : np.ndarray</span>
-<span class="sd">            Array of loss values corresponding to each slice alignment.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
+    <span class="n">use_gpu</span><span class="p">,</span>
+    <span class="n">exp_dissim_metric</span><span class="o">=</span><span class="s2">&quot;kl&quot;</span><span class="p">,</span>
+    <span class="n">norm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">pi_inits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">spot_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">numItermax</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+<span class="p">):</span>
     <span class="n">center_slice</span> <span class="o">=</span> <span class="n">AnnData</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">feature_matrix</span><span class="p">,</span> <span class="n">coeff_matrix</span><span class="p">))</span>
     <span class="n">center_slice</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">common_genes</span>
     <span class="n">center_slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">center_coordinates</span>
@@ -583,51 +471,15 @@
 
 
 <span class="k">def</span> <span class="nf">center_NMF</span><span class="p">(</span>
-    <span class="n">feature_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-    <span class="n">coeff_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-    <span class="n">slices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">AnnData</span><span class="p">],</span>
-    <span class="n">pis</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
-    <span class="n">slice_weights</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span>
-    <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-    <span class="n">random_seed</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">exp_dissim_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;kl&quot;</span><span class="p">,</span>
+    <span class="n">feature_matrix</span><span class="p">,</span>
+    <span class="n">coeff_matrix</span><span class="p">,</span>
+    <span class="n">slices</span><span class="p">,</span>
+    <span class="n">pis</span><span class="p">,</span>
+    <span class="n">slice_weights</span><span class="p">,</span>
+    <span class="n">n_components</span><span class="p">,</span>
+    <span class="n">random_seed</span><span class="p">,</span>
+    <span class="n">exp_dissim_metric</span><span class="o">=</span><span class="s2">&quot;kl&quot;</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Finds two low-rank matrices \( W \) (feature matrix) and \( H \) (coefficient matrix) that approximate expression matrices of all</span>
-<span class="sd">    slices by minimizing the following objective function:</span>
-
-<span class="sd">    .. math::</span>
-<span class="sd">           \[ S(W, H) = \sum_q \lambda_q \sum_{i, j} c((WH)_i, x_j^{(q)}) \pi_{ij}^{(q)}\]</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    feature_matrix : np.ndarray</span>
-<span class="sd">        The matrix representing the features extracted from the slices.</span>
-<span class="sd">    coeff_matrix : np.ndarray</span>
-<span class="sd">        The matrix representing the coefficients associated with the features.</span>
-<span class="sd">    slices : List[AnnData]</span>
-<span class="sd">        A list of AnnData objects representing the slices involved in the mapping.</span>
-<span class="sd">    pis : List[torch.Tensor]</span>
-<span class="sd">        List of optimal transport plans for each slice, used to weight the features.</span>
-<span class="sd">    slice_weights : List[float]</span>
-<span class="sd">        Weights associated with each slice, indicating their importance in the NMF process.</span>
-<span class="sd">    n_components : int</span>
-<span class="sd">        The number of components to extract from the NMF.</span>
-<span class="sd">    random_seed : int</span>
-<span class="sd">        Random seed for reproducibility.</span>
-<span class="sd">    exp_dissim_metric : str, default=&quot;kl&quot;</span>
-<span class="sd">        The metric used for measuring dissimilarity. Options include &quot;euclidean&quot; and &quot;kl&quot;</span>
-<span class="sd">        for Kullback-Leibler divergence.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    Tuple[np.ndarray, np.ndarray]</span>
-<span class="sd">        A tuple containing:</span>
-<span class="sd">        - new_feature_matrix : np.ndarray</span>
-<span class="sd">            The updated matrix of features after applying NMF.</span>
-<span class="sd">        - new_coeff_matrix : np.ndarray</span>
-<span class="sd">            The updated matrix of coefficients resulting from the NMF decomposition.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Solving Center Mapping NMF Problem.&quot;</span><span class="p">)</span>
     <span class="n">n_features</span> <span class="o">=</span> <span class="n">feature_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">weighted_features</span> <span class="o">=</span> <span class="n">n_features</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span>
@@ -657,74 +509,27 @@
 
 
 <span class="k">def</span> <span class="nf">my_fused_gromov_wasserstein</span><span class="p">(</span>
-    <span class="n">exp_dissim_matrix</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="n">a_spatial_dist</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="n">b_spatial_dist</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="n">a_spots_weight</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="n">b_spots_weight</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="n">alpha</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
-    <span class="n">overlap_fraction</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">pi_init</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">loss_fun</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;square_loss&quot;</span><span class="p">,</span>
-    <span class="n">armijo</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">numItermax</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
-    <span class="n">tol_rel</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">,</span>
-    <span class="n">tol_abs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">,</span>
-    <span class="n">use_gpu</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="n">numItermaxEmd</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100000</span><span class="p">,</span>
-    <span class="n">dummy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">exp_dissim_matrix</span><span class="p">,</span>
+    <span class="n">a_spatial_dist</span><span class="p">,</span>
+    <span class="n">b_spatial_dist</span><span class="p">,</span>
+    <span class="n">a_spots_weight</span><span class="p">,</span>
+    <span class="n">b_spots_weight</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">overlap_fraction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">pi_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">loss_fun</span><span class="o">=</span><span class="s2">&quot;square_loss&quot;</span><span class="p">,</span>
+    <span class="n">armijo</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">numItermax</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="n">tol_rel</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span>
+    <span class="n">tol_abs</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span>
+    <span class="n">use_gpu</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">numItermaxEmd</span><span class="o">=</span><span class="mi">100000</span><span class="p">,</span>
+    <span class="n">dummy</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Computes a transport plan to align two weighted spatial distributions based on expression</span>
-<span class="sd">    dissimilarity matrix and spatial distances, using the Gromov-Wasserstein framework.</span>
-<span class="sd">    Also allows for partial alignment by specifying an overlap fraction.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    exp_dissim_matrix : torch.Tensor</span>
-<span class="sd">        Expression dissimilarity matrix between two slices.</span>
-<span class="sd">    a_spatial_dist : torch.Tensor</span>
-<span class="sd">        Spot distance matrix in the first slice.</span>
-<span class="sd">    b_spatial_dist : torch.Tensor</span>
-<span class="sd">        Spot distance matrix in the second slice.</span>
-<span class="sd">    a_spots_weight : torch.Tensor</span>
-<span class="sd">        Weight distribution for the spots in the first slice.</span>
-<span class="sd">    b_spots_weight : torch.Tensor</span>
-<span class="sd">        Weight distribution for the spots in the second slice.</span>
-<span class="sd">    alpha : float, Optional</span>
-<span class="sd">        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.</span>
-<span class="sd">        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.</span>
-<span class="sd">    overlap_fraction : float, Option</span>
-<span class="sd">        Fraction of overlap between the two slices, must be between 0 and 1. If None, full alignment is performed.</span>
-<span class="sd">    pi_init : torch.Tensor, Optional</span>
-<span class="sd">        Initial transport plan. If None, it will be computed.</span>
-<span class="sd">    loss_fun : str, Optional</span>
-<span class="sd">        Loss function to be used in optimization. Default is &quot;square_loss&quot;.</span>
-<span class="sd">    armijo : bool, Optional</span>
-<span class="sd">        If True, uses Armijo rule for line search during optimization.</span>
-<span class="sd">    numItermax : int, Optional</span>
-<span class="sd">        Maximum number of iterations allowed for the optimization process.</span>
-<span class="sd">    tol_rel : float, Optional</span>
-<span class="sd">        Relative tolerance for convergence, by default 1e-9.</span>
-<span class="sd">    tol_abs : float, Optional</span>
-<span class="sd">        Absolute tolerance for convergence, by default 1e-9.</span>
-<span class="sd">    use_gpu : bool, Optional</span>
-<span class="sd">        Whether to use GPU for computations. If True but no GPU is available, will default to CPU.</span>
-<span class="sd">    numItermaxEmd : int, Optional</span>
-<span class="sd">        Maximum iterations for Earth Mover&#39;s Distance (EMD) solver.</span>
-<span class="sd">    dummy : int, Optional</span>
-<span class="sd">        Number of dummy points for partial overlap, by default 1.</span>
-
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    Tuple[np.ndarray, Optional[dict]]</span>
-<span class="sd">        - pi : np.ndarray</span>
-<span class="sd">          Optimal transport plan that minimizes hte fused gromov-wasserstein distance between</span>
-<span class="sd">          two distributions</span>
-<span class="sd">        - info : Optional[dict]</span>
-<span class="sd">          A dictionary containing details of teh optimization process.</span>
+<span class="sd">    Adapted fused_gromov_wasserstein with the added capability of defining a G_init (inital mapping).</span>
+<span class="sd">    Also added capability of utilizing different POT backends to speed up computation.</span>
 
 <span class="sd">    For more info, see: https://pythonot.github.io/gen_modules/ot.gromov.html</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -775,7 +580,6 @@
             <span class="n">pi_init</span> <span class="o">=</span> <span class="n">pi_init</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">f_loss</span><span class="p">(</span><span class="n">pi</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the Gromov-Wasserstein loss for a given transport plan.&quot;&quot;&quot;</span>
         <span class="n">combined_spatial_cost</span><span class="p">,</span> <span class="n">a_gradient</span><span class="p">,</span> <span class="n">b_gradient</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">init_matrix</span><span class="p">(</span>
             <span class="n">a_spatial_dist</span><span class="p">,</span>
             <span class="n">b_spatial_dist</span><span class="p">,</span>
@@ -786,7 +590,6 @@
         <span class="k">return</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">gwloss</span><span class="p">(</span><span class="n">combined_spatial_cost</span><span class="p">,</span> <span class="n">a_gradient</span><span class="p">,</span> <span class="n">b_gradient</span><span class="p">,</span> <span class="n">pi</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">f_gradient</span><span class="p">(</span><span class="n">pi</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the gradient of the Gromov-Wasserstein loss for a given transport plan.&quot;&quot;&quot;</span>
         <span class="n">combined_spatial_cost</span><span class="p">,</span> <span class="n">a_gradient</span><span class="p">,</span> <span class="n">b_gradient</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">init_matrix</span><span class="p">(</span>
             <span class="n">a_spatial_dist</span><span class="p">,</span>
             <span class="n">b_spatial_dist</span><span class="p">,</span>
@@ -800,7 +603,6 @@
         <span class="n">armijo</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># there is no closed form line-search with KL</span>
 
     <span class="k">def</span> <span class="nf">line_search</span><span class="p">(</span><span class="n">f_cost</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">pi_diff</span><span class="p">,</span> <span class="n">linearized_matrix</span><span class="p">,</span> <span class="n">cost_pi</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve the linesearch in the fused wasserstein iterations&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">overlap_fraction</span><span class="p">:</span>
             <span class="k">nonlocal</span> <span class="n">count</span>
             <span class="c1"># keep track of error only on every 10th iteration</span>
@@ -841,7 +643,6 @@
         <span class="n">b_spots_weight</span><span class="p">,</span>
         <span class="n">exp_dissim_matrix</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Solves the Earth Movers distance problem and returns the OT matrix&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">overlap_fraction</span><span class="p">:</span>
             <span class="n">_exp_dissim_matrix</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span>
                 <span class="n">exp_dissim_matrix</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dummy</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">dummy</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;constant&quot;</span>
@@ -895,52 +696,53 @@
 
 
 <span class="k">def</span> <span class="nf">solve_gromov_linesearch</span><span class="p">(</span>
-    <span class="n">pi</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="n">pi_diff</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="n">cost_pi</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">a_spatial_dist</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="n">b_spatial_dist</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="n">exp_dissim_matrix</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">alpha_min</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">alpha_max</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">nx</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">pi</span><span class="p">,</span>
+    <span class="n">pi_diff</span><span class="p">,</span>
+    <span class="n">cost_pi</span><span class="p">,</span>
+    <span class="n">a_spatial_dist</span><span class="p">,</span>
+    <span class="n">b_spatial_dist</span><span class="p">,</span>
+    <span class="n">exp_dissim_matrix</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">,</span>
+    <span class="n">alpha_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">alpha_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">nx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Perform a line search to optimize the transport plan with respect to the Gromov-Wasserstein loss.</span>
+<span class="sd">    Solve the linesearch in the FW iterations</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    pi : torch.Tensor</span>
+
+<span class="sd">    pi : array-like, shape(ns,nt)</span>
 <span class="sd">        The transport map at a given iteration of the FW</span>
-<span class="sd">    pi_diff : torch.Tensor</span>
-<span class="sd">        Difference between the optimal map found by linearization in the fused wasserstein algorithm and the value at a given iteration</span>
+<span class="sd">    pi_diff : array-like (ns,nt)</span>
+<span class="sd">        Difference between the optimal map found by linearization in the FW algorithm and the value at a given iteration</span>
 <span class="sd">    cost_pi : float</span>
 <span class="sd">        Value of the cost at `G`</span>
-<span class="sd">    a_spatial_dist : torch.Tensor</span>
-<span class="sd">        Spot distance matrix in the first slice.</span>
-<span class="sd">    b_spatial_dist : torch.Tensor</span>
-<span class="sd">        Spot distance matrix in the second slice.</span>
-<span class="sd">    exp_dissim_matrix : torch.Tensor</span>
-<span class="sd">         Expression dissimilarity matrix between two slices.</span>
+<span class="sd">    a_spatial_dist : array-like (ns,ns), optional</span>
+<span class="sd">        Structure matrix in the source domain.</span>
+<span class="sd">    b_spatial_dist : array-like (nt,nt), optional</span>
+<span class="sd">        Structure matrix in the target domain.</span>
+<span class="sd">    exp_dissim_matrix : array-like (ns,nt)</span>
+<span class="sd">        Cost matrix between the features.</span>
 <span class="sd">    alpha : float</span>
-<span class="sd">        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.</span>
-<span class="sd">        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.</span>
-<span class="sd">    alpha_min : float, Optional</span>
+<span class="sd">        Regularization parameter.</span>
+<span class="sd">    alpha_min : float, optional</span>
 <span class="sd">        Minimum value for alpha</span>
-<span class="sd">    alpha_max : float, Optional</span>
+<span class="sd">    alpha_max : float, optional</span>
 <span class="sd">        Maximum value for alpha</span>
-<span class="sd">    nx : backend, Optional</span>
+<span class="sd">    nx : backend, optional</span>
 <span class="sd">        If let to its default value None, a backend test will be conducted.</span>
-
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    minimal_cost : float</span>
-<span class="sd">        The optimal step size of the fused wasserstein</span>
+<span class="sd">    alpha : float</span>
+<span class="sd">        The optimal step size of the FW</span>
 <span class="sd">    fc : int</span>
-<span class="sd">        Number of function call. (Not used in this case)</span>
-<span class="sd">    cost_pi : float</span>
-<span class="sd">        The final cost after the update of the transport plan.</span>
+<span class="sd">        nb of function call. Useless here</span>
+<span class="sd">    cost_G : float</span>
+<span class="sd">        The value of the cost for the next iteration</span>
+
 
 <span class="sd">    .. _references-solve-linesearch:</span>
 <span class="sd">    References</span>
@@ -979,44 +781,14 @@
 
 
 <span class="k">def</span> <span class="nf">line_search_partial</span><span class="p">(</span>
-    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">exp_dissim_matrix</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="n">pi</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="n">a_spatial_dist</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="n">b_spatial_dist</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="n">pi_diff</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="n">loss_fun</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;square_loss&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">,</span>
+    <span class="n">exp_dissim_matrix</span><span class="p">,</span>
+    <span class="n">pi</span><span class="p">,</span>
+    <span class="n">a_spatial_dist</span><span class="p">,</span>
+    <span class="n">b_spatial_dist</span><span class="p">,</span>
+    <span class="n">pi_diff</span><span class="p">,</span>
+    <span class="n">loss_fun</span><span class="o">=</span><span class="s2">&quot;square_loss&quot;</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Solve the linesearch in the fused wasserstein iterations for partially overlapping slices</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    alpha : float</span>
-<span class="sd">        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.</span>
-<span class="sd">        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.</span>
-<span class="sd">    exp_dissim_matrix : torch.Tensor</span>
-<span class="sd">        Expression dissimilarity matrix between two slices.</span>
-<span class="sd">    pi : torch.Tensor</span>
-<span class="sd">        The transport map at a given iteration of the FW.</span>
-<span class="sd">    a_spatial_dist : torch.Tensor</span>
-<span class="sd">        Spot distance matrix in the first slice.</span>
-<span class="sd">    b_spatial_dist : torch.Tensor</span>
-<span class="sd">        Spot distance matrix in the first slice.</span>
-<span class="sd">    pi_diff : torch.Tensor</span>
-<span class="sd">        Difference between the optimal map found by linearization in the fused wasserstein algorithm and the value at a given iteration</span>
-<span class="sd">    loss_fun : str, Optional</span>
-<span class="sd">        Loss function to be used in optimization. Default is &quot;square_loss&quot;.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    minimal_cost : float</span>
-<span class="sd">        The optimal step size of the fused wasserstein</span>
-<span class="sd">    a : float</span>
-<span class="sd">        The computed value for the first cost component.</span>
-<span class="sd">    cost_G : float</span>
-<span class="sd">        The final cost after the update of the transport plan.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">combined_spatial_cost</span><span class="p">,</span> <span class="n">a_gradient</span><span class="p">,</span> <span class="n">b_gradient</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">init_matrix</span><span class="p">(</span>
         <span class="n">a_spatial_dist</span><span class="p">,</span>
         <span class="n">b_spatial_dist</span><span class="p">,</span>

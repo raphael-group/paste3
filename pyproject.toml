@@ -22,8 +22,8 @@ dependencies = [
     "POT",
     "numpy<2",
     "scipy",
-    "scikit-learn==1.5.2",
-    "IPython",
+    "scikit-learn",
+    "IPython==8.28.0",
     "statsmodels",
     "torch"
 ]

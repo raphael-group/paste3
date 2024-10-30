@@ -94,33 +94,54 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="paste3.paste.center_align">
 <span class="sig-prename descclassname"><span class="pre">paste3.paste.</span></span><span class="sig-name descname"><span class="pre">center_align</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_slice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slice_weights=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha=0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_components=15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold=0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter=10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_dissim_metric='kl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pi_inits=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spots_weights=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend=&lt;ot.backend.TorchBackend</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpu=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/paste3/paste.html#center_align"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#paste3.paste.center_align" title="Permalink to this definition"></a></dt>
-<dd><p>Computes center alignment of slices.</p>
+<dd><p>Solves for an expression matrix ( X = WH ) and optimal mappings across multiple slices
+by minimizing an objective function that balances expression cost and spatial proximity.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>initial_slice</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code>) -- Slice to use as the initialization for center alignment; Make sure to include gene expression and spatial information.</p></li>
-<li><p><strong>slices</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code>]) -- List of slices to use in the center alignment.</p></li>
-<li><p><strong>slice_weights</strong> (<em>array-like</em><em>, </em><em>optional</em>) -- List of probability weights assigned to each slice; If <code class="docutils literal notranslate"><span class="pre">None</span></code>, use uniform weights.</p></li>
-<li><p><strong>alpha</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) -- Alignment tuning parameter. Note: 0 &lt;= alpha &lt;= 1.</p></li>
-<li><p><strong>n_components</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) -- Number of components in NMF decomposition.</p></li>
-<li><p><strong>threshold</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) -- Threshold for convergence of feature_matrix and coeff_matrix during NMF decomposition.</p></li>
-<li><p><strong>max_iter</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) -- Maximum number of iterations for our center alignment algorithm.</p></li>
-<li><p><strong>exp_dissim_metric</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) -- Expression dissimilarity measure: <code class="docutils literal notranslate"><span class="pre">'kl'</span></code> or <code class="docutils literal notranslate"><span class="pre">'euclidean'</span></code>.</p></li>
-<li><p><strong>norm</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) -- If <code class="docutils literal notranslate"><span class="pre">True</span></code>, scales spatial distances such that neighboring spots are at distance 1. Otherwise, spatial distances remain unchanged.</p></li>
-<li><p><strong>random_seed</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) -- Set random seed for reproducibility.</p></li>
-<li><p><strong>pi_inits</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]]) -- Initial list of mappings between 'A' and 'slices' to solver. Otherwise, default will automatically calculate mappings.</p></li>
-<li><p><strong>spots_weights</strong> (<em>List</em><em>[</em><em>array-like</em><em>]</em><em>, </em><em>optional</em>) -- Distributions of spots for each slice. Otherwise, default is uniform.</p></li>
-<li><p><strong>backend</strong> -- Type of backend to run calculations. For list of backends available on system: <code class="docutils literal notranslate"><span class="pre">ot.backend.get_backend_list()</span></code>.</p></li>
-<li><p><strong>use_gpu</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) -- If <code class="docutils literal notranslate"><span class="pre">True</span></code>, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.</p></li>
+<li><p><strong>initial_slice</strong> (<em>AnnData</em>) -- An AnnData object that represent a slice to be used as a reference data for alignment</p></li>
+<li><p><strong>slices</strong> (<em>List</em><em>[</em><em>AnnData</em><em>]</em>) -- A list of AnnData objects that represent different slices to be aligned with the initial slice.</p></li>
+<li><p><strong>slice_weights</strong> (<em>List</em><em>[</em><em>float</em><em>]</em><em>, </em><em>optional</em>) -- Weights for each slice in the alignment process. If None, all slices are treated equally.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>default=0.1</em>) -- Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
+Setting lpha = 0 uses only transcriptional information, while lpha = 1 uses only spatial coordinates.</p></li>
+<li><p><strong>n_components</strong> (<em>int</em><em>, </em><em>default=15</em>) -- Number of components to use for the NMF.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em><em>, </em><em>default=0.001</em>) -- Convergence threshold for the optimization process. The process stops when the change
+in loss is below this threshold.</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em><em>, </em><em>default=10</em>) -- Maximum number of iterations for the optimization process.</p></li>
+<li><p><strong>exp_dissim_metric</strong> (<em>str</em><em>, </em><em>default=&quot;kl&quot;</em>) -- The metric used to compute dissimilarity. Options include &quot;euclidean&quot; or &quot;kl&quot; for
+Kullback-Leibler divergence.</p></li>
+<li><p><strong>norm</strong> (<em>bool</em><em>, </em><em>default=False</em>) -- If True, normalizes spatial distances.</p></li>
+<li><p><strong>random_seed</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em><em>, </em><em>default=None</em>) -- Random seed for reproducibility.</p></li>
+<li><p><strong>pi_inits</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>np.ndarray</em><em>]</em><em>]</em><em>, </em><em>default=None</em>) -- Initial transport plans for each slice. If None, it will be computed.</p></li>
+<li><p><strong>spots_weights</strong> (<em>List</em><em>[</em><em>float</em><em>]</em><em>, </em><em>optional</em>) -- Weights for individual spots in each slices. If None, uniform distribution is used.</p></li>
+<li><p><strong>backend</strong> (<em>Backend</em><em>, </em><em>default=ot.backend.TorchBackend</em><em>(</em><em>)</em>) -- Backend to be used for computations (default is TorchBackend).</p></li>
+<li><p><strong>use_gpu</strong> (<em>bool</em><em>, </em><em>default=True</em>) -- Whether to use GPU for computations. If True but no GPU is available, will default to CPU.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]]</p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><ul class="simple">
+<dd class="field-odd"><p><ul>
+<li><p><em>Tuple[AnnData, List[np.ndarray]]</em> -- A tuple containing:
+- center_slice : AnnData</p>
+<blockquote>
+<div><p>The aligned AnnData object representing the center slice after optimization.</p>
+</div></blockquote>
+<ul class="simple">
+<li><dl class="simple">
+<dt>pis<span class="classifier">List[np.ndarray]</span></dt><dd><p>List of optimal transport distributions for each slice after alignment.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</li>
+<li><p><em>Returns</em> --</p>
+<ul class="simple">
 <li><p>Inferred center slice with full and low dimensional representations (feature_matrix, coeff_matrix) of the gene expression matrix.</p></li>
 <li><p>List of pairwise alignment mappings of the center slice (rows) to each input slice (columns).</p></li>
+</ul>
+</li>
 </ul>
 </p>
 </dd>

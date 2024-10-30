@@ -94,36 +94,50 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="paste3.paste.pairwise_align">
 <span class="sig-prename descclassname"><span class="pre">paste3.paste.</span></span><span class="sig-name descname"><span class="pre">pairwise_align</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a_slice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b_slice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlap_fraction=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_dissim_matrix=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha=0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_dissim_metric='kl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pi_init=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_spots_weight=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b_spots_weight=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numItermax=200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend=&lt;ot.backend.TorchBackend</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpu=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_obj=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxIter=1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizeTheta=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps=0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_histology=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">armijo=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/paste3/paste.html#pairwise_align"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#paste3.paste.pairwise_align" title="Permalink to this definition"></a></dt>
-<dd><p>Calculates and returns optimal alignment of two slices.</p>
+<dd><p>Computes the optimal transport mapping between two slices by minimizing a transport cost
+that balances expression similarity and spatial proximity</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>a_slice</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code>) -- Slice A to align.</p></li>
-<li><p><strong>b_slice</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">AnnData</span></code>) -- Slice B to align.</p></li>
-<li><p><strong>alpha</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) -- Alignment tuning parameter. Note: 0 &lt;= alpha &lt;= 1.</p></li>
-<li><p><strong>exp_dissim_metric</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) -- Expression dissimilarity measure: <code class="docutils literal notranslate"><span class="pre">'kl'</span></code> or <code class="docutils literal notranslate"><span class="pre">'euclidean'</span></code>.</p></li>
-<li><p><strong>pi_init</strong> (<em>array-like</em><em>, </em><em>optional</em>) -- Initial mapping to be used in FGW-OT, otherwise default is uniform mapping.</p></li>
-<li><p><strong>a_spots_weight</strong> (<em>array-like</em><em>, </em><em>optional</em>) -- Distribution of sliceA spots, otherwise default is uniform.</p></li>
-<li><p><strong>b_spots_weight</strong> (<em>array-like</em><em>, </em><em>optional</em>) -- Distribution of sliceB spots, otherwise default is uniform.</p></li>
-<li><p><strong>numItermax</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) -- Max number of iterations during FGW-OT.</p></li>
-<li><p><strong>norm</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) -- If <code class="docutils literal notranslate"><span class="pre">True</span></code>, scales spatial distances such that neighboring spots are at distance 1. Otherwise, spatial distances remain unchanged.</p></li>
-<li><p><strong>backend</strong> -- Type of backend to run calculations. For list of backends available on system: <code class="docutils literal notranslate"><span class="pre">ot.backend.get_backend_list()</span></code>.</p></li>
-<li><p><strong>use_gpu</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) -- If <code class="docutils literal notranslate"><span class="pre">True</span></code>, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.</p></li>
-<li><p><strong>return_obj</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) -- If <code class="docutils literal notranslate"><span class="pre">True</span></code>, additionally returns objective function output of FGW-OT.</p></li>
+<li><p><strong>a_slice</strong> (<em>AnnData</em>) -- AnnData object containing data for the first slice.</p></li>
+<li><p><strong>b_slice</strong> (<em>AnnData</em>) -- AnnData object containing data for the second slice.</p></li>
+<li><p><strong>overlap_fraction</strong> (<em>float</em><em>, </em><em>optional</em>) -- Fraction of overlap between the two slices, must be between 0 and 1. If None, full alignment is performed.</p></li>
+<li><p><strong>exp_dissim_matrix</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) -- Precomputed expression dissimilarity matrix between two slices. If None, it will be computed.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>default=0.1</em>) -- Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
+Setting lpha = 0 uses only transcriptional information, while lpha = 1 uses only spatial coordinates.</p></li>
+<li><p><strong>exp_dissim_metric</strong> (<em>str</em><em>, </em><em>default=&quot;kl&quot;</em>) -- Metric used to compute the expression dissimilarity with the following options:
+- 'kl' for Kullback-Leibler divergence between slices,
+- 'euc' for Euclidean distance,
+- 'gkl' for generalized Kullback-Leibler divergence,
+- 'selection_kl' for a selection-based KL approach,
+- 'pca' for Principal Component Analysis,
+- 'glmpca' for Generalized Linear Model PCA.</p></li>
+<li><p><strong>pi_init</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) -- Initial transport plan. If None, it will be computed.</p></li>
+<li><p><strong>a_spots_weight</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) -- Weight distribution for the spots in the first slice. If None, uniform weights are used.</p></li>
+<li><p><strong>b_spots_weight</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) -- Weight distribution for the spots in the second slice. If None, uniform weights are used.</p></li>
+<li><p><strong>norm</strong> (<em>bool</em><em>, </em><em>default=False</em>) -- If True, normalizes spatial distances.</p></li>
+<li><p><strong>numItermax</strong> (<em>int</em><em>, </em><em>default=200</em>) -- Maximum number of iterations for the optimization.</p></li>
+<li><p><strong>backend</strong> (<em>Backend</em><em>, </em><em>default=ot.backend.TorchBackend</em><em>(</em><em>)</em>) -- Backend to be used for computations.</p></li>
+<li><p><strong>use_gpu</strong> (<em>bool</em><em>, </em><em>default=True</em>) -- Whether to use GPU for computations. If True but no GPU is available, will default to CPU.</p></li>
+<li><p><strong>return_obj</strong> (<em>bool</em><em>, </em><em>default=False</em>) -- If True, returns the optimization object along with the transport plan.</p></li>
+<li><p><strong>maxIter</strong> (<em>int</em><em>, </em><em>default=1000</em>) -- Maximum number of iterations for the dissimilarity calculation.</p></li>
+<li><p><strong>optimizeTheta</strong> (<em>bool</em><em>, </em><em>default=True</em>) -- Whether to optimize theta during dissimilarity calculation.</p></li>
+<li><p><strong>eps</strong> (<em>float</em><em>, </em><em>default=1e-4</em>) -- Tolerance level for convergence.</p></li>
+<li><p><strong>do_histology</strong> (<em>bool</em><em>, </em><em>default=False</em>) -- If True, incorporates RGB dissimilarity from histology data.</p></li>
+<li><p><strong>armijo</strong> (<em>bool</em><em>, </em><em>default=False</em>) -- If True, uses Armijo rule for line search during optimization.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</p>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><ul class="simple">
-<li><p>Alignment of spots.</p></li>
-</ul>
-<p>If <code class="docutils literal notranslate"><span class="pre">return_obj</span> <span class="pre">=</span> <span class="pre">True</span></code>, additionally returns:</p>
-<ul class="simple">
-<li><p>Objective function output of FGW-OT.</p></li>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>pi : np.ndarray
+Optimal transport plan for aligning the two slices.</p></li>
+<li><p>info : Optional[int]
+Information on the optimization process (if <cite>return_obj</cite> is True), else None.</p></li>
 </ul>
 </p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[np.ndarray, Optional[int]]</p>
 </dd>
 </dl>
 </dd></dl>

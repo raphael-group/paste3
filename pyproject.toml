@@ -18,8 +18,8 @@ classifiers = [
 
 dependencies = [
     "anndata",
-    "scanpy==1.10.3",
-    "POT",
+    "scanpy",
+    "POT==0.9.4",
     "numpy<2",
     "scipy",
     "scikit-learn",

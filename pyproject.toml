@@ -23,8 +23,8 @@ dependencies = [
     "numpy<2",
     "scipy",
     "scikit-learn",
-    "IPython==8.28.0",
-    "statsmodels",
+    "IPython",
+    "statsmodels==0.14.4",
     "torch"
 ]
 dynamic = ["version"]

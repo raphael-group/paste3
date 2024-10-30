@@ -44,64 +44,64 @@ def pairwise_align(
     **kwargs,
 ) -> Tuple[np.ndarray, Optional[int]]:
     """
-        Computes the optimal transport mapping between two slices by minimizing a transport cost
-        that balances expression similarity and spatial proximity
+    Computes the optimal transport mapping between two slices by minimizing a transport cost
+    that balances expression similarity and spatial proximity
 
-        Parameters
-        ----------
-        a_slice : AnnData
-            AnnData object containing data for the first slice.
-        b_slice : AnnData
-            AnnData object containing data for the second slice.
-        overlap_fraction : float, optional
-            Fraction of overlap between the two slices, must be between 0 and 1. If None, full alignment is performed.
-        exp_dissim_matrix : np.ndarray, optional
-            Precomputed expression dissimilarity matrix between two slices. If None, it will be computed.
-        alpha : float, default=0.1
-            Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
-            Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.
-        exp_dissim_metric : str, default="kl"
-            Metric used to compute the expression dissimilarity with the following options:
-            - 'kl' for Kullback-Leibler divergence between slices,
-            - 'euc' for Euclidean distance,
-            - 'gkl' for generalized Kullback-Leibler divergence,
-            - 'selection_kl' for a selection-based KL approach,
-            - 'pca' for Principal Component Analysis,
-            - 'glmpca' for Generalized Linear Model PCA.
-        pi_init : np.ndarray, optional
-            Initial transport plan. If None, it will be computed.
-        a_spots_weight : np.ndarray, optional
-            Weight distribution for the spots in the first slice. If None, uniform weights are used.
-        b_spots_weight : np.ndarray, optional
-            Weight distribution for the spots in the second slice. If None, uniform weights are used.
-        norm : bool, default=False
-            If True, normalizes spatial distances.
-        numItermax : int, default=200
-            Maximum number of iterations for the optimization.
-        backend : Backend, default=ot.backend.TorchBackend()
-            Backend to be used for computations.
-        use_gpu : bool, default=True
-            Whether to use GPU for computations. If True but no GPU is available, will default to CPU.
-        return_obj : bool, default=False
-            If True, returns the optimization object along with the transport plan.
-        maxIter : int, default=1000
-            Maximum number of iterations for the dissimilarity calculation.
-        optimizeTheta : bool, default=True
-            Whether to optimize theta during dissimilarity calculation.
-        eps : float, default=1e-4
-            Tolerance level for convergence.
-        do_histology : bool, default=False
-            If True, incorporates RGB dissimilarity from histology data.
-        armijo : bool, default=False
-            If True, uses Armijo rule for line search during optimization.
+    Parameters
+    ----------
+    a_slice : AnnData
+        AnnData object containing data for the first slice.
+    b_slice : AnnData
+        AnnData object containing data for the second slice.
+    overlap_fraction : float, optional
+        Fraction of overlap between the two slices, must be between 0 and 1. If None, full alignment is performed.
+    exp_dissim_matrix : np.ndarray, optional
+        Precomputed expression dissimilarity matrix between two slices. If None, it will be computed.
+    alpha : float, default=0.1
+        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
+        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.
+    exp_dissim_metric : str, default="kl"
+        Metric used to compute the expression dissimilarity with the following options:
+        - 'kl' for Kullback-Leibler divergence between slices,
+        - 'euc' for Euclidean distance,
+        - 'gkl' for generalized Kullback-Leibler divergence,
+        - 'selection_kl' for a selection-based KL approach,
+        - 'pca' for Principal Component Analysis,
+        - 'glmpca' for Generalized Linear Model PCA.
+    pi_init : np.ndarray, optional
+        Initial transport plan. If None, it will be computed.
+    a_spots_weight : np.ndarray, optional
+        Weight distribution for the spots in the first slice. If None, uniform weights are used.
+    b_spots_weight : np.ndarray, optional
+        Weight distribution for the spots in the second slice. If None, uniform weights are used.
+    norm : bool, default=False
+        If True, normalizes spatial distances.
+    numItermax : int, default=200
+        Maximum number of iterations for the optimization.
+    backend : Backend, default=ot.backend.TorchBackend()
+        Backend to be used for computations.
+    use_gpu : bool, default=True
+        Whether to use GPU for computations. If True but no GPU is available, will default to CPU.
+    return_obj : bool, default=False
+        If True, returns the optimization object along with the transport plan.
+    maxIter : int, default=1000
+        Maximum number of iterations for the dissimilarity calculation.
+    optimizeTheta : bool, default=True
+        Whether to optimize theta during dissimilarity calculation.
+    eps : float, default=1e-4
+        Tolerance level for convergence.
+    do_histology : bool, default=False
+        If True, incorporates RGB dissimilarity from histology data.
+    armijo : bool, default=False
+        If True, uses Armijo rule for line search during optimization.
 
-        Returns
-        -------
-        Tuple[np.ndarray, Optional[int]]
-            - pi : np.ndarray
-              Optimal transport plan for aligning the two slices.
-            - info : Optional[int]
-              Information on the optimization process (if `return_obj` is True), else None.
+    Returns
+    -------
+    Tuple[np.ndarray, Optional[int]]
+        - pi : np.ndarray
+          Optimal transport plan for aligning the two slices.
+        - info : Optional[int]
+          Information on the optimization process (if `return_obj` is True), else None.
     """
     if use_gpu and not torch.cuda.is_available():
         logger.info("GPU is not available, resorting to torch CPU.")
@@ -244,55 +244,55 @@ def center_align(
     use_gpu: bool = True,
 ) -> Tuple[AnnData, List[np.ndarray]]:
     """
-        Solves for an expression matrix \( X = WH \) and optimal mappings across multiple slices
-        by minimizing an objective function that balances expression cost and spatial proximity.
+    Solves for an expression matrix \( X = WH \) and optimal mappings across multiple slices
+    by minimizing an objective function that balances expression cost and spatial proximity.
 
-        Parameters
-        ----------
-        initial_slice : AnnData
-            An AnnData object that represent a slice to be used as a reference data for alignment
-        slices : List[AnnData]
-            A list of AnnData objects that represent different slices to be aligned with the initial slice.
-        slice_weights : List[float], optional
-            Weights for each slice in the alignment process. If None, all slices are treated equally.
-        alpha : float, default=0.1
-            Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
-            Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.
-        n_components : int, default=15
-            Number of components to use for the NMF.
-        threshold : float, default=0.001
-            Convergence threshold for the optimization process. The process stops when the change
-            in loss is below this threshold.
-        max_iter : int, default=10
-            Maximum number of iterations for the optimization process.
-        exp_dissim_metric : str, default="kl"
-            The metric used to compute dissimilarity. Options include "euclidean" or "kl" for
-            Kullback-Leibler divergence.
-        norm : bool, default=False
-            If True, normalizes spatial distances.
-        random_seed : Optional[int], default=None
-            Random seed for reproducibility.
-        pi_inits : Optional[List[np.ndarray]], default=None
-            Initial transport plans for each slice. If None, it will be computed.
-        spots_weights : List[float], optional
-            Weights for individual spots in each slices. If None, uniform distribution is used.
-        backend : Backend, default=ot.backend.TorchBackend()
-            Backend to be used for computations (default is TorchBackend).
-        use_gpu : bool, default=True
-            Whether to use GPU for computations. If True but no GPU is available, will default to CPU.
+    Parameters
+    ----------
+    initial_slice : AnnData
+        An AnnData object that represent a slice to be used as a reference data for alignment
+    slices : List[AnnData]
+        A list of AnnData objects that represent different slices to be aligned with the initial slice.
+    slice_weights : List[float], optional
+        Weights for each slice in the alignment process. If None, all slices are treated equally.
+    alpha : float, default=0.1
+        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
+        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.
+    n_components : int, default=15
+        Number of components to use for the NMF.
+    threshold : float, default=0.001
+        Convergence threshold for the optimization process. The process stops when the change
+        in loss is below this threshold.
+    max_iter : int, default=10
+        Maximum number of iterations for the optimization process.
+    exp_dissim_metric : str, default="kl"
+        The metric used to compute dissimilarity. Options include "euclidean" or "kl" for
+        Kullback-Leibler divergence.
+    norm : bool, default=False
+        If True, normalizes spatial distances.
+    random_seed : Optional[int], default=None
+        Random seed for reproducibility.
+    pi_inits : Optional[List[np.ndarray]], default=None
+        Initial transport plans for each slice. If None, it will be computed.
+    spots_weights : List[float], optional
+        Weights for individual spots in each slices. If None, uniform distribution is used.
+    backend : Backend, default=ot.backend.TorchBackend()
+        Backend to be used for computations (default is TorchBackend).
+    use_gpu : bool, default=True
+        Whether to use GPU for computations. If True but no GPU is available, will default to CPU.
 
-        Returns
-        -------
-        Tuple[AnnData, List[np.ndarray]]
-            A tuple containing:
-            - center_slice : AnnData
-                The aligned AnnData object representing the center slice after optimization.
-            - pis : List[np.ndarray]
-                List of optimal transport distributions for each slice after alignment.
+    Returns
+    -------
+    Tuple[AnnData, List[np.ndarray]]
+        A tuple containing:
+        - center_slice : AnnData
+            The aligned AnnData object representing the center slice after optimization.
+        - pis : List[np.ndarray]
+            List of optimal transport distributions for each slice after alignment.
 
-        Returns:
-            - Inferred center slice with full and low dimensional representations (feature_matrix, coeff_matrix) of the gene expression matrix.
-            - List of pairwise alignment mappings of the center slice (rows) to each input slice (columns).
+    Returns:
+        - Inferred center slice with full and low dimensional representations (feature_matrix, coeff_matrix) of the gene expression matrix.
+        - List of pairwise alignment mappings of the center slice (rows) to each input slice (columns).
     """
     if use_gpu and not torch.cuda.is_available():
         logger.info("GPU is not available, resorting to torch CPU.")
@@ -478,6 +478,7 @@ def center_ot(
         - losses : np.ndarray
             Array of loss values corresponding to each slice alignment.
     """
+
     center_slice = AnnData(np.dot(feature_matrix, coeff_matrix))
     center_slice.var.index = common_genes
     center_slice.obsm["spatial"] = center_coordinates
@@ -830,7 +831,6 @@ def solve_gromov_linesearch(
     alpha_min: Optional[float] = None,
     alpha_max: Optional[float] = None,
     nx: str = None,
-    **kwargs,
 ):
     """
     Perform a line search to optimize the transport plan with respect to the Gromov-Wasserstein loss.

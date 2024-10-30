@@ -16,11 +16,6 @@ jobs:
 
     name: Build wheel on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        # Required when using an activated conda environment in steps
-        # See https://github.com/conda-incubator/setup-miniconda#IMPORTANT
-        shell: bash -l {0}
 
     steps:
       - uses: actions/checkout@v4

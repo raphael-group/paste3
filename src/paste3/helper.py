@@ -1,3 +1,9 @@
+"""
+This module provides helper functions to compute an optimal transport plan that aligns multiple tissue slices
+using result of an ST experiment that includes a p genes by n spots transcript count matrix and coordinate
+matrix of the spots
+"""
+
 from paste3.glmpca import glmpca
 import anndata as ad
 import scanpy as sc
@@ -15,12 +21,20 @@ logger = logging.getLogger(__name__)
 
 def kl_divergence(a_exp_dissim, b_exp_dissim):
     """
-    Returns pairwise KL divergence (over all pairs of samples) of two matrices X and Y.
+    Calculates the Kullback-Leibler divergence between two distributions.
 
-    param: X - np array with dim (n_samples by n_features)
-    param: Y - np array with dim (m_samples by n_features)
+    Parameters
+    ----------
+    a_exp_dissim : torch.Tensor
+        A tensor representing the first probability distribution.
 
-    return: D - np array with dim (n_samples by m_samples). Pairwise KL divergence matrix.
+    b_exp_dissim : torch.Tensor
+       A tensor representing the second probability distribution.
+
+    Returns
+    -------
+    divergence : torch.Tensor
+       A tensor containing the Kullback-Leibler divergence for each sample.
     """
     assert (
         a_exp_dissim.shape[1] == b_exp_dissim.shape[1]
@@ -41,12 +55,20 @@ def kl_divergence(a_exp_dissim, b_exp_dissim):
 
 def generalized_kl_divergence(a_exp_dissim, b_exp_dissim):
     """
-    Returns pairwise generalized KL divergence (over all pairs of samples) of two matrices X and Y.
+    Computes the generalized Kullback-Leibler (KL) divergence between two distributions
 
-    param: X - np array with dim (n_samples by n_features)
-    param: Y - np array with dim (m_samples by n_features)
+    Parameters
+    ----------
+    a_exp_dissim : torch.Tensor
+        A tensor representing first probability distribution.
 
-    return: D - np array with dim (n_samples by m_samples). Pairwise generalized KL divergence matrix.
+    b_exp_dissim : torch.Tensor
+        A tensor representing the second probability distribution.
+
+    Returns
+    -------
+    divergence : torch.Tensor
+        A tensor containing the generalized Kullback-Leibler divergence for each sample.
     """
     assert (
         a_exp_dissim.shape[1] == b_exp_dissim.shape[1]
@@ -76,13 +98,35 @@ def glmpca_distance(
     optimizeTheta=True,
 ):
     """
-    param: X - np array with dim (n_samples by n_features)
-    param: Y - np array with dim (m_samples by n_features)
-    param: latent_dim - number of latent dimensions in glm-pca
-    param: filter - whether to first select genes with highest UMI counts
-    param maxIter - maximum number of iterations for glmpca
-    param eps - convergence threshold for glmpca
-    param optimizeTheta - whether to optimize overdispersion in glmpca
+    Computes the distance between two distributions after reducing dimensionality using GLM-PCA.
+
+    Parameters
+    ----------
+    a_exp_dissim : torch.Tensor
+        A tensor representing first probability distribution.
+
+    b_exp_dissim : torch.Tensor
+        A tensor representing the second probability distribution.
+
+    latent_dim : int, Optional
+        Number of latent dimensions for GLM-PCA reduction.
+
+    filter : bool, Optional
+        Whether to filter features based on top gene counts before GLM-PCA.
+
+    maxIter : int, Optional
+        Maximum number of iterations for GLM-PCA.
+
+    eps : float, Optional
+        Convergence threshold for GLM-PCA.
+
+    optimizeTheta : bool, Optional
+        If True, optimizes theta during GLM-PCA.
+
+    Returns
+    -------
+    np.ndarray
+        Distances between the two distributions after dimensionality reduction.
     """
     assert (
         a_exp_dissim.shape[1] == b_exp_dissim.shape[1]
@@ -110,6 +154,29 @@ def glmpca_distance(
 
 
 def pca_distance(a_slice, b_slice, n_top_genes, latent_dim):
+    """
+    Computes pairwise distances between two distributions slices after dimensionality
+    reduction using PCA.
+
+    Parameters
+    ----------
+    a_slice : AnnData
+        AnnData object representing the first slice.
+
+    b_slice : AnnData
+        AnnData object representing the second slice.
+
+    n_top_genes : int
+        Number of highly variable genes to select for PCA.
+
+    latent_dim : int
+        Number of principal components to retain in the PCA reduction.
+
+    Returns
+    -------
+    distances : np.ndarray
+        Distances between the two distributions after dimensionality reduction
+    """
     joint_adata = ad.concat([a_slice, b_slice])
     sc.pp.normalize_total(joint_adata, inplace=True)
     sc.pp.log1p(joint_adata)
@@ -126,7 +193,26 @@ def pca_distance(a_slice, b_slice, n_top_genes, latent_dim):
 
 def high_umi_gene_distance(a_exp_dissim, b_exp_dissim, n):
     """
-    n: number of highest umi count genes to keep
+    Computes the Kullback-Leibler (KL) divergence between two distribution
+    using genes with highest UMI counts.
+
+    Parameters
+    ----------
+    a_exp_dissim : torch.Tensor
+        A tensor representing the first probability distribution.
+
+    b_exp_dissim : torch.Tensor
+        A tensor representing the second probability distribution.
+
+    n : int
+        Number of genes with the highest UMI counts to select for computing
+        the KL divergence.
+
+    Returns
+    -------
+    torch.Tensor
+        KL divergence matrix between two distributions.
+
     """
     assert (
         a_exp_dissim.shape[1] == b_exp_dissim.shape[1]
@@ -149,38 +235,45 @@ def high_umi_gene_distance(a_exp_dissim, b_exp_dissim, n):
 
 
 def intersect(a_list, b_list):
-    """
-    param: lst1 - list
-    param: lst2 - list
-
-    return: list of common elements
-    """
+    """Returns the intersection between two list."""
     return [val for val in a_list if val in set(b_list)]
 
 
 def norm_and_center_coordinates(spatial_dist):
     """
-    param: X - numpy array
+    Normalizes and centers spatial coordinates by subtracting the mean and
+    scaling by the minimum pairwise distance
 
-    return:
+    Parameters
+    ----------
+    spatial_dist : np.ndarray
+        Spot distance matrix of a slice.
+
+    Returns
+    -------
+    np.ndarray
+        Normalized and centered spatial coordinates.
     """
     return (spatial_dist - spatial_dist.mean(axis=0)) / min(
         scipy.spatial.distance.pdist(spatial_dist)
     )
 
 
-## Covert a sparse matrix into a dense matrix
 def to_dense_array(X):
+    """Converts a sparse matrix into a dense one"""
     np_array = np.array(X.todense()) if isinstance(X, scipy.sparse.csr.spmatrix) else X
     return torch.Tensor(np_array).double()
 
 
 def filter_for_common_genes(slices: List[AnnData]) -> None:
     """
-    Filters for the intersection of genes between all slices.
+    Filters a list of AnnData objects to retain only the common genes across
+    all slices.
 
-    Args:
-        slices: List of slices.
+    Parameters
+    ----------
+    slices: List[AnnData]
+        A list of AnnData objects that represent different slices.
     """
     assert len(slices) > 0, "Cannot have empty list."
 
@@ -200,16 +293,29 @@ def match_spots_using_spatial_heuristic(
     a_spatial_dist, b_spatial_dist, use_ot: bool = True
 ) -> np.ndarray:
     """
-    Calculates and returns a mapping of spots using a spatial heuristic.
+    Matches spatial coordinates between two datasets using either optimal
+    transport or bipartite matching based on spatial proximity.
 
-    Args:
-        a_spatial_dist (array-like, optional): Coordinates for spots X.
-        b_spatial_dist (array-like, optional): Coordinates for spots Y.
-        use_ot: If ``True``, use optimal transport ``ot.emd()`` to calculate mapping. Otherwise, use Scipy's ``min_weight_full_bipartite_matching()`` algorithm.
+    Parameters
+    ----------
+    a_spatial_dist : np.ndarray
+        Spot distance matrix in the first slice.
 
-    Returns:
-        Mapping of spots using a spatial heuristic.
+    b_spatial_dist : np.ndarray
+        Spot distance matrix in the second slice.
+
+    use_ot : bool, Optional
+        If True, matches spots using optimal transport (OT); if False,
+        uses minimum-weight full bipartite matching.
+
+    Returns
+    -------
+    np.ndarray
+        A transport matrix (`pi`) representing matching weights between
+        the points in `a_spatial_dist` and `b_spatial_dist`.
+
     """
+
     len_a, len_b = len(a_spatial_dist), len(b_spatial_dist)
     a_spatial_dist, b_spatial_dist = (
         norm_and_center_coordinates(a_spatial_dist),
@@ -237,16 +343,20 @@ def match_spots_using_spatial_heuristic(
 
 def kl_divergence_backend(a_exp_dissim, b_exp_dissim):
     """
-    Returns pairwise KL divergence (over all pairs of samples) of two matrices X and Y.
+    Calculates the Kullback-Leibler divergence between two distributions.
 
-    Takes advantage of POT backend to speed up computation.
+    Parameters
+    ----------
+    a_exp_dissim : torch.Tensor
+        A tensor representing the first probability distribution.
 
-    Args:
-        a_exp_dissim: np array with dim (n_samples by n_features)
-        b_exp_dissim: np array with dim (m_samples by n_features)
+    b_exp_dissim : torch.Tensor
+        A tensor representing the second probability distribution.
 
-    Returns:
-        D: np array with dim (n_samples by m_samples). Pairwise KL divergence matrix.
+    Returns
+    -------
+    divergence : np.ndarray
+        A tensor containing the Kullback-Leibler divergence for each sample.
     """
     assert (
         a_exp_dissim.shape[1] == b_exp_dissim.shape[1]
@@ -267,6 +377,39 @@ def kl_divergence_backend(a_exp_dissim, b_exp_dissim):
 
 
 def dissimilarity_metric(which, a_slice, b_slice, a_exp_dissim, b_exp_dissim, **kwargs):
+    """
+    Computes a dissimilarity matrix between two distribution using a specified
+    metric.
+
+    Parameters
+    ----------
+    which : str
+        The dissimilarity metric to use. Options are:
+        - "euc" or "euclidean" for Euclidean distance.
+        - "gkl" for generalized KL divergence.
+        - "kl" for KL divergence.
+        - "selection_kl" for KL divergence with top 2000 high-UMI genes.
+        - "pca" for PCA-based distance.
+        - "glmpca" for GLM-PCA-based distance.
+
+    a_slice : AnnData
+        AnnData object containing data for the first slice.
+
+    b_slice : AnnData
+        AnnData object containing data for the second slice.
+
+    a_exp_dissim : torch.Tensor
+        A tensor representing the first probability distribution.
+
+    b_exp_dissim : torch.Tensor
+        A tensor representing the second probability distribution.
+
+    Returns
+    -------
+    torch.Tensor
+        A tensor representing pairwise dissimilarities between two distributions
+        according to the specified metric.
+    """
     match which:
         case "euc" | "euclidean":
             return torch.cdist(a_exp_dissim, b_exp_dissim)

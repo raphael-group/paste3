@@ -43,9 +43,46 @@ def pairwise_align(
     armijo=False,
     **kwargs,
 ) -> Tuple[np.ndarray, Optional[int]]:
-    """
-    Computes the optimal transport mapping between two slices by minimizing a transport cost
-    that balances expression similarity and spatial proximity
+    r"""
+    Returns a mapping :math:`( \Pi = [\pi_{ij}] )` between spots in one slice and spots in another slice
+    while preserving gene expression and spatial distances of mapped spots, where :math:`\pi_{ij}` describes the probability that
+    a spot i in the first slice is aligned to a spot j in the second slice.
+
+    Given slices :math:`(X, D, g)` and :math:`(X', D', g')` containing :math:`(n)` and :math:`(n')` spots, respectively,
+    over the same :math:`(p)` genes, an expression cost function :math:`(c)`, and a parameter :math:`(0 \leq \alpha \leq 1)`,
+    this function finds a mapping :math:`( \Pi \in \Gamma(g, g') )` that minimizes the following transport cost:
+
+    .. math::
+        F(\Pi; X, D, X', D', c, \alpha) = (1 - \alpha) \sum_{i,j} c(x_i, x'_j) \pi_{ij} + \alpha \sum_{i,j,k,l} (d_{ik} - d'_{jl})^2 \pi_{ij} \pi_{kl}'. \tag{1}
+
+    subject to the regularity constraint that :math:`\pi` has to be a probabilistic coupling between :math:`g` and :math:`g'`:
+
+    .. math::
+        \pi \in \mathcal{F}(g, g') = \left\{ \pi \in \mathbb{R}^{n \times n'} \mid \pi \geq 0, \pi 1_{n'} = g, \pi^T 1_n = g' \right\}. \tag{2}
+
+    Where:
+
+        - :math:`X` and :math:`X'` represent the gene expression data for each slice,
+        - :math:`D` and :math:`D'` represent the spatial distance matrices for each slice,
+        - :math:`c` is a cost function applied to expression differences, and
+        - :math:`\alpha` is a parameter that balances expression and spatial distance preservation in the mapping.
+        - :math:`g` and :math:`g'` represent probability distribution over the spots in slice :math:`X` and :math:`X'`, respectively
+
+    .. note::
+        When the value for :math:`\textit {overlap_fraction}` is provided, this function solves the :math:`\textit{partial pairwise slice alignment problem}`
+        by minimizing the same objective function as Equation (1), but with a different set of constraints that allow for unmapped spots.
+        Given a parameter :math:`s \in [0, 1]` describing the fraction of mass to transport between :math:`g` and :math:`g'`, we define a set
+        :math:`\mathcal{P}(g, g', s)` of :math:`s`-:math:`\textit{partial}` couplings between distributions :math:`g` and :math:`g'` as:
+
+        .. math::
+            \mathcal{P}(g, g', s) = \left\{ \pi \in \mathbb{R}^{n \times n'} \mid \pi \geq 0, \pi 1_{n'} \leq g, \pi^T 1_n \leq g', 1_n^T \pi 1_{n'} = s \right\}. \tag{3}
+
+        Where:
+
+            - :math:`s \in [0, 1]` is the overlap percentage between the two slices to align. (The constraint :math:`1_n^T \pi 1_{n'} = s` ensures that only the fraction of :math:`s` probability mass is transported)
+
+
+
 
     Parameters
     ----------
@@ -523,7 +560,7 @@ def center_NMF(
     slices by minimizing the following objective function:
 
     .. math::
-           \[ S(W, H) = \sum_q \lambda_q \sum_{i, j} c((WH)_i, x_j^{(q)}) \pi_{ij}^{(q)}\]
+            S(W, H) = \sum_q \lambda_q \sum_{i, j} c((WH)_i, x_j^{(q)}) \pi_{ij}^{(q)}
 
     Parameters
     ----------
@@ -647,7 +684,7 @@ def my_fused_gromov_wasserstein(
     -------
     Tuple[np.ndarray, Optional[dict]]
         - pi : np.ndarray
-          Optimal transport plan that minimizes hte fused gromov-wasserstein distance between
+          Optimal transport plan that minimizes the fused gromov-wasserstein distance between
           two distributions
         - info : Optional[dict]
           A dictionary containing details of teh optimization process.

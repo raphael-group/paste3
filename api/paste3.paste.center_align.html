@@ -18,6 +18,8 @@
       <script src="../_static/doctools.js"></script>
       <script src="../_static/sphinx_highlight.js"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -94,8 +96,27 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="paste3.paste.center_align">
 <span class="sig-prename descclassname"><span class="pre">paste3.paste.</span></span><span class="sig-name descname"><span class="pre">center_align</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_slice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slice_weights=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha=0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_components=15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold=0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter=10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_dissim_metric='kl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pi_inits=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spots_weights=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend=&lt;ot.backend.TorchBackend</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpu=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/paste3/paste.html#center_align"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#paste3.paste.center_align" title="Permalink to this definition"></a></dt>
-<dd><p>Solves for an expression matrix ( X = WH ) and optimal mappings across multiple slices
-by minimizing an objective function that balances expression cost and spatial proximity.</p>
+<dd><p>Infers a &quot;center&quot; slice consisting of a low rank expression matrix <span class="math notranslate nohighlight">\(X = WH\)</span> and a collection of
+<span class="math notranslate nohighlight">\(\pi\)</span> of mappings from the spots of the center slice to the spots of each input slice.</p>
+<p>Given slices <span class="math notranslate nohighlight">\((X^{(1)}, D^{(1)}, g^{(1)}), \dots, (X^{(t)}, D^{(t)}, g^{(t)})\)</span> containing <span class="math notranslate nohighlight">\(n_1, \dots, n_t\)</span>
+spots, respectively over the same <span class="math notranslate nohighlight">\(p\)</span> genes, a spot distance matrix <span class="math notranslate nohighlight">\(D \in \mathbb{R}^{n \times n}_{+}\)</span>,
+a distribution <span class="math notranslate nohighlight">\(g\)</span> over <span class="math notranslate nohighlight">\(n\)</span> spots, an expression cost function <span class="math notranslate nohighlight">\(c\)</span>, a distribution
+<span class="math notranslate nohighlight">\(\lambda \in \mathbb{R}^t_{+}\)</span> and parameters <span class="math notranslate nohighlight">\(0 \leq \alpha \leq 1\)</span>, <span class="math notranslate nohighlight">\(m \in \mathbb{N}\)</span>,
+find an expression matrix <span class="math notranslate nohighlight">\(X = WH\)</span> where <span class="math notranslate nohighlight">\(W \in \mathbb{R}^{p \times m}_{+}\)</span> and <span class="math notranslate nohighlight">\(H \in \mathbb{R}^{m \times n}_{+}\)</span>,
+and mappings <span class="math notranslate nohighlight">\(\Pi^{(q)} \in \Gamma(g, g^{(q)})\)</span> for each slice <span class="math notranslate nohighlight">\(q = 1, \dots, t\)</span> that minimize the following objective:</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}R(W, H, \Pi^{(1)}, \dots, \Pi^{(t)}) = \sum_q \lambda_q F(\Pi^{(q)}; WH, D, X^{(q)}, D^{(q)}, c, \alpha)\\= \sum_q \lambda_q \left[(1 - \alpha) \sum_{i,j} c(WH_{\cdot,i}, x^{(q)}_j) \pi^{(q)}_{ij} + \alpha \sum_{i,j,k,l} (d_{ik} - d^{(q)}_{jl})^2 \pi^{(q)}_{ij} \pi^{(q)}_{kl} \right].\end{aligned}\end{align} \]</div>
+<p>Where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(X^{q} = [x_{ij}] \in \mathbb{N}^{p \times n_t}\)</span> is a <span class="math notranslate nohighlight">\(p\)</span> genes by <span class="math notranslate nohighlight">\(n_t\)</span> spots transcript count matrix for <span class="math notranslate nohighlight">\(q^{th}\)</span> slice,</p></li>
+<li><p><span class="math notranslate nohighlight">\(D^{(q)}\)</span>, where <span class="math notranslate nohighlight">\(d_ij = \parallel z_.i - z_.j \parallel\)</span> is the spatial distance between spot <span class="math notranslate nohighlight">\(i\)</span> and <span class="math notranslate nohighlight">\(j\)</span>, represents the spot pairwise distance matrix for <span class="math notranslate nohighlight">\(q^{th}\)</span> slice,</p></li>
+<li><p><span class="math notranslate nohighlight">\(c: \mathbb{R}^{p}_{+} \times \mathbb{R}^{p}_{+} \to \mathbb{R}_{+}\)</span>, is a function that measures a nonnegative cost between the expression profiles of two spots over all genes</p></li>
+<li><p><span class="math notranslate nohighlight">\(\alpha\)</span> is a parameter balancing expression and spatial distance preservation,</p></li>
+<li><p><span class="math notranslate nohighlight">\(W\)</span> and <span class="math notranslate nohighlight">\(H\)</span> form the low-rank approximation of the center slice's expression matrix, and</p></li>
+<li><p><span class="math notranslate nohighlight">\(\lambda_q\)</span> weighs each slice <span class="math notranslate nohighlight">\(q\)</span> in the objective.</p></li>
+</ul>
+</div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -103,7 +124,7 @@ by minimizing an objective function that balances expression cost and spatial pr
 <li><p><strong>slices</strong> (<em>List</em><em>[</em><em>AnnData</em><em>]</em>) -- A list of AnnData objects that represent different slices to be aligned with the initial slice.</p></li>
 <li><p><strong>slice_weights</strong> (<em>List</em><em>[</em><em>float</em><em>]</em><em>, </em><em>optional</em>) -- Weights for each slice in the alignment process. If None, all slices are treated equally.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>default=0.1</em>) -- Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
-Setting lpha = 0 uses only transcriptional information, while lpha = 1 uses only spatial coordinates.</p></li>
+Setting alpha = 0 uses only transcriptional information, while alpha = 1 uses only spatial coordinates.</p></li>
 <li><p><strong>n_components</strong> (<em>int</em><em>, </em><em>default=15</em>) -- Number of components to use for the NMF.</p></li>
 <li><p><strong>threshold</strong> (<em>float</em><em>, </em><em>default=0.001</em>) -- Convergence threshold for the optimization process. The process stops when the change
 in loss is below this threshold.</p></li>

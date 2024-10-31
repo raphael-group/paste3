@@ -99,8 +99,8 @@
 <dd><p>Returns a mapping <span class="math notranslate nohighlight">\(( \Pi = [\pi_{ij}] )\)</span> between spots in one slice and spots in another slice
 while preserving gene expression and spatial distances of mapped spots, where <span class="math notranslate nohighlight">\(\pi_{ij}\)</span> describes the probability that
 a spot i in the first slice is aligned to a spot j in the second slice.</p>
-<p>Given slices <span class="math notranslate nohighlight">\((X, D, g)\)</span> and <span class="math notranslate nohighlight">\((X', D', g')\)</span> containing <span class="math notranslate nohighlight">\((n)\)</span> and <span class="math notranslate nohighlight">\((n')\)</span> spots, respectively,
-over the same <span class="math notranslate nohighlight">\((p)\)</span> genes, an expression cost function <span class="math notranslate nohighlight">\((c)\)</span>, and a parameter <span class="math notranslate nohighlight">\((0 \leq \alpha \leq 1)\)</span>,
+<p>Given slices <span class="math notranslate nohighlight">\((X, D, g)\)</span> and <span class="math notranslate nohighlight">\((X', D', g')\)</span> containing <span class="math notranslate nohighlight">\(n\)</span> and <span class="math notranslate nohighlight">\(n'\)</span> spots, respectively,
+over the same <span class="math notranslate nohighlight">\(p\)</span> genes, an expression cost function <span class="math notranslate nohighlight">\(c\)</span>, and a parameter <span class="math notranslate nohighlight">\((0 \leq \alpha \leq 1)\)</span>,
 this function finds a mapping <span class="math notranslate nohighlight">\(( \Pi \in \Gamma(g, g') )\)</span> that minimizes the following transport cost:</p>
 <div class="math notranslate nohighlight">
 \[F(\Pi; X, D, X', D', c, \alpha) = (1 - \alpha) \sum_{i,j} c(x_i, x'_j) \pi_{ij} + \alpha \sum_{i,j,k,l} (d_{ik} - d'_{jl})^2 \pi_{ij} \pi_{kl}'. \tag{1}\]</div>
@@ -166,7 +166,7 @@ Setting alpha = 0 uses only transcriptional information, while alpha = 1 uses on
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>pi : np.ndarray
-Optimal transport plan for aligning the two slices.</p></li>
+Optimal transport plan for aligning the two slices.r</p></li>
 <li><p>info : Optional[int]
 Information on the optimization process (if <cite>return_obj</cite> is True), else None.</p></li>
 </ul>

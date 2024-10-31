@@ -123,7 +123,7 @@
 <td><p>Returns a mapping <span class="math notranslate nohighlight">\(( \Pi = [\pi_{ij}] )\)</span> between spots in one slice and spots in another slice while preserving gene expression and spatial distances of mapped spots, where <span class="math notranslate nohighlight">\(\pi_{ij}\)</span> describes the probability that a spot i in the first slice is aligned to a spot j in the second slice.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api/paste3.paste.center_align.html#paste3.paste.center_align" title="paste3.paste.center_align"><code class="xref py py-obj docutils literal notranslate"><span class="pre">paste.center_align</span></code></a>(initial_slice, slices[, ...])</p></td>
-<td><p>Solves for an expression matrix ( X = WH ) and optimal mappings across multiple slices by minimizing an objective function that balances expression cost and spatial proximity.</p></td>
+<td><p>Infers a &quot;center&quot; slice consisting of a low rank expression matrix <span class="math notranslate nohighlight">\(X = WH\)</span> and a collection of <span class="math notranslate nohighlight">\(\pi\)</span> of mappings from the spots of the center slice to the spots of each input slice.</p></td>
 </tr>
 </tbody>
 </table>

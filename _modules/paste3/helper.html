@@ -72,7 +72,13 @@
            <div itemprop="articleBody">
              
   <h1>Source code for paste3.helper</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">paste3.glmpca</span> <span class="kn">import</span> <span class="n">glmpca</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module provides helper functions to compute an optimal transport plan that aligns multiple tissue slices</span>
+<span class="sd">using result of an ST experiment that includes a p genes by n spots transcript count matrix and coordinate</span>
+<span class="sd">matrix of the spots</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">paste3.glmpca</span> <span class="kn">import</span> <span class="n">glmpca</span>
 <span class="kn">import</span> <span class="nn">anndata</span> <span class="k">as</span> <span class="nn">ad</span>
 <span class="kn">import</span> <span class="nn">scanpy</span> <span class="k">as</span> <span class="nn">sc</span>
 <span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">distance</span>
@@ -89,12 +95,20 @@
 
 <span class="k">def</span> <span class="nf">kl_divergence</span><span class="p">(</span><span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">b_exp_dissim</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Returns pairwise KL divergence (over all pairs of samples) of two matrices X and Y.</span>
+<span class="sd">    Calculates the Kullback-Leibler divergence between two distributions.</span>
 
-<span class="sd">    param: X - np array with dim (n_samples by n_features)</span>
-<span class="sd">    param: Y - np array with dim (m_samples by n_features)</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a_exp_dissim : torch.Tensor</span>
+<span class="sd">        A tensor representing the first probability distribution.</span>
 
-<span class="sd">    return: D - np array with dim (n_samples by m_samples). Pairwise KL divergence matrix.</span>
+<span class="sd">    b_exp_dissim : torch.Tensor</span>
+<span class="sd">       A tensor representing the second probability distribution.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    divergence : torch.Tensor</span>
+<span class="sd">       A tensor containing the Kullback-Leibler divergence for each sample.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">assert</span> <span class="p">(</span>
         <span class="n">a_exp_dissim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">b_exp_dissim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -115,12 +129,20 @@
 
 <span class="k">def</span> <span class="nf">generalized_kl_divergence</span><span class="p">(</span><span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">b_exp_dissim</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Returns pairwise generalized KL divergence (over all pairs of samples) of two matrices X and Y.</span>
+<span class="sd">    Computes the generalized Kullback-Leibler (KL) divergence between two distributions</span>
 
-<span class="sd">    param: X - np array with dim (n_samples by n_features)</span>
-<span class="sd">    param: Y - np array with dim (m_samples by n_features)</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a_exp_dissim : torch.Tensor</span>
+<span class="sd">        A tensor representing first probability distribution.</span>
 
-<span class="sd">    return: D - np array with dim (n_samples by m_samples). Pairwise generalized KL divergence matrix.</span>
+<span class="sd">    b_exp_dissim : torch.Tensor</span>
+<span class="sd">        A tensor representing the second probability distribution.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    divergence : torch.Tensor</span>
+<span class="sd">        A tensor containing the generalized Kullback-Leibler divergence for each sample.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">assert</span> <span class="p">(</span>
         <span class="n">a_exp_dissim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">b_exp_dissim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -150,13 +172,35 @@
     <span class="n">optimizeTheta</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    param: X - np array with dim (n_samples by n_features)</span>
-<span class="sd">    param: Y - np array with dim (m_samples by n_features)</span>
-<span class="sd">    param: latent_dim - number of latent dimensions in glm-pca</span>
-<span class="sd">    param: filter - whether to first select genes with highest UMI counts</span>
-<span class="sd">    param maxIter - maximum number of iterations for glmpca</span>
-<span class="sd">    param eps - convergence threshold for glmpca</span>
-<span class="sd">    param optimizeTheta - whether to optimize overdispersion in glmpca</span>
+<span class="sd">    Computes the distance between two distributions after reducing dimensionality using GLM-PCA.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a_exp_dissim : torch.Tensor</span>
+<span class="sd">        A tensor representing first probability distribution.</span>
+
+<span class="sd">    b_exp_dissim : torch.Tensor</span>
+<span class="sd">        A tensor representing the second probability distribution.</span>
+
+<span class="sd">    latent_dim : int, Optional</span>
+<span class="sd">        Number of latent dimensions for GLM-PCA reduction.</span>
+
+<span class="sd">    filter : bool, Optional</span>
+<span class="sd">        Whether to filter features based on top gene counts before GLM-PCA.</span>
+
+<span class="sd">    maxIter : int, Optional</span>
+<span class="sd">        Maximum number of iterations for GLM-PCA.</span>
+
+<span class="sd">    eps : float, Optional</span>
+<span class="sd">        Convergence threshold for GLM-PCA.</span>
+
+<span class="sd">    optimizeTheta : bool, Optional</span>
+<span class="sd">        If True, optimizes theta during GLM-PCA.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        Distances between the two distributions after dimensionality reduction.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">assert</span> <span class="p">(</span>
         <span class="n">a_exp_dissim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">b_exp_dissim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -184,6 +228,29 @@
 
 
 <span class="k">def</span> <span class="nf">pca_distance</span><span class="p">(</span><span class="n">a_slice</span><span class="p">,</span> <span class="n">b_slice</span><span class="p">,</span> <span class="n">n_top_genes</span><span class="p">,</span> <span class="n">latent_dim</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes pairwise distances between two distributions slices after dimensionality</span>
+<span class="sd">    reduction using PCA.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a_slice : AnnData</span>
+<span class="sd">        AnnData object representing the first slice.</span>
+
+<span class="sd">    b_slice : AnnData</span>
+<span class="sd">        AnnData object representing the second slice.</span>
+
+<span class="sd">    n_top_genes : int</span>
+<span class="sd">        Number of highly variable genes to select for PCA.</span>
+
+<span class="sd">    latent_dim : int</span>
+<span class="sd">        Number of principal components to retain in the PCA reduction.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    distances : np.ndarray</span>
+<span class="sd">        Distances between the two distributions after dimensionality reduction</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">joint_adata</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">a_slice</span><span class="p">,</span> <span class="n">b_slice</span><span class="p">])</span>
     <span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">normalize_total</span><span class="p">(</span><span class="n">joint_adata</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">joint_adata</span><span class="p">)</span>
@@ -200,7 +267,26 @@
 
 <span class="k">def</span> <span class="nf">high_umi_gene_distance</span><span class="p">(</span><span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">b_exp_dissim</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    n: number of highest umi count genes to keep</span>
+<span class="sd">    Computes the Kullback-Leibler (KL) divergence between two distribution</span>
+<span class="sd">    using genes with highest UMI counts.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a_exp_dissim : torch.Tensor</span>
+<span class="sd">        A tensor representing the first probability distribution.</span>
+
+<span class="sd">    b_exp_dissim : torch.Tensor</span>
+<span class="sd">        A tensor representing the second probability distribution.</span>
+
+<span class="sd">    n : int</span>
+<span class="sd">        Number of genes with the highest UMI counts to select for computing</span>
+<span class="sd">        the KL divergence.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    torch.Tensor</span>
+<span class="sd">        KL divergence matrix between two distributions.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">assert</span> <span class="p">(</span>
         <span class="n">a_exp_dissim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">b_exp_dissim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -223,38 +309,45 @@
 
 
 <span class="k">def</span> <span class="nf">intersect</span><span class="p">(</span><span class="n">a_list</span><span class="p">,</span> <span class="n">b_list</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    param: lst1 - list</span>
-<span class="sd">    param: lst2 - list</span>
-
-<span class="sd">    return: list of common elements</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the intersection between two list.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">val</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">a_list</span> <span class="k">if</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">b_list</span><span class="p">)]</span>
 
 
 <span class="k">def</span> <span class="nf">norm_and_center_coordinates</span><span class="p">(</span><span class="n">spatial_dist</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    param: X - numpy array</span>
+<span class="sd">    Normalizes and centers spatial coordinates by subtracting the mean and</span>
+<span class="sd">    scaling by the minimum pairwise distance</span>
 
-<span class="sd">    return:</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spatial_dist : np.ndarray</span>
+<span class="sd">        Spot distance matrix of a slice.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        Normalized and centered spatial coordinates.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">spatial_dist</span> <span class="o">-</span> <span class="n">spatial_dist</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span> <span class="o">/</span> <span class="nb">min</span><span class="p">(</span>
         <span class="n">scipy</span><span class="o">.</span><span class="n">spatial</span><span class="o">.</span><span class="n">distance</span><span class="o">.</span><span class="n">pdist</span><span class="p">(</span><span class="n">spatial_dist</span><span class="p">)</span>
     <span class="p">)</span>
 
 
-<span class="c1">## Covert a sparse matrix into a dense matrix</span>
 <span class="k">def</span> <span class="nf">to_dense_array</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts a sparse matrix into a dense one&quot;&quot;&quot;</span>
     <span class="n">np_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">todense</span><span class="p">())</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csr</span><span class="o">.</span><span class="n">spmatrix</span><span class="p">)</span> <span class="k">else</span> <span class="n">X</span>
     <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">np_array</span><span class="p">)</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
 
 
 <div class="viewcode-block" id="filter_for_common_genes"><a class="viewcode-back" href="../../api/paste3.helper.filter_for_common_genes.html#paste3.helper.filter_for_common_genes">[docs]</a><span class="k">def</span> <span class="nf">filter_for_common_genes</span><span class="p">(</span><span class="n">slices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">AnnData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Filters for the intersection of genes between all slices.</span>
+<span class="sd">    Filters a list of AnnData objects to retain only the common genes across</span>
+<span class="sd">    all slices.</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        slices: List of slices.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    slices: List[AnnData]</span>
+<span class="sd">        A list of AnnData objects that represent different slices.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Cannot have empty list.&quot;</span>
 
@@ -274,16 +367,29 @@
     <span class="n">a_spatial_dist</span><span class="p">,</span> <span class="n">b_spatial_dist</span><span class="p">,</span> <span class="n">use_ot</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculates and returns a mapping of spots using a spatial heuristic.</span>
+<span class="sd">    Matches spatial coordinates between two datasets using either optimal</span>
+<span class="sd">    transport or bipartite matching based on spatial proximity.</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        a_spatial_dist (array-like, optional): Coordinates for spots X.</span>
-<span class="sd">        b_spatial_dist (array-like, optional): Coordinates for spots Y.</span>
-<span class="sd">        use_ot: If ``True``, use optimal transport ``ot.emd()`` to calculate mapping. Otherwise, use Scipy&#39;s ``min_weight_full_bipartite_matching()`` algorithm.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a_spatial_dist : np.ndarray</span>
+<span class="sd">        Spot distance matrix in the first slice.</span>
 
-<span class="sd">    Returns:</span>
-<span class="sd">        Mapping of spots using a spatial heuristic.</span>
+<span class="sd">    b_spatial_dist : np.ndarray</span>
+<span class="sd">        Spot distance matrix in the second slice.</span>
+
+<span class="sd">    use_ot : bool, Optional</span>
+<span class="sd">        If True, matches spots using optimal transport (OT); if False,</span>
+<span class="sd">        uses minimum-weight full bipartite matching.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        A transport matrix (`pi`) representing matching weights between</span>
+<span class="sd">        the points in `a_spatial_dist` and `b_spatial_dist`.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">len_a</span><span class="p">,</span> <span class="n">len_b</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">a_spatial_dist</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">b_spatial_dist</span><span class="p">)</span>
     <span class="n">a_spatial_dist</span><span class="p">,</span> <span class="n">b_spatial_dist</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">norm_and_center_coordinates</span><span class="p">(</span><span class="n">a_spatial_dist</span><span class="p">),</span>
@@ -311,16 +417,20 @@
 
 <span class="k">def</span> <span class="nf">kl_divergence_backend</span><span class="p">(</span><span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">b_exp_dissim</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Returns pairwise KL divergence (over all pairs of samples) of two matrices X and Y.</span>
+<span class="sd">    Calculates the Kullback-Leibler divergence between two distributions.</span>
 
-<span class="sd">    Takes advantage of POT backend to speed up computation.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a_exp_dissim : torch.Tensor</span>
+<span class="sd">        A tensor representing the first probability distribution.</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        a_exp_dissim: np array with dim (n_samples by n_features)</span>
-<span class="sd">        b_exp_dissim: np array with dim (m_samples by n_features)</span>
+<span class="sd">    b_exp_dissim : torch.Tensor</span>
+<span class="sd">        A tensor representing the second probability distribution.</span>
 
-<span class="sd">    Returns:</span>
-<span class="sd">        D: np array with dim (n_samples by m_samples). Pairwise KL divergence matrix.</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    divergence : np.ndarray</span>
+<span class="sd">        A tensor containing the Kullback-Leibler divergence for each sample.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">assert</span> <span class="p">(</span>
         <span class="n">a_exp_dissim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">b_exp_dissim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -341,6 +451,39 @@
 
 
 <span class="k">def</span> <span class="nf">dissimilarity_metric</span><span class="p">(</span><span class="n">which</span><span class="p">,</span> <span class="n">a_slice</span><span class="p">,</span> <span class="n">b_slice</span><span class="p">,</span> <span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">b_exp_dissim</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes a dissimilarity matrix between two distribution using a specified</span>
+<span class="sd">    metric.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    which : str</span>
+<span class="sd">        The dissimilarity metric to use. Options are:</span>
+<span class="sd">        - &quot;euc&quot; or &quot;euclidean&quot; for Euclidean distance.</span>
+<span class="sd">        - &quot;gkl&quot; for generalized KL divergence.</span>
+<span class="sd">        - &quot;kl&quot; for KL divergence.</span>
+<span class="sd">        - &quot;selection_kl&quot; for KL divergence with top 2000 high-UMI genes.</span>
+<span class="sd">        - &quot;pca&quot; for PCA-based distance.</span>
+<span class="sd">        - &quot;glmpca&quot; for GLM-PCA-based distance.</span>
+
+<span class="sd">    a_slice : AnnData</span>
+<span class="sd">        AnnData object containing data for the first slice.</span>
+
+<span class="sd">    b_slice : AnnData</span>
+<span class="sd">        AnnData object containing data for the second slice.</span>
+
+<span class="sd">    a_exp_dissim : torch.Tensor</span>
+<span class="sd">        A tensor representing the first probability distribution.</span>
+
+<span class="sd">    b_exp_dissim : torch.Tensor</span>
+<span class="sd">        A tensor representing the second probability distribution.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    torch.Tensor</span>
+<span class="sd">        A tensor representing pairwise dissimilarities between two distributions</span>
+<span class="sd">        according to the specified metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">match</span> <span class="n">which</span><span class="p">:</span>
         <span class="k">case</span> <span class="s2">&quot;euc&quot;</span> <span class="o">|</span> <span class="s2">&quot;euclidean&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span><span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">b_exp_dissim</span><span class="p">)</span>

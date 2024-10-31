@@ -1,3 +1,9 @@
+"""
+This module provides functions to compute an optimal transport plan that aligns multiple tissue slices
+using result of an ST experiment that includes a p genes by n spots transcript count matrix and coordinate
+matrix of the spots
+"""
+
 from typing import List, Tuple, Optional
 import torch
 import numpy as np
@@ -19,7 +25,7 @@ def pairwise_align(
     a_slice: AnnData,
     b_slice: AnnData,
     overlap_fraction: float = None,
-    exp_dissim_matrix=None,
+    exp_dissim_matrix: np.ndarray = None,
     alpha: float = 0.1,
     exp_dissim_metric: str = "kl",
     pi_init=None,
@@ -37,31 +43,100 @@ def pairwise_align(
     armijo=False,
     **kwargs,
 ) -> Tuple[np.ndarray, Optional[int]]:
+    r"""
+    Returns a mapping :math:`( \Pi = [\pi_{ij}] )` between spots in one slice and spots in another slice
+    while preserving gene expression and spatial distances of mapped spots, where :math:`\pi_{ij}` describes the probability that
+    a spot i in the first slice is aligned to a spot j in the second slice.
+
+    Given slices :math:`(X, D, g)` and :math:`(X', D', g')` containing :math:`n` and :math:`n'` spots, respectively,
+    over the same :math:`p` genes, an expression cost function :math:`c`, and a parameter :math:`(0 \leq \alpha \leq 1)`,
+    this function finds a mapping :math:`( \Pi \in \Gamma(g, g') )` that minimizes the following transport cost:
+
+    .. math::
+        F(\Pi; X, D, X', D', c, \alpha) = (1 - \alpha) \sum_{i,j} c(x_i, x'_j) \pi_{ij} + \alpha \sum_{i,j,k,l} (d_{ik} - d'_{jl})^2 \pi_{ij} \pi_{kl}'. \tag{1}
+
+    subject to the regularity constraint that :math:`\pi` has to be a probabilistic coupling between :math:`g` and :math:`g'`:
+
+    .. math::
+        \pi \in \mathcal{F}(g, g') = \left\{ \pi \in \mathbb{R}^{n \times n'} \mid \pi \geq 0, \pi 1_{n'} = g, \pi^T 1_n = g' \right\}. \tag{2}
+
+    Where:
+
+        - :math:`X` and :math:`X'` represent the gene expression data for each slice,
+        - :math:`D` and :math:`D'` represent the spatial distance matrices for each slice,
+        - :math:`c` is a cost function applied to expression differences, and
+        - :math:`\alpha` is a parameter that balances expression and spatial distance preservation in the mapping.
+        - :math:`g` and :math:`g'` represent probability distribution over the spots in slice :math:`X` and :math:`X'`, respectively
+
+    .. note::
+        When the value for :math:`\textit {overlap_fraction}` is provided, this function solves the :math:`\textit{partial pairwise slice alignment problem}`
+        by minimizing the same objective function as Equation (1), but with a different set of constraints that allow for unmapped spots.
+        Given a parameter :math:`s \in [0, 1]` describing the fraction of mass to transport between :math:`g` and :math:`g'`, we define a set
+        :math:`\mathcal{P}(g, g', s)` of :math:`s`-:math:`\textit{partial}` couplings between distributions :math:`g` and :math:`g'` as:
+
+        .. math::
+            \mathcal{P}(g, g', s) = \left\{ \pi \in \mathbb{R}^{n \times n'} \mid \pi \geq 0, \pi 1_{n'} \leq g, \pi^T 1_n \leq g', 1_n^T \pi 1_{n'} = s \right\}. \tag{3}
+
+        Where:
+
+            - :math:`s \in [0, 1]` is the overlap percentage between the two slices to align. (The constraint :math:`1_n^T \pi 1_{n'} = s` ensures that only the fraction of :math:`s` probability mass is transported)
+
+    Parameters
+    ----------
+    a_slice : AnnData
+        AnnData object containing data for the first slice.
+    b_slice : AnnData
+        AnnData object containing data for the second slice.
+    overlap_fraction : float, optional
+        Fraction of overlap between the two slices, must be between 0 and 1. If None, full alignment is performed.
+    exp_dissim_matrix : np.ndarray, optional
+        Precomputed expression dissimilarity matrix between two slices. If None, it will be computed.
+    alpha : float, default=0.1
+        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
+        Setting alpha = 0 uses only transcriptional information, while alpha = 1 uses only spatial coordinates.
+    exp_dissim_metric : str, default="kl"
+        Metric used to compute the expression dissimilarity with the following options:
+        - 'kl' for Kullback-Leibler divergence between slices,
+        - 'euc' for Euclidean distance,
+        - 'gkl' for generalized Kullback-Leibler divergence,
+        - 'selection_kl' for a selection-based KL approach,
+        - 'pca' for Principal Component Analysis,
+        - 'glmpca' for Generalized Linear Model PCA.
+    pi_init : np.ndarray, optional
+        Initial transport plan. If None, it will be computed.
+    a_spots_weight : np.ndarray, optional
+        Weight distribution for the spots in the first slice. If None, uniform weights are used.
+    b_spots_weight : np.ndarray, optional
+        Weight distribution for the spots in the second slice. If None, uniform weights are used.
+    norm : bool, default=False
+        If True, normalizes spatial distances.
+    numItermax : int, default=200
+        Maximum number of iterations for the optimization.
+    backend : Backend, default=ot.backend.TorchBackend()
+        Backend to be used for computations.
+    use_gpu : bool, default=True
+        Whether to use GPU for computations. If True but no GPU is available, will default to CPU.
+    return_obj : bool, default=False
+        If True, returns the optimization object along with the transport plan.
+    maxIter : int, default=1000
+        Maximum number of iterations for the dissimilarity calculation.
+    optimizeTheta : bool, default=True
+        Whether to optimize theta during dissimilarity calculation.
+    eps : float, default=1e-4
+        Tolerance level for convergence.
+    do_histology : bool, default=False
+        If True, incorporates RGB dissimilarity from histology data.
+    armijo : bool, default=False
+        If True, uses Armijo rule for line search during optimization.
+
+    Returns
+    -------
+    Tuple[np.ndarray, Optional[int]]
+        - pi : np.ndarray
+          Optimal transport plan for aligning the two slices.r
+        - info : Optional[int]
+          Information on the optimization process (if `return_obj` is True), else None.
     """
-    Calculates and returns optimal alignment of two slices.
-
-    Args:
-        a_slice: Slice A to align.
-        b_slice: Slice B to align.
-        alpha:  Alignment tuning parameter. Note: 0 <= alpha <= 1.
-        exp_dissim_metric: Expression dissimilarity measure: ``'kl'`` or ``'euclidean'``.
-        pi_init (array-like, optional): Initial mapping to be used in FGW-OT, otherwise default is uniform mapping.
-        a_spots_weight (array-like, optional): Distribution of sliceA spots, otherwise default is uniform.
-        b_spots_weight (array-like, optional): Distribution of sliceB spots, otherwise default is uniform.
-        numItermax: Max number of iterations during FGW-OT.
-        norm: If ``True``, scales spatial distances such that neighboring spots are at distance 1. Otherwise, spatial distances remain unchanged.
-        backend: Type of backend to run calculations. For list of backends available on system: ``ot.backend.get_backend_list()``.
-        use_gpu: If ``True``, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.
-        return_obj: If ``True``, additionally returns objective function output of FGW-OT.
-
-    Returns:
-        - Alignment of spots.
-
-        If ``return_obj = True``, additionally returns:
-
-        - Objective function output of FGW-OT.
-    """
-
     if use_gpu and not torch.cuda.is_available():
         logger.info("GPU is not available, resorting to torch CPU.")
         use_gpu = False
@@ -202,30 +277,78 @@ def center_align(
     backend=ot.backend.TorchBackend(),
     use_gpu: bool = True,
 ) -> Tuple[AnnData, List[np.ndarray]]:
-    """
-    Computes center alignment of slices.
+    r"""
+    Infers a "center" slice consisting of a low rank expression matrix :math:`X = WH` and a collection of
+    :math:`\pi` of mappings from the spots of the center slice to the spots of each input slice.
 
-    Args:
-        initial_slice: Slice to use as the initialization for center alignment; Make sure to include gene expression and spatial information.
-        slices: List of slices to use in the center alignment.
-        slice_weights (array-like, optional): List of probability weights assigned to each slice; If ``None``, use uniform weights.
-        alpha:  Alignment tuning parameter. Note: 0 <= alpha <= 1.
-        n_components: Number of components in NMF decomposition.
-        threshold: Threshold for convergence of feature_matrix and coeff_matrix during NMF decomposition.
-        max_iter: Maximum number of iterations for our center alignment algorithm.
-        exp_dissim_metric: Expression dissimilarity measure: ``'kl'`` or ``'euclidean'``.
-        norm:  If ``True``, scales spatial distances such that neighboring spots are at distance 1. Otherwise, spatial distances remain unchanged.
-        random_seed: Set random seed for reproducibility.
-        pi_inits: Initial list of mappings between 'A' and 'slices' to solver. Otherwise, default will automatically calculate mappings.
-        spots_weights (List[array-like], optional): Distributions of spots for each slice. Otherwise, default is uniform.
-        backend: Type of backend to run calculations. For list of backends available on system: ``ot.backend.get_backend_list()``.
-        use_gpu: If ``True``, use gpu. Otherwise, use cpu. Currently we only have gpu support for Pytorch.
+    Given slices :math:`(X^{(1)}, D^{(1)}, g^{(1)}), \dots, (X^{(t)}, D^{(t)}, g^{(t)})` containing :math:`n_1, \dots, n_t`
+    spots, respectively over the same :math:`p` genes, a spot distance matrix :math:`D \in \mathbb{R}^{n \times n}_{+}`,
+    a distribution :math:`g` over :math:`n` spots, an expression cost function :math:`c`, a distribution
+    :math:`\lambda \in \mathbb{R}^t_{+}` and parameters :math:`0 \leq \alpha \leq 1`, :math:`m \in \mathbb{N}`,
+    find an expression matrix :math:`X = WH` where :math:`W \in \mathbb{R}^{p \times m}_{+}` and :math:`H \in \mathbb{R}^{m \times n}_{+}`,
+    and mappings :math:`\Pi^{(q)} \in \Gamma(g, g^{(q)})` for each slice :math:`q = 1, \dots, t` that minimize the following objective:
+
+    .. math::
+        R(W, H, \Pi^{(1)}, \dots, \Pi^{(t)}) = \sum_q \lambda_q F(\Pi^{(q)}; WH, D, X^{(q)}, D^{(q)}, c, \alpha)
+
+        = \sum_q \lambda_q \left[(1 - \alpha) \sum_{i,j} c(WH_{\cdot,i}, x^{(q)}_j) \pi^{(q)}_{ij} + \alpha \sum_{i,j,k,l} (d_{ik} - d^{(q)}_{jl})^2 \pi^{(q)}_{ij} \pi^{(q)}_{kl} \right].
+
+    Where:
+
+        - :math:`X^{q} = [x_{ij}] \in \mathbb{N}^{p \times n_t}` is a :math:`p` genes by :math:`n_t` spots transcript count matrix for :math:`q^{th}` slice,
+        - :math:`D^{(q)}`, where :math:`d_ij = \parallel z_.i - z_.j \parallel` is the spatial distance between spot :math:`i` and :math:`j`, represents the spot pairwise distance matrix for :math:`q^{th}` slice,
+        - :math:`c: \mathbb{R}^{p}_{+} \times \mathbb{R}^{p}_{+} \to \mathbb{R}_{+}`, is a function that measures a nonnegative cost between the expression profiles of two spots over all genes
+        - :math:`\alpha` is a parameter balancing expression and spatial distance preservation,
+        - :math:`W` and :math:`H` form the low-rank approximation of the center slice's expression matrix, and
+        - :math:`\lambda_q` weighs each slice :math:`q` in the objective.
+
+    Parameters
+    ----------
+    initial_slice : AnnData
+        An AnnData object that represent a slice to be used as a reference data for alignment
+    slices : List[AnnData]
+        A list of AnnData objects that represent different slices to be aligned with the initial slice.
+    slice_weights : List[float], optional
+        Weights for each slice in the alignment process. If None, all slices are treated equally.
+    alpha : float, default=0.1
+        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
+        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.
+    n_components : int, default=15
+        Number of components to use for the NMF.
+    threshold : float, default=0.001
+        Convergence threshold for the optimization process. The process stops when the change
+        in loss is below this threshold.
+    max_iter : int, default=10
+        Maximum number of iterations for the optimization process.
+    exp_dissim_metric : str, default="kl"
+        The metric used to compute dissimilarity. Options include "euclidean" or "kl" for
+        Kullback-Leibler divergence.
+    norm : bool, default=False
+        If True, normalizes spatial distances.
+    random_seed : Optional[int], default=None
+        Random seed for reproducibility.
+    pi_inits : Optional[List[np.ndarray]], default=None
+        Initial transport plans for each slice. If None, it will be computed.
+    spots_weights : List[float], optional
+        Weights for individual spots in each slices. If None, uniform distribution is used.
+    backend : Backend, default=ot.backend.TorchBackend()
+        Backend to be used for computations (default is TorchBackend).
+    use_gpu : bool, default=True
+        Whether to use GPU for computations. If True but no GPU is available, will default to CPU.
+
+    Returns
+    -------
+    Tuple[AnnData, List[np.ndarray]]
+        A tuple containing:
+        - center_slice : AnnData
+            The aligned AnnData object representing the center slice after optimization.
+        - pis : List[np.ndarray]
+            List of optimal transport distributions for each slice after alignment.
 
     Returns:
         - Inferred center slice with full and low dimensional representations (feature_matrix, coeff_matrix) of the gene expression matrix.
         - List of pairwise alignment mappings of the center slice (rows) to each input slice (columns).
     """
-
     if use_gpu and not torch.cuda.is_available():
         logger.info("GPU is not available, resorting to torch CPU.")
         use_gpu = False
@@ -353,20 +476,64 @@ def center_align(
 
 
 def center_ot(
-    feature_matrix,
-    coeff_matrix,
-    slices,
-    center_coordinates,
-    common_genes,
-    alpha,
+    feature_matrix: np.ndarray,
+    coeff_matrix: np.ndarray,
+    slices: List[AnnData],
+    center_coordinates: np.ndarray,
+    common_genes: List[str],
+    alpha: float,
     backend,
-    use_gpu,
-    exp_dissim_metric="kl",
-    norm=False,
-    pi_inits=None,
-    spot_weights=None,
-    numItermax=200,
-):
+    use_gpu: bool,
+    exp_dissim_metric: str = "kl",
+    norm: bool = False,
+    pi_inits: Optional[List[np.ndarray]] = None,
+    spot_weights: Optional[List[float]] = None,
+    numItermax: int = 200,
+) -> Tuple[List[np.ndarray], np.ndarray]:
+    """Computes the optimal mappings \Pi^{(1)}, \ldots, \Pi^{(t)} given W (specified features)
+    and H (coefficient matrix) by solving the pairwise slice alignment problem between the
+    center slice and each slices separately
+
+    Parameters
+    ----------
+    feature_matrix : np.ndarray
+        The matrix representing features extracted from the initial slice.
+    coeff_matrix : np.ndarray
+        The matrix representing the coefficients corresponding to the features.
+    slices : List[AnnData]
+        A list of AnnData objects representing the slices to be aligned with the center slice.
+    center_coordinates : np.ndarray
+        Spatial coordinates of the center slice.
+    common_genes : Index
+        Index of common genes shared among all slices for alignment.
+    alpha : float
+        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
+        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.
+    backend : Backend
+        Backend to be used for computations.
+    use_gpu : bool
+        Whether to use GPU for computations. If True but no GPU is available, will default to CPU.
+    exp_dissim_metric : str, default="kl"
+        Metric used to compute the expression dissimilarity between slices. Options include "euclidean" and "kl".
+    norm : bool, default=False
+        If True, normalizes spatial distances.
+    pi_inits : Optional[List[np.ndarray]], default=None
+        Initial transport plans for each slice. If None, it will be computed.
+    spot_weights : Optional[List[float]], default=None
+        Weights for individual spots in each slice. If None, uniform distribution is used.
+    numItermax : int, default=200
+        Maximum number of iterations allowed for the optimization process.
+
+    Returns
+    -------
+    Tuple[List[np.ndarray], np.ndarray]
+        A tuple containing:
+        - pis : List[np.ndarray]
+            List of optimal transport plans for aligning each slice to the center slice.
+        - losses : np.ndarray
+            Array of loss values corresponding to each slice alignment.
+    """
+
     center_slice = AnnData(np.dot(feature_matrix, coeff_matrix))
     center_slice.var.index = common_genes
     center_slice.obsm["spatial"] = center_coordinates
@@ -397,15 +564,51 @@ def center_ot(
 
 
 def center_NMF(
-    feature_matrix,
-    coeff_matrix,
-    slices,
-    pis,
-    slice_weights,
-    n_components,
-    random_seed,
-    exp_dissim_metric="kl",
+    feature_matrix: np.ndarray,
+    coeff_matrix: np.ndarray,
+    slices: List[AnnData],
+    pis: List[torch.Tensor],
+    slice_weights: Optional[List[float]],
+    n_components: int,
+    random_seed: float,
+    exp_dissim_metric: str = "kl",
 ):
+    """
+    Finds two low-rank matrices \( W \) (feature matrix) and \( H \) (coefficient matrix) that approximate expression matrices of all
+    slices by minimizing the following objective function:
+
+    .. math::
+            S(W, H) = \sum_q \lambda_q \sum_{i, j} c((WH)_i, x_j^{(q)}) \pi_{ij}^{(q)}
+
+    Parameters
+    ----------
+    feature_matrix : np.ndarray
+        The matrix representing the features extracted from the slices.
+    coeff_matrix : np.ndarray
+        The matrix representing the coefficients associated with the features.
+    slices : List[AnnData]
+        A list of AnnData objects representing the slices involved in the mapping.
+    pis : List[torch.Tensor]
+        List of optimal transport plans for each slice, used to weight the features.
+    slice_weights : List[float]
+        Weights associated with each slice, indicating their importance in the NMF process.
+    n_components : int
+        The number of components to extract from the NMF.
+    random_seed : int
+        Random seed for reproducibility.
+    exp_dissim_metric : str, default="kl"
+        The metric used for measuring dissimilarity. Options include "euclidean" and "kl"
+        for Kullback-Leibler divergence.
+
+    Returns
+    -------
+    Tuple[np.ndarray, np.ndarray]
+        A tuple containing:
+        - new_feature_matrix : np.ndarray
+            The updated matrix of features after applying NMF.
+        - new_coeff_matrix : np.ndarray
+            The updated matrix of coefficients resulting from the NMF decomposition.
+    """
     logger.info("Solving Center Mapping NMF Problem.")
     n_features = feature_matrix.shape[0]
     weighted_features = n_features * sum(
@@ -435,27 +638,74 @@ def center_NMF(
 
 
 def my_fused_gromov_wasserstein(
-    exp_dissim_matrix,
-    a_spatial_dist,
-    b_spatial_dist,
-    a_spots_weight,
-    b_spots_weight,
-    alpha=0.5,
-    overlap_fraction=None,
-    pi_init=None,
-    loss_fun="square_loss",
-    armijo=False,
-    numItermax=200,
-    tol_rel=1e-9,
-    tol_abs=1e-9,
-    use_gpu=True,
-    numItermaxEmd=100000,
-    dummy=1,
+    exp_dissim_matrix: torch.Tensor,
+    a_spatial_dist: torch.Tensor,
+    b_spatial_dist: torch.Tensor,
+    a_spots_weight: torch.Tensor,
+    b_spots_weight: torch.Tensor,
+    alpha: Optional[float] = 0.5,
+    overlap_fraction: Optional[float] = None,
+    pi_init: Optional[np.ndarray] = None,
+    loss_fun: Optional[str] = "square_loss",
+    armijo: Optional[bool] = False,
+    numItermax: Optional[int] = 200,
+    tol_rel: Optional[float] = 1e-9,
+    tol_abs: Optional[float] = 1e-9,
+    use_gpu: Optional[bool] = True,
+    numItermaxEmd: Optional[int] = 100000,
+    dummy: Optional[int] = 1,
     **kwargs,
 ):
     """
-    Adapted fused_gromov_wasserstein with the added capability of defining a G_init (inital mapping).
-    Also added capability of utilizing different POT backends to speed up computation.
+    Computes a transport plan to align two weighted spatial distributions based on expression
+    dissimilarity matrix and spatial distances, using the Gromov-Wasserstein framework.
+    Also allows for partial alignment by specifying an overlap fraction.
+
+    Parameters
+    ----------
+    exp_dissim_matrix : torch.Tensor
+        Expression dissimilarity matrix between two slices.
+    a_spatial_dist : torch.Tensor
+        Spot distance matrix in the first slice.
+    b_spatial_dist : torch.Tensor
+        Spot distance matrix in the second slice.
+    a_spots_weight : torch.Tensor
+        Weight distribution for the spots in the first slice.
+    b_spots_weight : torch.Tensor
+        Weight distribution for the spots in the second slice.
+    alpha : float, Optional
+        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
+        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.
+    overlap_fraction : float, Option
+        Fraction of overlap between the two slices, must be between 0 and 1. If None, full alignment is performed.
+    pi_init : torch.Tensor, Optional
+        Initial transport plan. If None, it will be computed.
+    loss_fun : str, Optional
+        Loss function to be used in optimization. Default is "square_loss".
+    armijo : bool, Optional
+        If True, uses Armijo rule for line search during optimization.
+    numItermax : int, Optional
+        Maximum number of iterations allowed for the optimization process.
+    tol_rel : float, Optional
+        Relative tolerance for convergence, by default 1e-9.
+    tol_abs : float, Optional
+        Absolute tolerance for convergence, by default 1e-9.
+    use_gpu : bool, Optional
+        Whether to use GPU for computations. If True but no GPU is available, will default to CPU.
+    numItermaxEmd : int, Optional
+        Maximum iterations for Earth Mover's Distance (EMD) solver.
+    dummy : int, Optional
+        Number of dummy points for partial overlap, by default 1.
+
+
+    Returns
+    -------
+    Tuple[np.ndarray, Optional[dict]]
+        - pi : np.ndarray
+          Optimal transport plan that minimizes the fused gromov-wasserstein distance between
+          two distributions
+        - info : Optional[dict]
+          A dictionary containing details of teh optimization process.
 
     For more info, see: https://pythonot.github.io/gen_modules/ot.gromov.html
     """
@@ -506,6 +756,7 @@ def my_fused_gromov_wasserstein(
             pi_init = pi_init.cuda()
 
     def f_loss(pi):
+        """Compute the Gromov-Wasserstein loss for a given transport plan."""
         combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
             a_spatial_dist,
             b_spatial_dist,
@@ -516,6 +767,7 @@ def my_fused_gromov_wasserstein(
         return ot.gromov.gwloss(combined_spatial_cost, a_gradient, b_gradient, pi)
 
     def f_gradient(pi):
+        """Compute the gradient of the Gromov-Wasserstein loss for a given transport plan."""
         combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
             a_spatial_dist,
             b_spatial_dist,
@@ -529,6 +781,7 @@ def my_fused_gromov_wasserstein(
         armijo = True  # there is no closed form line-search with KL
 
     def line_search(f_cost, pi, pi_diff, linearized_matrix, cost_pi, **kwargs):
+        """Solve the linesearch in the fused wasserstein iterations"""
         if overlap_fraction:
             nonlocal count
             # keep track of error only on every 10th iteration
@@ -569,6 +822,7 @@ def my_fused_gromov_wasserstein(
         b_spots_weight,
         exp_dissim_matrix,
     ):
+        """Solves the Earth Movers distance problem and returns the OT matrix"""
         if overlap_fraction:
             _exp_dissim_matrix = torch.nn.functional.pad(
                 exp_dissim_matrix, pad=(0, dummy, 0, dummy), mode="constant"
@@ -622,53 +876,52 @@ def my_fused_gromov_wasserstein(
 
 
 def solve_gromov_linesearch(
-    pi,
-    pi_diff,
-    cost_pi,
-    a_spatial_dist,
-    b_spatial_dist,
-    exp_dissim_matrix,
-    alpha,
-    alpha_min=None,
-    alpha_max=None,
-    nx=None,
-    **kwargs,
+    pi: torch.Tensor,
+    pi_diff: torch.Tensor,
+    cost_pi: float,
+    a_spatial_dist: torch.Tensor,
+    b_spatial_dist: torch.Tensor,
+    exp_dissim_matrix: float,
+    alpha: float,
+    alpha_min: Optional[float] = None,
+    alpha_max: Optional[float] = None,
+    nx: str = None,
 ):
     """
-    Solve the linesearch in the FW iterations
+    Perform a line search to optimize the transport plan with respect to the Gromov-Wasserstein loss.
 
     Parameters
     ----------
-
-    pi : array-like, shape(ns,nt)
+    pi : torch.Tensor
         The transport map at a given iteration of the FW
-    pi_diff : array-like (ns,nt)
-        Difference between the optimal map found by linearization in the FW algorithm and the value at a given iteration
+    pi_diff : torch.Tensor
+        Difference between the optimal map found by linearization in the fused wasserstein algorithm and the value at a given iteration
     cost_pi : float
         Value of the cost at `G`
-    a_spatial_dist : array-like (ns,ns), optional
-        Structure matrix in the source domain.
-    b_spatial_dist : array-like (nt,nt), optional
-        Structure matrix in the target domain.
-    exp_dissim_matrix : array-like (ns,nt)
-        Cost matrix between the features.
+    a_spatial_dist : torch.Tensor
+        Spot distance matrix in the first slice.
+    b_spatial_dist : torch.Tensor
+        Spot distance matrix in the second slice.
+    exp_dissim_matrix : torch.Tensor
+         Expression dissimilarity matrix between two slices.
     alpha : float
-        Regularization parameter.
-    alpha_min : float, optional
+        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
+        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.
+    alpha_min : float, Optional
         Minimum value for alpha
-    alpha_max : float, optional
+    alpha_max : float, Optional
         Maximum value for alpha
-    nx : backend, optional
+    nx : backend, Optional
         If let to its default value None, a backend test will be conducted.
+
     Returns
     -------
-    alpha : float
-        The optimal step size of the FW
+    minimal_cost : float
+        The optimal step size of the fused wasserstein
     fc : int
-        nb of function call. Useless here
-    cost_G : float
-        The value of the cost for the next iteration
-
+        Number of function call. (Not used in this case)
+    cost_pi : float
+        The final cost after the update of the transport plan.
 
     .. _references-solve-linesearch:
     References
@@ -707,14 +960,44 @@ def solve_gromov_linesearch(
 
 
 def line_search_partial(
-    alpha,
-    exp_dissim_matrix,
-    pi,
-    a_spatial_dist,
-    b_spatial_dist,
-    pi_diff,
-    loss_fun="square_loss",
+    alpha: float,
+    exp_dissim_matrix: torch.Tensor,
+    pi: torch.Tensor,
+    a_spatial_dist: torch.Tensor,
+    b_spatial_dist: torch.Tensor,
+    pi_diff: torch.Tensor,
+    loss_fun: str = "square_loss",
 ):
+    """
+    Solve the linesearch in the fused wasserstein iterations for partially overlapping slices
+
+    Parameters
+    ----------
+    alpha : float
+        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
+        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.
+    exp_dissim_matrix : torch.Tensor
+        Expression dissimilarity matrix between two slices.
+    pi : torch.Tensor
+        The transport map at a given iteration of the FW.
+    a_spatial_dist : torch.Tensor
+        Spot distance matrix in the first slice.
+    b_spatial_dist : torch.Tensor
+        Spot distance matrix in the first slice.
+    pi_diff : torch.Tensor
+        Difference between the optimal map found by linearization in the fused wasserstein algorithm and the value at a given iteration
+    loss_fun : str, Optional
+        Loss function to be used in optimization. Default is "square_loss".
+
+    Returns
+    -------
+    minimal_cost : float
+        The optimal step size of the fused wasserstein
+    a : float
+        The computed value for the first cost component.
+    cost_G : float
+        The final cost after the update of the transport plan.
+    """
     combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
         a_spatial_dist,
         b_spatial_dist,

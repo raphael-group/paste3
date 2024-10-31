@@ -1,4 +1,5 @@
-""" This module provide functions to load and process data from ST experiments. """
+"""This module provide functions to load and process data from ST experiments."""
+
 import scanpy as sc
 import numpy as np
 

@@ -117,9 +117,46 @@
     <span class="n">armijo</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Computes the optimal transport mapping between two slices by minimizing a transport cost</span>
-<span class="sd">    that balances expression similarity and spatial proximity</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a mapping :math:`( \Pi = [\pi_{ij}] )` between spots in one slice and spots in another slice</span>
+<span class="sd">    while preserving gene expression and spatial distances of mapped spots, where :math:`\pi_{ij}` describes the probability that</span>
+<span class="sd">    a spot i in the first slice is aligned to a spot j in the second slice.</span>
+
+<span class="sd">    Given slices :math:`(X, D, g)` and :math:`(X&#39;, D&#39;, g&#39;)` containing :math:`(n)` and :math:`(n&#39;)` spots, respectively,</span>
+<span class="sd">    over the same :math:`(p)` genes, an expression cost function :math:`(c)`, and a parameter :math:`(0 \leq \alpha \leq 1)`,</span>
+<span class="sd">    this function finds a mapping :math:`( \Pi \in \Gamma(g, g&#39;) )` that minimizes the following transport cost:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        F(\Pi; X, D, X&#39;, D&#39;, c, \alpha) = (1 - \alpha) \sum_{i,j} c(x_i, x&#39;_j) \pi_{ij} + \alpha \sum_{i,j,k,l} (d_{ik} - d&#39;_{jl})^2 \pi_{ij} \pi_{kl}&#39;. \tag{1}</span>
+
+<span class="sd">    subject to the regularity constraint that :math:`\pi` has to be a probabilistic coupling between :math:`g` and :math:`g&#39;`:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \pi \in \mathcal{F}(g, g&#39;) = \left\{ \pi \in \mathbb{R}^{n \times n&#39;} \mid \pi \geq 0, \pi 1_{n&#39;} = g, \pi^T 1_n = g&#39; \right\}. \tag{2}</span>
+
+<span class="sd">    Where:</span>
+
+<span class="sd">        - :math:`X` and :math:`X&#39;` represent the gene expression data for each slice,</span>
+<span class="sd">        - :math:`D` and :math:`D&#39;` represent the spatial distance matrices for each slice,</span>
+<span class="sd">        - :math:`c` is a cost function applied to expression differences, and</span>
+<span class="sd">        - :math:`\alpha` is a parameter that balances expression and spatial distance preservation in the mapping.</span>
+<span class="sd">        - :math:`g` and :math:`g&#39;` represent probability distribution over the spots in slice :math:`X` and :math:`X&#39;`, respectively</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        When the value for :math:`\textit {overlap_fraction}` is provided, this function solves the :math:`\textit{partial pairwise slice alignment problem}`</span>
+<span class="sd">        by minimizing the same objective function as Equation (1), but with a different set of constraints that allow for unmapped spots.</span>
+<span class="sd">        Given a parameter :math:`s \in [0, 1]` describing the fraction of mass to transport between :math:`g` and :math:`g&#39;`, we define a set</span>
+<span class="sd">        :math:`\mathcal{P}(g, g&#39;, s)` of :math:`s`-:math:`\textit{partial}` couplings between distributions :math:`g` and :math:`g&#39;` as:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \mathcal{P}(g, g&#39;, s) = \left\{ \pi \in \mathbb{R}^{n \times n&#39;} \mid \pi \geq 0, \pi 1_{n&#39;} \leq g, \pi^T 1_n \leq g&#39;, 1_n^T \pi 1_{n&#39;} = s \right\}. \tag{3}</span>
+
+<span class="sd">        Where:</span>
+
+<span class="sd">            - :math:`s \in [0, 1]` is the overlap percentage between the two slices to align. (The constraint :math:`1_n^T \pi 1_{n&#39;} = s` ensures that only the fraction of :math:`s` probability mass is transported)</span>
+
+
+
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -597,7 +634,7 @@
 <span class="sd">    slices by minimizing the following objective function:</span>
 
 <span class="sd">    .. math::</span>
-<span class="sd">           \[ S(W, H) = \sum_q \lambda_q \sum_{i, j} c((WH)_i, x_j^{(q)}) \pi_{ij}^{(q)}\]</span>
+<span class="sd">            S(W, H) = \sum_q \lambda_q \sum_{i, j} c((WH)_i, x_j^{(q)}) \pi_{ij}^{(q)}</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -721,7 +758,7 @@
 <span class="sd">    -------</span>
 <span class="sd">    Tuple[np.ndarray, Optional[dict]]</span>
 <span class="sd">        - pi : np.ndarray</span>
-<span class="sd">          Optimal transport plan that minimizes hte fused gromov-wasserstein distance between</span>
+<span class="sd">          Optimal transport plan that minimizes the fused gromov-wasserstein distance between</span>
 <span class="sd">          two distributions</span>
 <span class="sd">        - info : Optional[dict]</span>
 <span class="sd">          A dictionary containing details of teh optimization process.</span>

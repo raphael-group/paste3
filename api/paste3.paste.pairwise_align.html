@@ -18,6 +18,8 @@
       <script src="../_static/doctools.js"></script>
       <script src="../_static/sphinx_highlight.js"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -94,8 +96,42 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="paste3.paste.pairwise_align">
 <span class="sig-prename descclassname"><span class="pre">paste3.paste.</span></span><span class="sig-name descname"><span class="pre">pairwise_align</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a_slice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b_slice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlap_fraction=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_dissim_matrix=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha=0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_dissim_metric='kl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pi_init=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_spots_weight=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b_spots_weight=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numItermax=200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend=&lt;ot.backend.TorchBackend</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpu=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_obj=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxIter=1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizeTheta=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps=0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_histology=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">armijo=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/paste3/paste.html#pairwise_align"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#paste3.paste.pairwise_align" title="Permalink to this definition"></a></dt>
-<dd><p>Computes the optimal transport mapping between two slices by minimizing a transport cost
-that balances expression similarity and spatial proximity</p>
+<dd><p>Returns a mapping <span class="math notranslate nohighlight">\(( \Pi = [\pi_{ij}] )\)</span> between spots in one slice and spots in another slice
+while preserving gene expression and spatial distances of mapped spots, where <span class="math notranslate nohighlight">\(\pi_{ij}\)</span> describes the probability that
+a spot i in the first slice is aligned to a spot j in the second slice.</p>
+<p>Given slices <span class="math notranslate nohighlight">\((X, D, g)\)</span> and <span class="math notranslate nohighlight">\((X', D', g')\)</span> containing <span class="math notranslate nohighlight">\((n)\)</span> and <span class="math notranslate nohighlight">\((n')\)</span> spots, respectively,
+over the same <span class="math notranslate nohighlight">\((p)\)</span> genes, an expression cost function <span class="math notranslate nohighlight">\((c)\)</span>, and a parameter <span class="math notranslate nohighlight">\((0 \leq \alpha \leq 1)\)</span>,
+this function finds a mapping <span class="math notranslate nohighlight">\(( \Pi \in \Gamma(g, g') )\)</span> that minimizes the following transport cost:</p>
+<div class="math notranslate nohighlight">
+\[F(\Pi; X, D, X', D', c, \alpha) = (1 - \alpha) \sum_{i,j} c(x_i, x'_j) \pi_{ij} + \alpha \sum_{i,j,k,l} (d_{ik} - d'_{jl})^2 \pi_{ij} \pi_{kl}'. \tag{1}\]</div>
+<p>subject to the regularity constraint that <span class="math notranslate nohighlight">\(\pi\)</span> has to be a probabilistic coupling between <span class="math notranslate nohighlight">\(g\)</span> and <span class="math notranslate nohighlight">\(g'\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\pi \in \mathcal{F}(g, g') = \left\{ \pi \in \mathbb{R}^{n \times n'} \mid \pi \geq 0, \pi 1_{n'} = g, \pi^T 1_n = g' \right\}. \tag{2}\]</div>
+<p>Where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(X\)</span> and <span class="math notranslate nohighlight">\(X'\)</span> represent the gene expression data for each slice,</p></li>
+<li><p><span class="math notranslate nohighlight">\(D\)</span> and <span class="math notranslate nohighlight">\(D'\)</span> represent the spatial distance matrices for each slice,</p></li>
+<li><p><span class="math notranslate nohighlight">\(c\)</span> is a cost function applied to expression differences, and</p></li>
+<li><p><span class="math notranslate nohighlight">\(\alpha\)</span> is a parameter that balances expression and spatial distance preservation in the mapping.</p></li>
+<li><p><span class="math notranslate nohighlight">\(g\)</span> and <span class="math notranslate nohighlight">\(g'\)</span> represent probability distribution over the spots in slice <span class="math notranslate nohighlight">\(X\)</span> and <span class="math notranslate nohighlight">\(X'\)</span>, respectively</p></li>
+</ul>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When the value for <span class="math notranslate nohighlight">\(\textit {overlap_fraction}\)</span> is provided, this function solves the <span class="math notranslate nohighlight">\(\textit{partial pairwise slice alignment problem}\)</span>
+by minimizing the same objective function as Equation (1), but with a different set of constraints that allow for unmapped spots.
+Given a parameter <span class="math notranslate nohighlight">\(s \in [0, 1]\)</span> describing the fraction of mass to transport between <span class="math notranslate nohighlight">\(g\)</span> and <span class="math notranslate nohighlight">\(g'\)</span>, we define a set
+<span class="math notranslate nohighlight">\(\mathcal{P}(g, g', s)\)</span> of <span class="math notranslate nohighlight">\(s\)</span>-<span class="math notranslate nohighlight">\(\textit{partial}\)</span> couplings between distributions <span class="math notranslate nohighlight">\(g\)</span> and <span class="math notranslate nohighlight">\(g'\)</span> as:</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{P}(g, g', s) = \left\{ \pi \in \mathbb{R}^{n \times n'} \mid \pi \geq 0, \pi 1_{n'} \leq g, \pi^T 1_n \leq g', 1_n^T \pi 1_{n'} = s \right\}. \tag{3}\]</div>
+<p>Where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(s \in [0, 1]\)</span> is the overlap percentage between the two slices to align. (The constraint <span class="math notranslate nohighlight">\(1_n^T \pi 1_{n'} = s\)</span> ensures that only the fraction of <span class="math notranslate nohighlight">\(s\)</span> probability mass is transported)</p></li>
+</ul>
+</div></blockquote>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -104,7 +140,7 @@ that balances expression similarity and spatial proximity</p>
 <li><p><strong>overlap_fraction</strong> (<em>float</em><em>, </em><em>optional</em>) -- Fraction of overlap between the two slices, must be between 0 and 1. If None, full alignment is performed.</p></li>
 <li><p><strong>exp_dissim_matrix</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) -- Precomputed expression dissimilarity matrix between two slices. If None, it will be computed.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>default=0.1</em>) -- Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
-Setting lpha = 0 uses only transcriptional information, while lpha = 1 uses only spatial coordinates.</p></li>
+Setting alpha = 0 uses only transcriptional information, while alpha = 1 uses only spatial coordinates.</p></li>
 <li><p><strong>exp_dissim_metric</strong> (<em>str</em><em>, </em><em>default=&quot;kl&quot;</em>) -- Metric used to compute the expression dissimilarity with the following options:
 - 'kl' for Kullback-Leibler divergence between slices,
 - 'euc' for Euclidean distance,

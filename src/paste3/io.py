@@ -1,3 +1,4 @@
+""" This module provide functions to load and process data from ST experiments. """
 import scanpy as sc
 import numpy as np
 
@@ -10,7 +11,32 @@ logger = logging.getLogger(__name__)
 
 
 def process_files(g_fpath, s_fpath, w_fpath=None):
-    """Returns a list of AnnData objects."""
+    """
+    Processes gene expression files and associated spatial and weight files,
+    returning a list of AnnData objects with the relevant data loaded into
+    appropriate attributes.
+
+    This function supports two file types: CSV and HDF5 (H5AD). For CSV files,
+    it expects corresponding spatial and weight files to be provided.
+
+    Parameters
+    ----------
+    g_fpath : List[str]
+        List of file paths to the gene expression files (CSV or H5AD).
+
+    s_fpath : List[str]
+        List of file paths to the corresponding spatial files (CSV).
+
+    w_fpath : List[str], Optional
+        List of file paths to the corresponding weight files (CSV). If not
+        provided, weights are initialized uniformly.
+
+    Returns
+    -------
+    List[AnnData]
+        A list of AnnData objects, each containing gene expression data,
+        spatial information, and weights.
+    """
 
     ext = Path(g_fpath[0]).suffix
 
@@ -55,9 +81,10 @@ def process_files(g_fpath, s_fpath, w_fpath=None):
 
 
 def get_shape(file_path):
-    """Determines the shapes of the csv without opening the files"""
+    """Determines the shape of data inside of a csv file without opening it."""
 
     def is_numeric(value):
+        """Determine if the passed value is numeric."""
         try:
             float(value)
             return True

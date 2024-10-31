@@ -48,8 +48,8 @@ def pairwise_align(
     while preserving gene expression and spatial distances of mapped spots, where :math:`\pi_{ij}` describes the probability that
     a spot i in the first slice is aligned to a spot j in the second slice.
 
-    Given slices :math:`(X, D, g)` and :math:`(X', D', g')` containing :math:`(n)` and :math:`(n')` spots, respectively,
-    over the same :math:`(p)` genes, an expression cost function :math:`(c)`, and a parameter :math:`(0 \leq \alpha \leq 1)`,
+    Given slices :math:`(X, D, g)` and :math:`(X', D', g')` containing :math:`n` and :math:`n'` spots, respectively,
+    over the same :math:`p` genes, an expression cost function :math:`c`, and a parameter :math:`(0 \leq \alpha \leq 1)`,
     this function finds a mapping :math:`( \Pi \in \Gamma(g, g') )` that minimizes the following transport cost:
 
     .. math::
@@ -81,9 +81,6 @@ def pairwise_align(
 
             - :math:`s \in [0, 1]` is the overlap percentage between the two slices to align. (The constraint :math:`1_n^T \pi 1_{n'} = s` ensures that only the fraction of :math:`s` probability mass is transported)
 
-
-
-
     Parameters
     ----------
     a_slice : AnnData
@@ -96,7 +93,7 @@ def pairwise_align(
         Precomputed expression dissimilarity matrix between two slices. If None, it will be computed.
     alpha : float, default=0.1
         Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
-        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.
+        Setting alpha = 0 uses only transcriptional information, while alpha = 1 uses only spatial coordinates.
     exp_dissim_metric : str, default="kl"
         Metric used to compute the expression dissimilarity with the following options:
         - 'kl' for Kullback-Leibler divergence between slices,
@@ -136,7 +133,7 @@ def pairwise_align(
     -------
     Tuple[np.ndarray, Optional[int]]
         - pi : np.ndarray
-          Optimal transport plan for aligning the two slices.
+          Optimal transport plan for aligning the two slices.r
         - info : Optional[int]
           Information on the optimization process (if `return_obj` is True), else None.
     """
@@ -280,9 +277,30 @@ def center_align(
     backend=ot.backend.TorchBackend(),
     use_gpu: bool = True,
 ) -> Tuple[AnnData, List[np.ndarray]]:
-    """
-    Solves for an expression matrix \( X = WH \) and optimal mappings across multiple slices
-    by minimizing an objective function that balances expression cost and spatial proximity.
+    r"""
+    Infers a "center" slice consisting of a low rank expression matrix :math:`X = WH` and a collection of
+    :math:`\pi` of mappings from the spots of the center slice to the spots of each input slice.
+
+    Given slices :math:`(X^{(1)}, D^{(1)}, g^{(1)}), \dots, (X^{(t)}, D^{(t)}, g^{(t)})` containing :math:`n_1, \dots, n_t`
+    spots, respectively over the same :math:`p` genes, a spot distance matrix :math:`D \in \mathbb{R}^{n \times n}_{+}`,
+    a distribution :math:`g` over :math:`n` spots, an expression cost function :math:`c`, a distribution
+    :math:`\lambda \in \mathbb{R}^t_{+}` and parameters :math:`0 \leq \alpha \leq 1`, :math:`m \in \mathbb{N}`,
+    find an expression matrix :math:`X = WH` where :math:`W \in \mathbb{R}^{p \times m}_{+}` and :math:`H \in \mathbb{R}^{m \times n}_{+}`,
+    and mappings :math:`\Pi^{(q)} \in \Gamma(g, g^{(q)})` for each slice :math:`q = 1, \dots, t` that minimize the following objective:
+
+    .. math::
+        R(W, H, \Pi^{(1)}, \dots, \Pi^{(t)}) = \sum_q \lambda_q F(\Pi^{(q)}; WH, D, X^{(q)}, D^{(q)}, c, \alpha)
+
+        = \sum_q \lambda_q \left[(1 - \alpha) \sum_{i,j} c(WH_{\cdot,i}, x^{(q)}_j) \pi^{(q)}_{ij} + \alpha \sum_{i,j,k,l} (d_{ik} - d^{(q)}_{jl})^2 \pi^{(q)}_{ij} \pi^{(q)}_{kl} \right].
+
+    Where:
+
+        - :math:`X^{q} = [x_{ij}] \in \mathbb{N}^{p \times n_t}` is a :math:`p` genes by :math:`n_t` spots transcript count matrix for :math:`q^{th}` slice,
+        - :math:`D^{(q)}`, where :math:`d_ij = \parallel z_.i - z_.j \parallel` is the spatial distance between spot :math:`i` and :math:`j`, represents the spot pairwise distance matrix for :math:`q^{th}` slice,
+        - :math:`c: \mathbb{R}^{p}_{+} \times \mathbb{R}^{p}_{+} \to \mathbb{R}_{+}`, is a function that measures a nonnegative cost between the expression profiles of two spots over all genes
+        - :math:`\alpha` is a parameter balancing expression and spatial distance preservation,
+        - :math:`W` and :math:`H` form the low-rank approximation of the center slice's expression matrix, and
+        - :math:`\lambda_q` weighs each slice :math:`q` in the objective.
 
     Parameters
     ----------

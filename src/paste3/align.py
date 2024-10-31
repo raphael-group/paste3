@@ -86,7 +86,7 @@ def align(
         logger.info("Computing Pairwise Alignment ")
         pis = []
         for i in range(n_slices - 1):
-            pi = pairwise_align(
+            pi, _ = pairwise_align(
                 a_slice=slices[i],
                 b_slice=slices[i + 1],
                 overlap_fraction=overlap_fraction,
@@ -98,9 +98,7 @@ def align(
                 b_spots_weight=slices[i + 1].obsm["weights"],
                 norm=norm,
                 numItermax=numItermax,
-                backend=ot.backend.TorchBackend(),
                 use_gpu=use_gpu,
-                return_obj=return_obj,
                 maxIter=max_iter,
                 optimizeTheta=optimizeTheta,
                 eps=eps,

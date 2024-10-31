@@ -21,7 +21,7 @@ def test_partial_pairwise_align_glmpca(fn, slices2):
     data = np.load(output_dir / "test_partial_pairwise_align.npz")
     fn.return_value = torch.Tensor(data["glmpca"]).double()
 
-    pi_BC = pairwise_align(
+    pi_BC, _ = pairwise_align(
         slices2[0],
         slices2[1],
         overlap_fraction=0.7,
@@ -50,11 +50,10 @@ def test_partial_pairwise_align_given_cost_matrix(slices):
         overlap_fraction=0.85,
         exp_dissim_matrix=glmpca_distance_matrix,
         alpha=0.1,
-        armijo=False,
         norm=True,
-        return_obj=True,
         numItermax=10,
         maxIter=10,
+        armijo=False,
     )
 
     assert_frame_equal(
@@ -71,7 +70,6 @@ def test_partial_pairwise_align_histology(slices2):
         slices2[1],
         overlap_fraction=0.7,
         alpha=0.1,
-        return_obj=True,
         exp_dissim_metric="euclidean",
         norm=True,
         numItermax=10,

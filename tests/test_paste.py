@@ -41,16 +41,15 @@ def assert_checksum_equals(temp_dir, filename, loose=False):
 
 
 def test_pairwise_alignment(slices):
-    outcome = pairwise_align(
+    outcome, _ = pairwise_align(
         slices[0],
         slices[1],
         alpha=0.1,
         exp_dissim_metric="kl",
+        pi_init=None,
         a_spots_weight=slices[0].obsm["weights"].astype(slices[0].X.dtype),
         b_spots_weight=slices[1].obsm["weights"].astype(slices[1].X.dtype),
-        pi_init=None,
         use_gpu=True,
-        backend=ot.backend.TorchBackend(),
     )
     probability_mapping = pd.DataFrame(
         outcome.cpu().numpy(), index=slices[0].obs.index, columns=slices[1].obs.index

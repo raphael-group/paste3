@@ -211,11 +211,10 @@ def select_overlap_fraction(sliceA, sliceB, alpha=0.1, show_plot=True, numIterma
             overlap_fraction=m,
             exp_dissim_matrix=M,
             alpha=alpha,
-            armijo=False,
             norm=True,
-            return_obj=True,
             numItermax=numItermax,
             maxIter=numItermax,
+            armijo=False,
         )
         m_to_pi[m] = pi
 

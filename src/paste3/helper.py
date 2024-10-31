@@ -265,28 +265,17 @@ def to_dense_array(X):
     return torch.Tensor(np_array).double()
 
 
-def filter_for_common_genes(slices: List[AnnData]) -> None:
-    """
-    Filters a list of AnnData objects to retain only the common genes across
-    all slices.
-
-    Parameters
-    ----------
-    slices: List[AnnData]
-        A list of AnnData objects that represent different slices.
-    """
-    assert len(slices) > 0, "Cannot have empty list."
-
+def get_common_genes(slices: List[AnnData]) -> List[AnnData]:
+    """Returns common genes from multiple slices"""
     common_genes = slices[0].var.index
-    for s in slices:
-        common_genes = intersect(common_genes, s.var.index)
-    for i in range(len(slices)):
-        slices[i] = slices[i][:, common_genes]
-    logging.info(
-        "Filtered all slices for common genes. There are "
-        + str(len(common_genes))
-        + " common genes."
-    )
+
+    for i, slice in enumerate(slices, start=1):
+        common_genes = intersect(common_genes, slice.var.index)
+        if len(common_genes) == 0:
+            logger.error(f"Slice {i} has no common genes with rest of the slices.")
+            raise ValueError(f"Slice {i} has no common genes with rest of the slices.")
+
+    return [slice[:, common_genes] for slice in slices]
 
 
 def match_spots_using_spatial_heuristic(

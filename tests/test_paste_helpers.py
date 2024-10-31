@@ -9,7 +9,7 @@ from paste3.helper import (
     kl_divergence_backend,
     to_dense_array,
     kl_divergence,
-    filter_for_common_genes,
+    get_common_genes,
     match_spots_using_spatial_heuristic,
     generalized_kl_divergence,
     glmpca_distance,
@@ -75,8 +75,7 @@ def test_kl_divergence(slices):
 
 def test_filter_for_common_genes(slices):
     # creating a copy of the original list
-    slices = list(slices)
-    filter_for_common_genes(slices)
+    slices = get_common_genes(list(slices))
 
     common_genes = list(np.genfromtxt(output_dir / "common_genes.csv", dtype=str))
     for slice in slices:
@@ -164,8 +163,7 @@ def test_high_umi_gene_distance(slices):
 )
 def test_match_spots_using_spatial_heuristic(slices, _use_ot, filename):
     # creating a copy of the original list
-    slices = list(slices)
-    filter_for_common_genes(slices)
+    slices = get_common_genes(list(slices))
 
     spots_mapping = match_spots_using_spatial_heuristic(
         slices[0].X, slices[1].X, use_ot=bool(_use_ot)

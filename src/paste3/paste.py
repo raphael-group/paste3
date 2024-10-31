@@ -16,6 +16,7 @@ from paste3.helper import (
     intersect,
     to_dense_array,
     dissimilarity_metric,
+    get_common_genes,
 )
 
 logger = logging.getLogger(__name__)
@@ -33,16 +34,14 @@ def pairwise_align(
     b_spots_weight=None,
     norm: bool = False,
     numItermax: int = 200,
-    backend=ot.backend.TorchBackend(),
     use_gpu: bool = True,
-    return_obj: bool = False,
     maxIter=1000,
     optimizeTheta=True,
     eps=1e-4,
     do_histology: bool = False,
     armijo=False,
     **kwargs,
-) -> Tuple[np.ndarray, Optional[int]]:
+) -> Tuple[np.ndarray, dict]:
     r"""
     Returns a mapping :math:`( \Pi = [\pi_{ij}] )` between spots in one slice and spots in another slice
     while preserving gene expression and spatial distances of mapped spots, where :math:`\pi_{ij}` describes the probability that
@@ -112,12 +111,8 @@ def pairwise_align(
         If True, normalizes spatial distances.
     numItermax : int, default=200
         Maximum number of iterations for the optimization.
-    backend : Backend, default=ot.backend.TorchBackend()
-        Backend to be used for computations.
     use_gpu : bool, default=True
         Whether to use GPU for computations. If True but no GPU is available, will default to CPU.
-    return_obj : bool, default=False
-        If True, returns the optimization object along with the transport plan.
     maxIter : int, default=1000
         Maximum number of iterations for the dissimilarity calculation.
     optimizeTheta : bool, default=True
@@ -137,46 +132,24 @@ def pairwise_align(
         - info : Optional[int]
           Information on the optimization process (if `return_obj` is True), else None.
     """
+    # Convert every numpy array into tensors
+
     if use_gpu and not torch.cuda.is_available():
         logger.info("GPU is not available, resorting to torch CPU.")
         use_gpu = False
 
-    # subset for common genes
-    common_genes = intersect(a_slice.var.index, b_slice.var.index)
-    a_slice = a_slice[:, common_genes]
-    b_slice = b_slice[:, common_genes]
+    device = "cuda" if use_gpu else "cpu"
 
-    # check if slices are valid
-    for slice in [a_slice, b_slice]:
-        if not len(slice):
-            raise ValueError(f"Found empty `AnnData`:\n{a_slice}.")
+    a_slice, b_slice = get_common_genes([a_slice, b_slice])
 
-    # Backend
-    nx = backend
+    a_dist = torch.Tensor(a_slice.obsm["spatial"]).double()
+    b_dist = torch.Tensor(b_slice.obsm["spatial"]).double()
 
-    # Calculate spatial distances
-    a_coordinates = a_slice.obsm["spatial"].copy()
-    a_coordinates = nx.from_numpy(a_coordinates)
-    b_coordinates = b_slice.obsm["spatial"].copy()
-    b_coordinates = nx.from_numpy(b_coordinates)
+    a_exp_dissim = to_dense_array(a_slice.X).to(device)
+    b_exp_dissim = to_dense_array(b_slice.X).to(device)
 
-    a_spatial_dist = ot.dist(a_coordinates, a_coordinates, metric="euclidean")
-    b_spatial_dist = ot.dist(b_coordinates, b_coordinates, metric="euclidean")
-
-    if isinstance(nx, ot.backend.TorchBackend):
-        a_spatial_dist = a_spatial_dist.double()
-        b_spatial_dist = b_spatial_dist.double()
-    if use_gpu:
-        a_spatial_dist = a_spatial_dist.cuda()
-        b_spatial_dist = b_spatial_dist.cuda()
-
-    # Calculate expression dissimilarity
-    a_exp_dissim = to_dense_array(a_slice.X)
-    b_exp_dissim = to_dense_array(b_slice.X)
-
-    if isinstance(nx, ot.backend.TorchBackend) and use_gpu:
-        a_exp_dissim = a_exp_dissim.cuda()
-        b_exp_dissim = b_exp_dissim.cuda()
+    a_spatial_dist = torch.cdist(a_dist, a_dist).to(device)
+    b_spatial_dist = torch.cdist(b_dist, b_dist).to(device)
 
     if exp_dissim_matrix is None:
         exp_dissim_matrix = dissimilarity_metric(
@@ -190,7 +163,9 @@ def pairwise_align(
             maxIter=maxIter,
             eps=eps,
             optimizeTheta=optimizeTheta,
-        )
+        ).to(device)
+    else:
+        exp_dissim_matrix = torch.Tensor(exp_dissim_matrix).double().to(device)
 
     if do_histology:
         # Calculate RGB dissimilarity
@@ -200,7 +175,7 @@ def pairwise_align(
                 torch.Tensor(b_slice.obsm["rgb"]).double(),
             )
             .to(exp_dissim_matrix.dtype)
-            .to(exp_dissim_matrix.device)
+            .to(device)
         )
 
         # Scale M_exp and rgb_dissim_matrix, obtain M by taking half from each
@@ -208,39 +183,31 @@ def pairwise_align(
         rgb_dissim_matrix *= exp_dissim_matrix.max()
         exp_dissim_matrix = 0.5 * exp_dissim_matrix + 0.5 * rgb_dissim_matrix
 
-    # init distributions
     if a_spots_weight is None:
-        a_spots_weight = nx.ones((a_slice.shape[0],)) / a_slice.shape[0]
+        a_spots_weight = torch.ones((a_slice.shape[0],)) / a_slice.shape[0]
+        a_spots_weight = a_spots_weight.to(device)
     else:
-        a_spots_weight = nx.from_numpy(a_spots_weight)
+        a_spots_weight = torch.Tensor(a_spots_weight).double().to(device)
 
     if b_spots_weight is None:
-        b_spots_weight = nx.ones((b_slice.shape[0],)) / b_slice.shape[0]
+        b_spots_weight = torch.ones((b_slice.shape[0],)) / b_slice.shape[0]
     else:
-        b_spots_weight = nx.from_numpy(b_spots_weight)
+        b_spots_weight = torch.Tensor(b_spots_weight).double()
+        b_spots_weight = b_spots_weight.to(device)
 
-    if isinstance(nx, ot.backend.TorchBackend):
-        exp_dissim_matrix = exp_dissim_matrix.double()
-        a_spots_weight = a_spots_weight.double()
-        b_spots_weight = b_spots_weight.double()
-        if use_gpu:
-            exp_dissim_matrix = exp_dissim_matrix.cuda()
-            a_spots_weight = a_spots_weight.cuda()
-            b_spots_weight = b_spots_weight.cuda()
+    if pi_init is not None:
+        pi_init = torch.Tensor(pi_init).double().to(device)
 
     if norm:
-        a_spatial_dist /= nx.min(a_spatial_dist[a_spatial_dist > 0])
-        b_spatial_dist /= nx.min(b_spatial_dist[b_spatial_dist > 0])
-        if overlap_fraction:
-            a_spatial_dist /= a_spatial_dist[a_spatial_dist > 0].max()
-            a_spatial_dist *= exp_dissim_matrix.max()
-            b_spatial_dist /= b_spatial_dist[b_spatial_dist > 0].max()
-            b_spatial_dist *= exp_dissim_matrix.max()
+        a_spatial_dist /= torch.min(a_spatial_dist[a_spatial_dist > 0])
+        b_spatial_dist /= torch.min(b_spatial_dist[b_spatial_dist > 0])
+    if overlap_fraction:
+        a_spatial_dist /= a_spatial_dist[a_spatial_dist > 0].max()
+        a_spatial_dist *= exp_dissim_matrix.max()
+        b_spatial_dist /= b_spatial_dist[b_spatial_dist > 0].max()
+        b_spatial_dist *= exp_dissim_matrix.max()
 
-    # Run OT
-    if pi_init is not None and use_gpu:
-        pi_init.cuda()
-    pi, info = my_fused_gromov_wasserstein(
+    return my_fused_gromov_wasserstein(
         exp_dissim_matrix,
         a_spatial_dist,
         b_spatial_dist,
@@ -253,12 +220,6 @@ def pairwise_align(
         numItermax=maxIter if overlap_fraction else numItermax,
         use_gpu=use_gpu,
     )
-    if not overlap_fraction:
-        info = info["fgw_dist"].item()
-
-    if return_obj:
-        return pi, info
-    return pi
 
 
 def center_align(
@@ -550,16 +511,14 @@ def center_ot(
             slices[i],
             alpha=alpha,
             exp_dissim_metric=exp_dissim_metric,
-            norm=norm,
-            numItermax=numItermax,
-            return_obj=True,
             pi_init=pi_inits[i],
             b_spots_weight=spot_weights[i],
-            backend=backend,
+            norm=norm,
+            numItermax=numItermax,
             use_gpu=use_gpu,
         )
         pis.append(pi)
-        losses.append(loss)
+        losses.append(loss["fgw_dist"].item())
     return pis, np.array(losses)
 
 

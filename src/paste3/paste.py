@@ -517,7 +517,7 @@ def center_ot(
             use_gpu=use_gpu,
         )
         pis.append(pi)
-        losses.append(loss["fgw_dist"].item())
+        losses.append(loss["loss"][-1])
     return pis, np.array(losses)
 
 
@@ -670,14 +670,6 @@ def my_fused_gromov_wasserstein(
     a_spots_weight, b_spots_weight = ot.utils.list_to_array(
         a_spots_weight, b_spots_weight
     )
-    nx = ot.backend.get_backend(
-        a_spots_weight,
-        b_spots_weight,
-        a_spatial_dist,
-        b_spatial_dist,
-        exp_dissim_matrix,
-    )
-
     if overlap_fraction is not None:
         if overlap_fraction < 0:
             raise ValueError(
@@ -709,7 +701,7 @@ def my_fused_gromov_wasserstein(
         )
 
     if pi_init is not None:
-        pi_init = (1 / nx.sum(pi_init)) * pi_init
+        pi_init = (1 / torch.sum(pi_init)) * pi_init
         if use_gpu:
             pi_init = pi_init.cuda()
 
@@ -718,8 +710,8 @@ def my_fused_gromov_wasserstein(
         combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
             a_spatial_dist,
             b_spatial_dist,
-            nx.sum(pi, axis=1).reshape(-1, 1).to(a_spatial_dist.dtype),
-            nx.sum(pi, axis=0).reshape(1, -1).to(b_spatial_dist.dtype),
+            torch.sum(pi, axis=1).reshape(-1, 1).to(a_spatial_dist.dtype),
+            torch.sum(pi, axis=0).reshape(1, -1).to(b_spatial_dist.dtype),
             loss_fun,
         )
         return ot.gromov.gwloss(combined_spatial_cost, a_gradient, b_gradient, pi)
@@ -729,8 +721,8 @@ def my_fused_gromov_wasserstein(
         combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
             a_spatial_dist,
             b_spatial_dist,
-            nx.sum(pi, axis=1).reshape(-1, 1),
-            nx.sum(pi, axis=0).reshape(1, -1),
+            torch.sum(pi, axis=1).reshape(-1, 1),
+            torch.sum(pi, axis=0).reshape(1, -1),
             loss_fun,
         )
         return ot.gromov.gwggrad(combined_spatial_cost, a_gradient, b_gradient, pi)
@@ -749,7 +741,7 @@ def my_fused_gromov_wasserstein(
 
         if armijo:
             return ot.optim.line_search_armijo(
-                f_cost, pi, pi_diff, linearized_matrix, cost_pi, nx=nx, **kwargs
+                f_cost, pi, pi_diff, linearized_matrix, cost_pi, **kwargs
             )
         else:
             if overlap_fraction:
@@ -771,7 +763,6 @@ def my_fused_gromov_wasserstein(
                     b_spatial_dist,
                     exp_dissim_matrix=0.0,
                     alpha=1.0,
-                    nx=nx,
                     **kwargs,
                 )
 
@@ -804,7 +795,7 @@ def my_fused_gromov_wasserstein(
                 log=True,
             )
 
-    return_val = ot.optim.generic_conditional_gradient(
+    pi, info = ot.optim.generic_conditional_gradient(
         a=a_spots_weight,
         b=b_spots_weight,
         M=(1 - alpha) * exp_dissim_matrix,
@@ -821,15 +812,8 @@ def my_fused_gromov_wasserstein(
         stopThr2=tol_abs,
         **kwargs,
     )
-
-    pi, info = return_val
     if overlap_fraction:
-        info["partial_fgw_cost"] = info["loss"][-1]
         info["err"] = _info["err"]
-    else:
-        info["fgw_dist"] = info["loss"][-1]
-        info["u"] = info["u"]
-        info["v"] = info["v"]
     return pi, info
 
 

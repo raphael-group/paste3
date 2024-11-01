@@ -186,13 +186,13 @@ def pairwise_align(
 
     if a_spots_weight is None:
         a_spots_weight = torch.ones((a_slice.shape[0],)) / a_slice.shape[0]
-        a_spots_weight = a_spots_weight.to(device)
+        a_spots_weight = a_spots_weight.double().to(device)
     else:
         a_spots_weight = torch.Tensor(a_spots_weight).double().to(device)
 
     if b_spots_weight is None:
         b_spots_weight = torch.ones((b_slice.shape[0],)) / b_slice.shape[0]
-        b_spots_weight = b_spots_weight.to(device)
+        b_spots_weight = b_spots_weight.double().to(device)
     else:
         b_spots_weight = torch.Tensor(b_spots_weight).double().to(device)
 

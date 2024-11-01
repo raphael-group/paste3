@@ -145,11 +145,11 @@ def pairwise_align(
     a_dist = torch.Tensor(a_slice.obsm["spatial"]).double()
     b_dist = torch.Tensor(b_slice.obsm["spatial"]).double()
 
-    a_exp_dissim = to_dense_array(a_slice.X).to(device)
-    b_exp_dissim = to_dense_array(b_slice.X).to(device)
+    a_exp_dissim = to_dense_array(a_slice.X).double().to(device)
+    b_exp_dissim = to_dense_array(b_slice.X).double().to(device)
 
-    a_spatial_dist = torch.cdist(a_dist, a_dist).to(device)
-    b_spatial_dist = torch.cdist(b_dist, b_dist).to(device)
+    a_spatial_dist = torch.cdist(a_dist, a_dist).double().to(device)
+    b_spatial_dist = torch.cdist(b_dist, b_dist).double().to(device)
 
     if exp_dissim_matrix is None:
         exp_dissim_matrix = dissimilarity_metric(
@@ -163,7 +163,8 @@ def pairwise_align(
             maxIter=maxIter,
             eps=eps,
             optimizeTheta=optimizeTheta,
-        ).to(device)
+        )
+        exp_dissim_matrix = exp_dissim_matrix.double().to(device)
     else:
         exp_dissim_matrix = torch.Tensor(exp_dissim_matrix).double().to(device)
 
@@ -191,9 +192,9 @@ def pairwise_align(
 
     if b_spots_weight is None:
         b_spots_weight = torch.ones((b_slice.shape[0],)) / b_slice.shape[0]
-    else:
-        b_spots_weight = torch.Tensor(b_spots_weight).double()
         b_spots_weight = b_spots_weight.to(device)
+    else:
+        b_spots_weight = torch.Tensor(b_spots_weight).double().to(device)
 
     if pi_init is not None:
         pi_init = torch.Tensor(pi_init).double().to(device)

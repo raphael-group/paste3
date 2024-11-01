@@ -194,9 +194,6 @@ def pairwise_align(
     else:
         b_spots_weight = torch.Tensor(b_spots_weight).double().to(device)
 
-    if pi_init is not None:
-        pi_init = torch.Tensor(pi_init).double().to(device)
-
     if norm:
         a_spatial_dist /= torch.min(a_spatial_dist[a_spatial_dist > 0])
         b_spatial_dist /= torch.min(b_spatial_dist[b_spatial_dist > 0])
@@ -205,6 +202,10 @@ def pairwise_align(
         a_spatial_dist *= exp_dissim_matrix.max()
         b_spatial_dist /= b_spatial_dist[b_spatial_dist > 0].max()
         b_spatial_dist *= exp_dissim_matrix.max()
+
+    if pi_init is not None:
+        pi_init = torch.Tensor(pi_init).double().to(device)
+        pi_init = (1 / torch.sum(pi_init)) * pi_init
 
     return my_fused_gromov_wasserstein(
         exp_dissim_matrix,
@@ -217,7 +218,6 @@ def pairwise_align(
         pi_init=pi_init,
         loss_fun="square_loss",
         numItermax=maxIter if overlap_fraction else numItermax,
-        use_gpu=use_gpu,
     )
 
 
@@ -609,11 +609,10 @@ def my_fused_gromov_wasserstein(
     numItermax: Optional[int] = 200,
     tol_rel: Optional[float] = 1e-9,
     tol_abs: Optional[float] = 1e-9,
-    use_gpu: Optional[bool] = True,
     numItermaxEmd: Optional[int] = 100000,
     dummy: Optional[int] = 1,
     **kwargs,
-):
+) -> Tuple[np.ndarray, dict]:
     """
     Computes a transport plan to align two weighted spatial distributions based on expression
     dissimilarity matrix and spatial distances, using the Gromov-Wasserstein framework.
@@ -648,8 +647,6 @@ def my_fused_gromov_wasserstein(
         Relative tolerance for convergence, by default 1e-9.
     tol_abs : float, Optional
         Absolute tolerance for convergence, by default 1e-9.
-    use_gpu : bool, Optional
-        Whether to use GPU for computations. If True but no GPU is available, will default to CPU.
     numItermaxEmd : int, Optional
         Maximum iterations for Earth Mover's Distance (EMD) solver.
     dummy : int, Optional
@@ -667,9 +664,7 @@ def my_fused_gromov_wasserstein(
 
     For more info, see: https://pythonot.github.io/gen_modules/ot.gromov.html
     """
-    a_spots_weight, b_spots_weight = ot.utils.list_to_array(
-        a_spots_weight, b_spots_weight
-    )
+
     if overlap_fraction is not None:
         if overlap_fraction < 0:
             raise ValueError(
@@ -700,11 +695,6 @@ def my_fused_gromov_wasserstein(
             ]
         )
 
-    if pi_init is not None:
-        pi_init = (1 / torch.sum(pi_init)) * pi_init
-        if use_gpu:
-            pi_init = pi_init.cuda()
-
     def f_loss(pi):
         """Compute the Gromov-Wasserstein loss for a given transport plan."""
         combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
@@ -727,9 +717,6 @@ def my_fused_gromov_wasserstein(
         )
         return ot.gromov.gwggrad(combined_spatial_cost, a_gradient, b_gradient, pi)
 
-    if loss_fun == "kl_loss":
-        armijo = True  # there is no closed form line-search with KL
-
     def line_search(f_cost, pi, pi_diff, linearized_matrix, cost_pi, **kwargs):
         """Solve the linesearch in the fused wasserstein iterations"""
         if overlap_fraction:
@@ -739,7 +726,7 @@ def my_fused_gromov_wasserstein(
                 _info["err"].append(torch.norm(pi_diff))
             count += 1
 
-        if armijo:
+        if loss_fun == "kl_loss" or armijo:
             return ot.optim.line_search_armijo(
                 f_cost, pi, pi_diff, linearized_matrix, cost_pi, **kwargs
             )

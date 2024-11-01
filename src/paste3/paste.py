@@ -164,9 +164,7 @@ def pairwise_align(
             eps=eps,
             optimizeTheta=optimizeTheta,
         )
-        exp_dissim_matrix = exp_dissim_matrix.double().to(device)
-    else:
-        exp_dissim_matrix = torch.Tensor(exp_dissim_matrix).double().to(device)
+    exp_dissim_matrix = torch.Tensor(exp_dissim_matrix).double().to(device)
 
     if do_histology:
         # Calculate RGB dissimilarity

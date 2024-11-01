@@ -197,11 +197,11 @@ def pairwise_align(
     if norm:
         a_spatial_dist /= torch.min(a_spatial_dist[a_spatial_dist > 0])
         b_spatial_dist /= torch.min(b_spatial_dist[b_spatial_dist > 0])
-    if overlap_fraction:
-        a_spatial_dist /= a_spatial_dist[a_spatial_dist > 0].max()
-        a_spatial_dist *= exp_dissim_matrix.max()
-        b_spatial_dist /= b_spatial_dist[b_spatial_dist > 0].max()
-        b_spatial_dist *= exp_dissim_matrix.max()
+        if overlap_fraction:
+            a_spatial_dist /= a_spatial_dist[a_spatial_dist > 0].max()
+            a_spatial_dist *= exp_dissim_matrix.max()
+            b_spatial_dist /= b_spatial_dist[b_spatial_dist > 0].max()
+            b_spatial_dist *= exp_dissim_matrix.max()
 
     if pi_init is not None:
         pi_init = torch.Tensor(pi_init).double().to(device)

@@ -1,19 +1,20 @@
-import numpy as np
-import torch
-from scipy.spatial import ConvexHull
-from matplotlib.path import Path
-from scipy.spatial.distance import cdist
-import networkx as nx
-import pandas as pd
+import logging
+
 import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
+import pandas as pd
+import torch
+from matplotlib.path import Path
+from scipy.spatial import ConvexHull
+from scipy.spatial.distance import cdist
 
 from paste3.helper import (
+    glmpca_distance,
     intersect,
     to_dense_array,
-    glmpca_distance,
 )
 from paste3.paste import pairwise_align
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ def create_graph(adata, degree=4):
         for c in idx[r]:
             G.add_edge(r, c)
 
-    node_dict = dict(zip(range(adata.shape[0]), adata.obs.index))
+    node_dict = dict(zip(range(adata.shape[0]), adata.obs.index, strict=False))
     return G, node_dict
 
 
@@ -57,8 +58,8 @@ def generate_graph_from_labels(adata, labels_dict):
 
     # remove any nodes that are not mapped to a cluster
     removed_nodes = []
-    for node in node_to_spot.keys():
-        if node_to_spot[node] not in spot_to_cluster.keys():
+    for node in node_to_spot:
+        if node_to_spot[node] not in spot_to_cluster:
             removed_nodes.append(node)
 
     for node in removed_nodes:
@@ -66,7 +67,11 @@ def generate_graph_from_labels(adata, labels_dict):
         g.remove_node(node)
 
     labels = dict(
-        zip(g.nodes(), [spot_to_cluster[node_to_spot[node]] for node in g.nodes()])
+        zip(
+            g.nodes(),
+            [spot_to_cluster[node_to_spot[node]] for node in g.nodes()],
+            strict=False,
+        )
     )
     return g, labels
 
@@ -211,7 +216,6 @@ def select_overlap_fraction(sliceA, sliceB, alpha=0.1, show_plot=True, numIterma
             overlap_fraction=m,
             exp_dissim_matrix=M,
             alpha=alpha,
-            armijo=False,
             norm=True,
             return_obj=True,
             numItermax=numItermax,

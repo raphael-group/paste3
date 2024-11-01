@@ -1,14 +1,16 @@
-import pandas as pd
-import anndata as ad
-from pandas.testing import assert_frame_equal
-import scanpy as sc
-from pathlib import Path
-from paste3.io import get_shape, process_files
-from paste3.align import align
-import sys
-import subprocess as sp
-import paste3
 import logging
+import subprocess as sp
+import sys
+from pathlib import Path
+
+import anndata as ad
+import pandas as pd
+import scanpy as sc
+from pandas.testing import assert_frame_equal
+
+import paste3
+from paste3.align import align
+from paste3.io import get_shape, process_files
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +63,7 @@ def test_cmd_line_center(tmp_path):
         atol=1e-08,
     )
 
-    for i, pi in enumerate(range(2)):
+    for i in (0, 1):
         assert_frame_equal(
             pd.read_csv(tmp_path / f"slice_{i}_{i+1}_pairwise.csv"),
             pd.read_csv(
@@ -146,7 +148,10 @@ def test_get_shape():
 
 def test_version():
     result = sp.run(
-        [sys.executable, "-m", "paste3", "--version"], capture_output=True, text=True
+        [sys.executable, "-m", "paste3", "--version"],
+        capture_output=True,
+        text=True,
+        check=False,
     )
     assert result.returncode == 0
     assert result.stdout.strip() == paste3.__version__

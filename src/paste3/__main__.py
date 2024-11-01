@@ -1,8 +1,9 @@
-import logging
 import argparse
-import os
-from paste3 import align
+import logging
+from pathlib import Path
+
 import paste3
+from paste3 import align
 
 logger = logging.getLogger("paste3")
 
@@ -17,7 +18,7 @@ def main():
     subparsers.required = True
 
     def get_str_name(module):
-        return os.path.splitext(os.path.basename(module.__file__))[0]
+        return Path(module.__file__).stem
 
     for module in modules:
         this_parser = subparsers.add_parser(

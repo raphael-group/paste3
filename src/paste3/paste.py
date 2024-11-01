@@ -4,18 +4,19 @@ using result of an ST experiment that includes a p genes by n spots transcript c
 matrix of the spots
 """
 
-from typing import List, Tuple, Optional
-import torch
+import logging
+
 import numpy as np
-from anndata import AnnData
 import ot
+import torch
+from anndata import AnnData
 from ot.lp import emd
 from sklearn.decomposition import NMF
-import logging
+
 from paste3.helper import (
+    dissimilarity_metric,
     intersect,
     to_dense_array,
-    dissimilarity_metric,
 )
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ logger = logging.getLogger(__name__)
 def pairwise_align(
     a_slice: AnnData,
     b_slice: AnnData,
-    overlap_fraction: float = None,
+    overlap_fraction: float | None = None,
     exp_dissim_matrix: np.ndarray = None,
     alpha: float = 0.1,
     exp_dissim_metric: str = "kl",
@@ -33,16 +34,13 @@ def pairwise_align(
     b_spots_weight=None,
     norm: bool = False,
     numItermax: int = 200,
-    backend=ot.backend.TorchBackend(),
     use_gpu: bool = True,
     return_obj: bool = False,
     maxIter=1000,
     optimizeTheta=True,
     eps=1e-4,
     do_histology: bool = False,
-    armijo=False,
-    **kwargs,
-) -> Tuple[np.ndarray, Optional[int]]:
+) -> tuple[np.ndarray, int | None]:
     r"""
     Returns a mapping :math:`( \Pi = [\pi_{ij}] )` between spots in one slice and spots in another slice
     while preserving gene expression and spatial distances of mapped spots, where :math:`\pi_{ij}` describes the probability that
@@ -112,8 +110,6 @@ def pairwise_align(
         If True, normalizes spatial distances.
     numItermax : int, default=200
         Maximum number of iterations for the optimization.
-    backend : Backend, default=ot.backend.TorchBackend()
-        Backend to be used for computations.
     use_gpu : bool, default=True
         Whether to use GPU for computations. If True but no GPU is available, will default to CPU.
     return_obj : bool, default=False
@@ -126,8 +122,6 @@ def pairwise_align(
         Tolerance level for convergence.
     do_histology : bool, default=False
         If True, incorporates RGB dissimilarity from histology data.
-    armijo : bool, default=False
-        If True, uses Armijo rule for line search during optimization.
 
     Returns
     -------
@@ -152,7 +146,7 @@ def pairwise_align(
             raise ValueError(f"Found empty `AnnData`:\n{a_slice}.")
 
     # Backend
-    nx = backend
+    nx = ot.backend.TorchBackend()
 
     # Calculate spatial distances
     a_coordinates = a_slice.obsm["spatial"].copy()
@@ -163,9 +157,8 @@ def pairwise_align(
     a_spatial_dist = ot.dist(a_coordinates, a_coordinates, metric="euclidean")
     b_spatial_dist = ot.dist(b_coordinates, b_coordinates, metric="euclidean")
 
-    if isinstance(nx, ot.backend.TorchBackend):
-        a_spatial_dist = a_spatial_dist.double()
-        b_spatial_dist = b_spatial_dist.double()
+    a_spatial_dist = a_spatial_dist.double()
+    b_spatial_dist = b_spatial_dist.double()
     if use_gpu:
         a_spatial_dist = a_spatial_dist.cuda()
         b_spatial_dist = b_spatial_dist.cuda()
@@ -174,7 +167,7 @@ def pairwise_align(
     a_exp_dissim = to_dense_array(a_slice.X)
     b_exp_dissim = to_dense_array(b_slice.X)
 
-    if isinstance(nx, ot.backend.TorchBackend) and use_gpu:
+    if use_gpu:
         a_exp_dissim = a_exp_dissim.cuda()
         b_exp_dissim = b_exp_dissim.cuda()
 
@@ -219,14 +212,13 @@ def pairwise_align(
     else:
         b_spots_weight = nx.from_numpy(b_spots_weight)
 
-    if isinstance(nx, ot.backend.TorchBackend):
-        exp_dissim_matrix = exp_dissim_matrix.double()
-        a_spots_weight = a_spots_weight.double()
-        b_spots_weight = b_spots_weight.double()
-        if use_gpu:
-            exp_dissim_matrix = exp_dissim_matrix.cuda()
-            a_spots_weight = a_spots_weight.cuda()
-            b_spots_weight = b_spots_weight.cuda()
+    exp_dissim_matrix = exp_dissim_matrix.double()
+    a_spots_weight = a_spots_weight.double()
+    b_spots_weight = b_spots_weight.double()
+    if use_gpu:
+        exp_dissim_matrix = exp_dissim_matrix.cuda()
+        a_spots_weight = a_spots_weight.cuda()
+        b_spots_weight = b_spots_weight.cuda()
 
     if norm:
         a_spatial_dist /= nx.min(a_spatial_dist[a_spatial_dist > 0])
@@ -263,7 +255,7 @@ def pairwise_align(
 
 def center_align(
     initial_slice: AnnData,
-    slices: List[AnnData],
+    slices: list[AnnData],
     slice_weights=None,
     alpha: float = 0.1,
     n_components: int = 15,
@@ -271,12 +263,11 @@ def center_align(
     max_iter: int = 10,
     exp_dissim_metric: str = "kl",
     norm: bool = False,
-    random_seed: Optional[int] = None,
-    pi_inits: Optional[List[np.ndarray]] = None,
+    random_seed: int | None = None,
+    pi_inits: list[np.ndarray] | None = None,
     spots_weights=None,
-    backend=ot.backend.TorchBackend(),
     use_gpu: bool = True,
-) -> Tuple[AnnData, List[np.ndarray]]:
+) -> tuple[AnnData, list[np.ndarray]]:
     r"""
     Infers a "center" slice consisting of a low rank expression matrix :math:`X = WH` and a collection of
     :math:`\pi` of mappings from the spots of the center slice to the spots of each input slice.
@@ -331,8 +322,6 @@ def center_align(
         Initial transport plans for each slice. If None, it will be computed.
     spots_weights : List[float], optional
         Weights for individual spots in each slices. If None, uniform distribution is used.
-    backend : Backend, default=ot.backend.TorchBackend()
-        Backend to be used for computations (default is TorchBackend).
     use_gpu : bool, default=True
         Whether to use GPU for computations. If True but no GPU is available, will default to CPU.
 
@@ -429,7 +418,6 @@ def center_align(
             center_coordinates,
             common_genes,
             alpha,
-            backend,
             use_gpu,
             exp_dissim_metric=exp_dissim_metric,
             norm=norm,
@@ -438,7 +426,6 @@ def center_align(
         )
         feature_matrix, coeff_matrix = center_NMF(
             feature_matrix,
-            coeff_matrix,
             slices,
             pis,
             slice_weights,
@@ -478,18 +465,17 @@ def center_align(
 def center_ot(
     feature_matrix: np.ndarray,
     coeff_matrix: np.ndarray,
-    slices: List[AnnData],
+    slices: list[AnnData],
     center_coordinates: np.ndarray,
-    common_genes: List[str],
+    common_genes: list[str],
     alpha: float,
-    backend,
     use_gpu: bool,
     exp_dissim_metric: str = "kl",
     norm: bool = False,
-    pi_inits: Optional[List[np.ndarray]] = None,
-    spot_weights: Optional[List[float]] = None,
+    pi_inits: list[np.ndarray] | None = None,
+    spot_weights: list[float] | None = None,
     numItermax: int = 200,
-) -> Tuple[List[np.ndarray], np.ndarray]:
+) -> tuple[list[np.ndarray], np.ndarray]:
     """Computes the optimal mappings \Pi^{(1)}, \ldots, \Pi^{(t)} given W (specified features)
     and H (coefficient matrix) by solving the pairwise slice alignment problem between the
     center slice and each slices separately
@@ -509,8 +495,6 @@ def center_ot(
     alpha : float
         Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
         Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.
-    backend : Backend
-        Backend to be used for computations.
     use_gpu : bool
         Whether to use GPU for computations. If True but no GPU is available, will default to CPU.
     exp_dissim_metric : str, default="kl"
@@ -555,7 +539,6 @@ def center_ot(
             return_obj=True,
             pi_init=pi_inits[i],
             b_spots_weight=spot_weights[i],
-            backend=backend,
             use_gpu=use_gpu,
         )
         pis.append(pi)
@@ -565,10 +548,9 @@ def center_ot(
 
 def center_NMF(
     feature_matrix: np.ndarray,
-    coeff_matrix: np.ndarray,
-    slices: List[AnnData],
-    pis: List[torch.Tensor],
-    slice_weights: Optional[List[float]],
+    slices: list[AnnData],
+    pis: list[torch.Tensor],
+    slice_weights: list[float] | None,
     n_components: int,
     random_seed: float,
     exp_dissim_metric: str = "kl",
@@ -584,8 +566,6 @@ def center_NMF(
     ----------
     feature_matrix : np.ndarray
         The matrix representing the features extracted from the slices.
-    coeff_matrix : np.ndarray
-        The matrix representing the coefficients associated with the features.
     slices : List[AnnData]
         A list of AnnData objects representing the slices involved in the mapping.
     pis : List[torch.Tensor]
@@ -643,17 +623,17 @@ def my_fused_gromov_wasserstein(
     b_spatial_dist: torch.Tensor,
     a_spots_weight: torch.Tensor,
     b_spots_weight: torch.Tensor,
-    alpha: Optional[float] = 0.5,
-    overlap_fraction: Optional[float] = None,
-    pi_init: Optional[np.ndarray] = None,
-    loss_fun: Optional[str] = "square_loss",
-    armijo: Optional[bool] = False,
-    numItermax: Optional[int] = 200,
-    tol_rel: Optional[float] = 1e-9,
-    tol_abs: Optional[float] = 1e-9,
-    use_gpu: Optional[bool] = True,
-    numItermaxEmd: Optional[int] = 100000,
-    dummy: Optional[int] = 1,
+    alpha: float | None = 0.5,
+    overlap_fraction: float | None = None,
+    pi_init: np.ndarray | None = None,
+    loss_fun: str | None = "square_loss",
+    armijo: bool | None = False,
+    numItermax: int | None = 200,
+    tol_rel: float | None = 1e-9,
+    tol_abs: float | None = 1e-9,
+    use_gpu: bool | None = True,
+    numItermaxEmd: int | None = 100000,
+    dummy: int | None = 1,
     **kwargs,
 ):
     """
@@ -725,10 +705,9 @@ def my_fused_gromov_wasserstein(
             raise ValueError(
                 "Problem infeasible. Overlap fraction should be greater than 0."
             )
-        elif overlap_fraction > min(a_spots_weight.sum(), b_spots_weight.sum()):
+        if overlap_fraction > min(a_spots_weight.sum(), b_spots_weight.sum()):
             raise ValueError(
-                "Problem infeasible. Overlap fraction should lower or"
-                " equal to min(|p|_1, |q|_1)."
+                "Problem infeasible. Overlap fraction should lower or equal to min(|p|_1, |q|_1)."
             )
 
         _info = {"err": []}
@@ -793,29 +772,27 @@ def my_fused_gromov_wasserstein(
             return ot.optim.line_search_armijo(
                 f_cost, pi, pi_diff, linearized_matrix, cost_pi, nx=nx, **kwargs
             )
-        else:
-            if overlap_fraction:
-                return line_search_partial(
-                    alpha,
-                    exp_dissim_matrix,
-                    pi,
-                    a_spatial_dist,
-                    b_spatial_dist,
-                    pi_diff,
-                    loss_fun=loss_fun,
-                )
-            else:
-                return solve_gromov_linesearch(
-                    pi,
-                    pi_diff,
-                    cost_pi,
-                    a_spatial_dist,
-                    b_spatial_dist,
-                    exp_dissim_matrix=0.0,
-                    alpha=1.0,
-                    nx=nx,
-                    **kwargs,
-                )
+        if overlap_fraction:
+            return line_search_partial(
+                alpha,
+                exp_dissim_matrix,
+                pi,
+                a_spatial_dist,
+                b_spatial_dist,
+                pi_diff,
+                loss_fun=loss_fun,
+            )
+        return solve_gromov_linesearch(
+            pi,
+            pi_diff,
+            cost_pi,
+            a_spatial_dist,
+            b_spatial_dist,
+            exp_dissim_matrix=0.0,
+            alpha=1.0,
+            nx=nx,
+            **kwargs,
+        )
 
     def lp_solver(
         a_spots_weight,
@@ -837,14 +814,13 @@ def my_fused_gromov_wasserstein(
                     "Error in EMD resolution: Increase the number of dummy points."
                 )
             return _pi[: len(a_spots_weight), : len(b_spots_weight)], _innerlog
-        else:
-            return emd(
-                a_spots_weight,
-                b_spots_weight,
-                exp_dissim_matrix,
-                numItermaxEmd,
-                log=True,
-            )
+        return emd(
+            a_spots_weight,
+            b_spots_weight,
+            exp_dissim_matrix,
+            numItermaxEmd,
+            log=True,
+        )
 
     return_val = ot.optim.generic_conditional_gradient(
         a=a_spots_weight,
@@ -883,9 +859,9 @@ def solve_gromov_linesearch(
     b_spatial_dist: torch.Tensor,
     exp_dissim_matrix: float,
     alpha: float,
-    alpha_min: Optional[float] = None,
-    alpha_max: Optional[float] = None,
-    nx: str = None,
+    alpha_min: float | None = None,
+    alpha_max: float | None = None,
+    nx: str | None = None,
 ):
     """
     Perform a line search to optimize the transport plan with respect to the Gromov-Wasserstein loss.
@@ -911,7 +887,7 @@ def solve_gromov_linesearch(
         Minimum value for alpha
     alpha_max : float, Optional
         Maximum value for alpha
-    nx : backend, Optional
+    nx : str, Optional
         If let to its default value None, a backend test will be conducted.
 
     Returns
@@ -935,7 +911,7 @@ def solve_gromov_linesearch(
             pi, pi_diff, a_spatial_dist, b_spatial_dist
         )
 
-        if isinstance(exp_dissim_matrix, int) or isinstance(exp_dissim_matrix, float):
+        if isinstance(exp_dissim_matrix, (int | float)):
             nx = ot.backend.get_backend(pi, pi_diff, a_spatial_dist, b_spatial_dist)
         else:
             nx = ot.backend.get_backend(

@@ -1,14 +1,16 @@
-import torch
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import scanpy as sc
-from pathlib import Path
-from paste3.visualization import (
-    stack_slices_pairwise,
-    stack_slices_center,
-    generalized_procrustes_analysis,
-)
+import torch
 from pandas.testing import assert_frame_equal
+
+from paste3.visualization import (
+    generalized_procrustes_analysis,
+    stack_slices_center,
+    stack_slices_pairwise,
+)
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"

@@ -1,22 +1,24 @@
 from pathlib import Path
+
 import numpy as np
-import torch
 import pandas as pd
 import pytest
+import torch
 from pandas.testing import assert_frame_equal
+
 from paste3.helper import (
-    intersect,
-    kl_divergence_backend,
-    to_dense_array,
-    kl_divergence,
+    dissimilarity_metric,
     filter_for_common_genes,
-    match_spots_using_spatial_heuristic,
     generalized_kl_divergence,
     glmpca_distance,
-    pca_distance,
     high_umi_gene_distance,
+    intersect,
+    kl_divergence,
+    kl_divergence_backend,
+    match_spots_using_spatial_heuristic,
     norm_and_center_coordinates,
-    dissimilarity_metric,
+    pca_distance,
+    to_dense_array,
 )
 
 test_dir = Path(__file__).parent
@@ -34,7 +36,7 @@ def test_intersect(slices):
     )
 
 
-def test_kl_divergence_backend(slices):
+def test_kl_divergence_backend():
     X = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     Y = np.array([[2, 4, 6], [8, 10, 12], [14, 16, 28]])
 
@@ -55,7 +57,7 @@ def test_kl_divergence_backend(slices):
     )
 
 
-def test_kl_divergence(slices):
+def test_kl_divergence():
     X = torch.Tensor([[1, 2, 3], [4, 5, 6], [7, 8, 9]]).double()
     Y = torch.Tensor([[2, 4, 6], [8, 10, 12], [14, 16, 28]]).double()
 
@@ -83,7 +85,7 @@ def test_filter_for_common_genes(slices):
         assert np.all(np.equal(common_genes, slice.var.index))
 
 
-def test_generalized_kl_divergence(slices):
+def test_generalized_kl_divergence():
     X = torch.Tensor([[1, 2, 3], [4, 5, 6], [7, 8, 9]]).double()
     Y = torch.Tensor([[2, 4, 6], [8, 10, 12], [14, 16, 28]]).double()
 
@@ -159,10 +161,10 @@ def test_high_umi_gene_distance(slices):
 
 
 @pytest.mark.parametrize(
-    "_use_ot, filename",
+    ("_use_ot", "filename"),
     [(True, "spots_mapping_true.csv"), (False, "spots_mapping_false.csv")],
 )
-def test_match_spots_using_spatial_heuristic(slices, _use_ot, filename):
+def test_match_spots_using_spatial_heuristic(slices, _use_ot, filename):  # noqa: PT019
     # creating a copy of the original list
     slices = list(slices)
     filter_for_common_genes(slices)
@@ -209,7 +211,7 @@ def test_norm_and_center_coordinates(slices):
     # Note: There's already a dedicated test for glmpca dissimilarity metric,
     # (test_glmpca_distance), so we don't include it here
     "dissimilarity",
-    ("euc", "gkl", "kl", "selection_kl", "pca"),
+    ["euc", "gkl", "kl", "selection_kl", "pca"],
 )
 def test_dissimilarity_metric(slices2, dissimilarity):
     sliceA, sliceB = slices2[:2]

@@ -1,15 +1,17 @@
-import numpy as np
 from pathlib import Path
-from tests.test_paste import assert_checksum_equals
+
+import numpy as np
+import scanpy as sc
+
 from paste3.model_selection import (
-    create_graph,
-    generate_graph_from_labels,
-    edge_inconsistency_score,
     calculate_convex_hull_edge_inconsistency,
+    create_graph,
+    edge_inconsistency_score,
+    generate_graph_from_labels,
     select_overlap_fraction,
 )
-import scanpy as sc
 from paste3.paste import pairwise_align
+from tests.test_paste import assert_checksum_equals
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
@@ -42,7 +44,7 @@ def test_generate_graph_from_labels(tmp_path):
     assert_checksum_equals(tmp_path, "generate_graph_from_labels_nodes.csv")
 
 
-def test_edge_inconsistency_score(slices, tmp_path):
+def test_edge_inconsistency_score():
     adata = sc.read_h5ad(output_dir / "source_hull_adata.h5ad")
 
     graph, labels = generate_graph_from_labels(adata, adata.obs["aligned"])
@@ -50,7 +52,7 @@ def test_edge_inconsistency_score(slices, tmp_path):
     assert measure_a == 0.0
 
 
-def test_calculate_convex_hull_edge_inconsistency(slices, tmp_path):
+def test_calculate_convex_hull_edge_inconsistency(slices):
     pairwise_info = pairwise_align(
         slices[0],
         slices[1],

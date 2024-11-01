@@ -1,10 +1,9 @@
 import logging.config
 
-
 # The _version.py file is managed by setuptools-scm
 #   and is not in version control.
 try:
-    from paste3._version import version as __version__  # type: ignore
+    from paste3._version import version as __version__
 except ModuleNotFoundError:
     # We're likely running as a source package without installation
     __version__ = "src"

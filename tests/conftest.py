@@ -1,10 +1,12 @@
 from pathlib import Path
+
 import numpy as np
+import ot.backend
+import pytest
 import scanpy as sc
 import torch
-import pytest
+
 from paste3.helper import intersect
-import ot.backend
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
@@ -71,8 +73,8 @@ def slices2():
     return slices
 
 
-@pytest.fixture(scope="function", autouse=True)
-def seed():
+@pytest.fixture(autouse=True)
+def _seed():
     np.random.seed(0)
     torch.manual_seed(0)
     torch.cuda.manual_seed(0)

@@ -1,14 +1,16 @@
 from pathlib import Path
+
 import numpy as np
+import pytest
+
 from paste3.glmpca import (
-    ortho,
-    mat_binom_dev,
-    remove_intercept,
-    glmpca_init,
     est_nb_theta,
     glmpca,
+    glmpca_init,
+    mat_binom_dev,
+    ortho,
+    remove_intercept,
 )
-import pytest
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
@@ -40,11 +42,11 @@ def test_remove_intercept():
     outcome = remove_intercept(X)
     expected_outcome = [[-1.5, -1.5, -1.5], [1.5, 1.5, 1.5]]
 
-    for i, j in zip(outcome, expected_outcome):
+    for i, j in zip(outcome, expected_outcome, strict=False):
         assert np.all(np.isclose(i, j))
 
 
-@pytest.mark.parametrize("fam", ("poi", "nb", "mult", "bern"))
+@pytest.mark.parametrize("fam", ["poi", "nb", "mult", "bern"])
 def test_glmpca_init(fam):
     Y = np.genfromtxt(input_dir / "Y.csv", delimiter=",", skip_header=2)
 
@@ -67,7 +69,7 @@ def test_est_nb_theta():
     assert output == expected_output
 
 
-@pytest.mark.parametrize("fam", ("poi", "nb", "mult", "bern"))
+@pytest.mark.parametrize("fam", ["poi", "nb", "mult", "bern"])
 def test_glmpca(fam):
     joint_matrix_T = np.genfromtxt(input_dir / "joint_matrix.csv", delimiter=",")
     if fam == "bern":

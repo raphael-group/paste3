@@ -7,12 +7,12 @@
    "metadata": {},
    "outputs": [],
    "source": [
+    "import matplotlib.patches as mpatches\n",
+    "import matplotlib.pyplot as plt\n",
+    "import numpy as np\n",
     "import scanpy as sc\n",
     "import seaborn as sns\n",
-    "import matplotlib.pyplot as plt\n",
-    "import matplotlib.patches as mpatches\n",
-    "import squidpy as sq\n",
-    "import numpy as np"
+    "import squidpy as sq"
    ]
   },
   {
@@ -130,9 +130,7 @@
    "cell_type": "code",
    "execution_count": null,
    "id": "2d937bd4",
-   "metadata": {
-    "scrolled": true
-   },
+   "metadata": {},
    "outputs": [],
    "source": [
     "sq.pl.spatial_scatter(\n",
@@ -156,7 +154,7 @@
    "source": [
     "# Compute partial pairwise alignment using PASTE2\n",
     "\n",
-    "Give a pair of partially overlapping slices, we can use PASTE2.partial_pairwise_align( ) to find an alignment matrix. To call the function, you need to input the AnnData objects of the two slices, as well as a parameter s, which indicates the overlap percentage of the two slices. In this tutorial, each pair of cropped subslices overlap at 70% of the areas, so we set s=0.7. For your own datasets you should visualize the slices and manually determine the approxiamte overlap percentage (this parameter does not have to be very accurate).\n",
+    "Give a pair of partially overlapping slices, we can use PASTE2.partial_pairwise_align( ) to find an alignment matrix. To call the function, you need to input the AnnData objects of the two slices, as well as a parameter s, which indicates the overlap percentage of the two slices. In this tutorial, each pair of cropped subslices overlap at 70% of the areas, so we set overlap_fraction=0.7. For your own datasets you should visualize the slices and manually determine the approxiamte overlap percentage (this parameter does not have to be very accurate).\n",
     "\n",
     "Now we compute an alignment matrix between each pair of slices in our example dataset.\n",
     "\n",
@@ -167,36 +165,30 @@
    "cell_type": "code",
    "execution_count": null,
    "id": "c1d136f0",
-   "metadata": {
-    "scrolled": true
-   },
+   "metadata": {},
    "outputs": [],
    "source": [
-    "pi_AB = paste.pairwise_align(sliceA, sliceB, s=0.7, verbose=True, maxIter=20)"
+    "pi_AB = paste.pairwise_align(sliceA, sliceB, overlap_fraction=0.7, maxIter=20)"
    ]
   },
   {
    "cell_type": "code",
    "execution_count": null,
    "id": "3e6a6ae1",
-   "metadata": {
-    "scrolled": true
-   },
+   "metadata": {},
    "outputs": [],
    "source": [
-    "pi_BC = paste.pairwise_align(sliceB, sliceC, s=0.7, verbose=True, maxIter=20)"
+    "pi_BC = paste.pairwise_align(sliceB, sliceC, overlap_fraction=0.7, maxIter=20)"
    ]
   },
   {
    "cell_type": "code",
    "execution_count": null,
    "id": "b582c420",
-   "metadata": {
-    "scrolled": true
-   },
+   "metadata": {},
    "outputs": [],
    "source": [
-    "pi_CD = paste.pairwise_align(sliceC, sliceD, s=0.7, verbose=True, maxIter=20)"
+    "pi_CD = paste.pairwise_align(sliceC, sliceD, overlap_fraction=0.7, maxIter=20)"
    ]
   },
   {
@@ -244,9 +236,7 @@
     "    return np.unravel_index(indices, ary.shape)\n",
     "\n",
     "\n",
-    "def plot2D_samples_mat(\n",
-    "    xs, xt, G, thr=1e-8, alpha=0.2, top=1000, weight_alpha=False, **kwargs\n",
-    "):\n",
+    "def plot2D_samples_mat(xs, xt, G, alpha=0.2, top=1000, weight_alpha=False, **kwargs):\n",
     "    if (\"color\" not in kwargs) and (\"c\" not in kwargs):\n",
     "        kwargs[\"color\"] = \"k\"\n",
     "    mx = G.max().item()\n",
@@ -263,7 +253,7 @@
     "\n",
     "\n",
     "def plot_slice_pairwise_alignment(\n",
-    "    slice1, slice2, pi, thr=1 - 1e-8, alpha=0.05, top=1000, name=\"\", weight_alpha=False\n",
+    "    slice1, slice2, pi, alpha=0.05, top=1000, weight_alpha=False\n",
     "):\n",
     "    coordinates1, coordinates2 = slice1.obsm[\"spatial\"], slice2.obsm[\"spatial\"]\n",
     "    offset = (coordinates1[:, 0].max() - coordinates2[:, 0].min()) * 1.1\n",
@@ -274,7 +264,6 @@
     "        coordinates1,\n",
     "        coordinates2 + temp,\n",
     "        pi,\n",
-    "        thr=thr,\n",
     "        c=\"k\",\n",
     "        alpha=alpha,\n",
     "        top=top,\n",
@@ -292,6 +281,7 @@
     "                    zip(\n",
     "                        slice1.obs[\"layer_guess_reordered\"].cat.categories,\n",
     "                        slice1.uns[\"layer_guess_reordered_colors\"],\n",
+    "                        strict=False,\n",
     "                    )\n",
     "                )\n",
     "            )\n",
@@ -309,6 +299,7 @@
     "                    zip(\n",
     "                        slice2.obs[\"layer_guess_reordered\"].cat.categories,\n",
     "                        slice2.uns[\"layer_guess_reordered_colors\"],\n",
+    "                        strict=False,\n",
     "                    )\n",
     "                )\n",
     "            )\n",
@@ -362,9 +353,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "layer_to_color_map = {\n",
-    "    \"Layer{0}\".format(i + 1): sns.color_palette()[i] for i in range(6)\n",
-    "}\n",
+    "layer_to_color_map = {f\"Layer{i + 1}\": sns.color_palette()[i] for i in range(6)}\n",
     "layer_to_color_map[\"WM\"] = sns.color_palette()[6]\n",
     "\n",
     "\n",

@@ -1,10 +1,10 @@
-from typing import List, Tuple, Optional
-from anndata import AnnData
-import numpy as np
-import torch
-import seaborn as sns
-import matplotlib.pyplot as plt
 import logging
+
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+import torch
+from anndata import AnnData
 
 logger = logging.getLogger(__name__)
 
@@ -15,12 +15,11 @@ logger = logging.getLogger(__name__)
 
 
 def stack_slices_pairwise(
-    slices: List[AnnData],
-    pis: List[np.ndarray],
+    slices: list[AnnData],
+    pis: list[np.ndarray],
     return_params: bool = False,
-    return_as_matrix: bool = False,
     is_partial: bool = False,
-) -> Tuple[List[AnnData], Optional[List[float]], Optional[List[np.ndarray]]]:
+) -> tuple[list[AnnData], list[float] | None, list[np.ndarray] | None]:
     """
     Align spatial coordinates of sequential pairwise slices.
 
@@ -34,8 +33,6 @@ def stack_slices_pairwise(
         slices: List of slices.
         pis: List of pi (``pairwise_align()`` output) between consecutive slices.
         return_params: If ``True``, addtionally return angles of rotation (theta) and translations for each slice.
-        return_as_matrix: If ``True`` and output_params is also ``True``, the rotation is
-            return as a matrix instead of an angle for each slice.
         is_partial: Boolean of whether this is partial pairwise analysis or a total one
 
     Returns:
@@ -111,17 +108,16 @@ def stack_slices_pairwise(
 
     if not return_params:
         return new_slices
-    else:
-        return new_slices, rotation_angles, translations
+    return new_slices, rotation_angles, translations
 
 
 def stack_slices_center(
     center_slice: AnnData,
-    slices: List[AnnData],
-    pis: List[np.ndarray],
+    slices: list[AnnData],
+    pis: list[np.ndarray],
     matrix: bool = False,
     output_params: bool = False,
-) -> Tuple[AnnData, List[AnnData], Optional[List[float]], Optional[List[np.ndarray]]]:
+) -> tuple[AnnData, list[AnnData], list[float] | None, list[np.ndarray] | None]:
     """
     Align spatial coordinates of a list of slices to a center_slice.
 
@@ -202,12 +198,11 @@ def stack_slices_center(
     new_center.obsm["spatial"] = source_coordinates.cpu().numpy()
     if not output_params:
         return new_center, new_slices
-    else:
-        return new_center, new_slices, rotation_angles, translations
+    return new_center, new_slices, rotation_angles, translations
 
 
 def plot_slice(
-    slice: AnnData, color, ax: Optional[plt.Axes] = None, s: float = 100
+    slice: AnnData, color, ax: plt.Axes | None = None, s: float = 100
 ) -> None:
     """
     Plots slice spatial coordinates.
@@ -255,7 +250,8 @@ def generalized_procrustes_analysis(
     Returns:
         Aligned spatial coordinates of X, Y, rotation angle, translation of X, translation of Y.
     """
-    assert source_coordinates.shape[1] == 2 and target_coordinates.shape[1] == 2
+    assert source_coordinates.shape[1] == 2
+    assert target_coordinates.shape[1] == 2
 
     weighted_source = pi.sum(axis=1).matmul(source_coordinates)
     weighted_targed = pi.sum(axis=0).matmul(target_coordinates)
@@ -281,7 +277,7 @@ def generalized_procrustes_analysis(
             weighted_source,
             weighted_targed,
         )
-    elif return_params and return_as_matrix:
+    if return_params and return_as_matrix:
         return (
             source_coordinates,
             target_coordinates,
@@ -289,5 +285,4 @@ def generalized_procrustes_analysis(
             weighted_source,
             weighted_targed,
         )
-    else:
-        return source_coordinates, target_coordinates
+    return source_coordinates, target_coordinates

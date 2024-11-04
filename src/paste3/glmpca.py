@@ -2,12 +2,13 @@
 Python implementation of the generalized PCA for dimension reduction of non-normally distributed data. The original R implementation is at https://github.com/willtownes/glmpca
 """
 
+import logging
+from decimal import Decimal
+
 import numpy as np
+import statsmodels.genmod.families as smf
 from numpy import log
 from scipy.special import digamma, polygamma
-import statsmodels.genmod.families as smf
-from decimal import Decimal
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -121,7 +122,7 @@ class GlmpcaError(ValueError):
     pass
 
 
-class GlmpcaFamily(object):
+class GlmpcaFamily:
     """thin wrapper around the statsmodels.genmod.families.Family class"""
 
     # TO DO: would it be better to use inheritance?
@@ -198,7 +199,7 @@ class GlmpcaFamily(object):
         self.dev_func = dev_func
 
     def __str__(self):
-        return "GlmpcaFamily object of type {}".format(self.glmpca_fam)
+        return f"GlmpcaFamily object of type {self.glmpca_fam}"
 
 
 def remove_intercept(X):
@@ -224,10 +225,7 @@ def glmpca_init(Y, fam, sz=None, nb_theta=None):
     """
     if sz is not None and len(sz) != ncol(Y):
         raise GlmpcaError("size factor must have length equal to columns of Y")
-    if fam == "mult":
-        mult_n = colSums(Y)
-    else:
-        mult_n = None
+    mult_n = colSums(Y) if fam == "mult" else None
     gf = GlmpcaFamily(fam, nb_theta, mult_n)
     if fam in ("poi", "nb"):
         if sz is None:
@@ -295,9 +293,9 @@ def glmpca(
     Y,
     L,
     fam="poi",
-    ctl={"maxIter": 1000, "eps": 1e-4, "optimizeTheta": True},
+    ctl: dict | None = None,
     penalty=1,
-    init={"factors": None, "loadings": None},
+    init: dict | None = None,
     nb_theta=100,
     X=None,
     Z=None,
@@ -406,6 +404,10 @@ def glmpca(
 
     # initialize U,V, with row-specific intercept terms
     U = np.hstack((cvec1(N), X, np.random.randn(N, Ku) * 1e-5 / Ku))
+
+    init = init or {"factors": None, "loadings": None}
+    ctl = ctl or {"maxIter": 1000, "eps": 1e-4, "optimizeTheta": True}
+
     if init["factors"] is not None:
         L0 = np.min([L, ncol(init["factors"])])
         U[:, (Ko + Kf) + np.array(range(L0))] = init["factors"][:, range(L0)]
@@ -431,9 +433,9 @@ def glmpca(
         ):
             break
 
-        msg = "Iteration: {:d} | deviance={:.4E}".format(t, Decimal(dev[t]))
+        msg = f"Iteration: {t:d} | deviance={Decimal(dev[t]):.4E}"
         if fam == "nb":
-            msg += " | nb_theta: {:.3E}".format(nb_theta)
+            msg += f" | nb_theta: {nb_theta:.3E}"
         logger.debug(msg)
 
         # (k in lid) ensures no penalty on regression coefficients:
@@ -454,10 +456,7 @@ def glmpca(
                 )
             gf = GlmpcaFamily(fam, nb_theta)
     # postprocessing: include row and column labels for regression coefficients
-    if ncol(Z) == 0:
-        G = None
-    else:
-        G = U[:, Ko + np.array(range(Kf))]
+    G = None if ncol(Z) == 0 else U[:, Ko + np.array(range(Kf))]
     X = np.hstack((cvec1(N), X))
     A = V[:, range(Ko)]
     res = ortho(U[:, lid], V[:, lid], A, X=X, G=G, Z=Z)

@@ -1,13 +1,12 @@
-import ot.backend
-import numpy as np
+import logging
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from paste3.io import process_files
-import logging
-from paste3.paste import pairwise_align, center_align
-from paste3.visualization import stack_slices_pairwise, stack_slices_center
+from paste3.paste import center_align, pairwise_align
+from paste3.visualization import stack_slices_center, stack_slices_pairwise
 
 logger = logging.getLogger(__name__)
 
@@ -37,12 +36,11 @@ def align(
     optimizeTheta=True,
     eps=1e-4,
     is_histology=False,
-    armijo=False,
 ):
     slices = process_files(gene_fpath, spatial_fpath, weight_fpath)
     n_slices = len(slices)
 
-    if not (mode == "pairwise" or mode == "center"):
+    if mode not in ("pairwise", "center"):
         raise (ValueError("Please select either pairwise or center alignment mode."))
 
     if alpha < 0 or alpha > 1:
@@ -51,9 +49,8 @@ def align(
     if initial_slice < 1 or initial_slice > n_slices:
         raise (ValueError("Initial specified outside of 0 - n range"))
 
-    if overlap_fraction:
-        if overlap_fraction < 0 or overlap_fraction > 1:
-            raise (ValueError("Overlap fraction specified outside of 0-1 range."))
+    if overlap_fraction is not None and (overlap_fraction < 0 or overlap_fraction > 1):
+        raise (ValueError("Overlap fraction specified outside of 0-1 range."))
 
     if lmbda is None:
         lmbda = n_slices * [1 / n_slices]
@@ -62,16 +59,15 @@ def align(
     else:
         if not all(i >= 0 for i in lmbda):
             raise (ValueError("lambda includes negative weights"))
-        else:
-            print("Normalizing lambda weights into probability vector.")
-            lmbda = [float(i) / sum(lmbda) for i in lmbda]
+        logger.info("Normalizing lambda weights into probability vector.")
+        lmbda = [float(i) / sum(lmbda) for i in lmbda]
 
     if cost_matrix:
         cost_matrix = np.genfromtxt(cost_matrix, delimiter=",", dtype="float64")
 
     if start is None:
         pi_inits = [None] * (n_slices - 1) if mode == "pairwise" else None
-    elif mode == "pairwise" and not (len(start) == n_slices - 1):
+    elif mode == "pairwise" and len(start) != n_slices - 1:
         raise ValueError(
             f"Number of slices {n_slices} is not equal to number of start pi files {len(start)}"
         )
@@ -98,14 +94,12 @@ def align(
                 b_spots_weight=slices[i + 1].obsm["weights"],
                 norm=norm,
                 numItermax=numItermax,
-                backend=ot.backend.TorchBackend(),
                 use_gpu=use_gpu,
                 return_obj=return_obj,
                 maxIter=max_iter,
                 optimizeTheta=optimizeTheta,
                 eps=eps,
                 do_histology=is_histology,
-                armijo=armijo,
             )
             pis.append(pi)
             pd.DataFrame(
@@ -136,7 +130,6 @@ def align(
             random_seed=seed,
             pi_inits=pi_inits,
             spots_weights=[slice.obsm["weights"] for slice in slices],
-            backend=ot.backend.TorchBackend(),
             use_gpu=use_gpu,
         )
 
@@ -226,9 +219,6 @@ def add_args(parser):
         "--hist", action="store_true", help="Use histological images if True."
     )
     parser.add_argument(
-        "--armijo", action="store_true", help="Run Armijo line search if True."
-    )
-    parser.add_argument(
         "--seed", type=int, default=0, help="Random seed for reproducibility."
     )
     return parser
@@ -257,5 +247,4 @@ def main(args):
         use_gpu=args.gpu,
         return_obj=args.r_info,
         is_histology=args.hist,
-        armijo=args.armijo,
     )

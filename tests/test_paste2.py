@@ -1,12 +1,14 @@
 from pathlib import Path
-import pandas as pd
-import numpy as np
-import torch
-from paste3.helper import intersect
-import pytest
 from unittest.mock import patch
-from scipy.spatial import distance
+
+import numpy as np
+import pandas as pd
+import pytest
+import torch
 from pandas.testing import assert_frame_equal
+from scipy.spatial import distance
+
+from paste3.helper import intersect
 from paste3.paste import my_fused_gromov_wasserstein, pairwise_align
 
 test_dir = Path(__file__).parent
@@ -50,7 +52,6 @@ def test_partial_pairwise_align_given_cost_matrix(slices):
         overlap_fraction=0.85,
         exp_dissim_matrix=glmpca_distance_matrix,
         alpha=0.1,
-        armijo=False,
         norm=True,
         return_obj=True,
         numItermax=10,
@@ -87,7 +88,7 @@ def test_partial_pairwise_align_histology(slices2):
 
 
 @pytest.mark.parametrize(
-    "armijo, expected_log, filename",
+    ("armijo", "expected_log", "filename"),
     [
         (
             False,

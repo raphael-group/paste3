@@ -1,22 +1,24 @@
 import hashlib
+import tempfile
 from pathlib import Path
+
 import numpy as np
-import torch
 import ot.backend
 import pandas as pd
-import tempfile
+import pytest
+import torch
+from pandas.testing import assert_frame_equal
+
 from paste3.paste import (
-    pairwise_align,
     center_align,
+    center_NMF,
     center_ot,
     intersect,
-    center_NMF,
-    my_fused_gromov_wasserstein,
-    solve_gromov_linesearch,
     line_search_partial,
+    my_fused_gromov_wasserstein,
+    pairwise_align,
+    solve_gromov_linesearch,
 )
-from pandas.testing import assert_frame_equal
-import pytest
 
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
@@ -30,14 +32,16 @@ def assert_checksum_equals(temp_dir, filename, loose=False):
     if loose:
         assert_frame_equal(pd.read_csv(generated_file), pd.read_csv(oracle))
     else:
-        assert (
-            hashlib.md5(
-                "".join(open(generated_file, "r").readlines()).encode("utf8")
-            ).hexdigest()
-            == hashlib.md5(
-                "".join(open(oracle, "r").readlines()).encode("utf8")
-            ).hexdigest()
-        )
+        with (
+            Path.open(generated_file) as generated_file_f,
+            Path.open(oracle) as oracle_f,
+        ):
+            assert (
+                hashlib.md5(
+                    "".join(generated_file_f.readlines()).encode("utf8")
+                ).hexdigest()
+                == hashlib.md5("".join(oracle_f.readlines()).encode("utf8")).hexdigest()
+            )
 
 
 def test_pairwise_alignment(slices):
@@ -50,7 +54,6 @@ def test_pairwise_alignment(slices):
         b_spots_weight=slices[1].obsm["weights"].astype(slices[1].X.dtype),
         pi_init=None,
         use_gpu=True,
-        backend=ot.backend.TorchBackend(),
     )
     probability_mapping = pd.DataFrame(
         outcome.cpu().numpy(), index=slices[0].obs.index, columns=slices[1].obs.index
@@ -76,7 +79,6 @@ def test_center_alignment(slices):
         max_iter=2,
         exp_dissim_metric="kl",
         use_gpu=True,
-        backend=ot.backend.TorchBackend(),
         spots_weights=[
             slices[i].obsm["weights"].astype(slices[i].X.dtype)
             for i in range(len(slices))
@@ -128,7 +130,6 @@ def test_center_ot(slices):
         common_genes=common_genes,
         use_gpu=True,
         alpha=0.1,
-        backend=ot.backend.TorchBackend(),
         exp_dissim_metric="kl",
         norm=False,
         pi_inits=[None for _ in range(len(slices))],
@@ -164,7 +165,6 @@ def test_center_NMF(intersecting_slices):
 
     _W, _H = center_NMF(
         feature_matrix=np.genfromtxt(input_dir / "W_intermediate.csv", delimiter=","),
-        coeff_matrix=np.genfromtxt(input_dir / "H_intermediate.csv", delimiter=","),
         slices=intersecting_slices,
         pis=pairwise_info,
         slice_weights=n_slices * [1.0 / n_slices],
@@ -190,7 +190,7 @@ def test_center_NMF(intersecting_slices):
     )
 
 
-def test_fused_gromov_wasserstein(slices, spot_distance_matrix):
+def test_fused_gromov_wasserstein(spot_distance_matrix):
     temp_dir = Path(tempfile.mkdtemp())
 
     nx = ot.backend.TorchBackend()
@@ -215,7 +215,7 @@ def test_fused_gromov_wasserstein(slices, spot_distance_matrix):
     assert_checksum_equals(temp_dir, "fused_gromov_wasserstein.csv")
 
 
-def test_gromov_linesearch(slices, spot_distance_matrix):
+def test_gromov_linesearch(spot_distance_matrix):
     nx = ot.backend.TorchBackend()
 
     G = 1.509115054931788e-05 * torch.ones((251, 264)).double()
@@ -239,7 +239,7 @@ def test_gromov_linesearch(slices, spot_distance_matrix):
     assert pytest.approx(cost_G) == -11.20545
 
 
-def test_line_search_partial(slices, spot_distance_matrix):
+def test_line_search_partial(spot_distance_matrix):
     G = 1.509115054931788e-05 * torch.ones((251, 264)).double()
     deltaG = torch.Tensor(
         np.genfromtxt(input_dir / "deltaG.csv", delimiter=",")

@@ -12,10 +12,10 @@ repos:
         exclude: 'tests/test_data/.*'
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.6
+    rev: v0.7.1
     hooks:
       - id: ruff
-        args: [ --fix ]
+        args: [ "--fix", "--show-fixes" ]
         exclude: 'tests/test_data/.*'
 
       - id: ruff-format

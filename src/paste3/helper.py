@@ -4,17 +4,18 @@ using result of an ST experiment that includes a p genes by n spots transcript c
 matrix of the spots
 """
 
-from paste3.glmpca import glmpca
-import anndata as ad
-import scanpy as sc
-from scipy.spatial import distance
-from typing import List
-from anndata import AnnData
-import numpy as np
-import torch
-import scipy
-import ot
 import logging
+
+import anndata as ad
+import numpy as np
+import ot
+import scanpy as sc
+import scipy
+import torch
+from anndata import AnnData
+from scipy.spatial import distance
+
+from paste3.glmpca import glmpca
 
 logger = logging.getLogger(__name__)
 
@@ -47,10 +48,7 @@ def kl_divergence(a_exp_dissim, b_exp_dissim):
     a_weighted_dissim_sum = torch.sum(a_exp_dissim * a_log_exp_dissim, axis=1)[
         torch.newaxis, :
     ]
-    divergence = a_weighted_dissim_sum.T - torch.matmul(
-        a_exp_dissim, b_log_exp_dissim.T
-    )
-    return divergence
+    return a_weighted_dissim_sum.T - torch.matmul(a_exp_dissim, b_log_exp_dissim.T)
 
 
 def generalized_kl_divergence(a_exp_dissim, b_exp_dissim):
@@ -84,8 +82,7 @@ def generalized_kl_divergence(a_exp_dissim, b_exp_dissim):
     )
     sum_a_exp_dissim = torch.sum(a_exp_dissim, axis=1)
     sum_b_exp_dissim = torch.sum(b_exp_dissim, axis=1)
-    divergence = (divergence.T - sum_a_exp_dissim).T + sum_b_exp_dissim.T
-    return divergence
+    return (divergence.T - sum_a_exp_dissim).T + sum_b_exp_dissim.T
 
 
 def glmpca_distance(
@@ -265,7 +262,7 @@ def to_dense_array(X):
     return torch.Tensor(np_array).double()
 
 
-def get_common_genes(slices: List[AnnData]) -> List[AnnData]:
+def get_common_genes(slices: list[AnnData]) -> list[AnnData]:
     """Returns common genes from multiple slices"""
     common_genes = slices[0].var.index
 
@@ -412,8 +409,7 @@ def dissimilarity_metric(which, a_slice, b_slice, a_exp_dissim, b_exp_dissim, **
         case "kl":
             a_exp_dissim = a_exp_dissim + 0.01
             b_exp_dissim = b_exp_dissim + 0.01
-            exp_dissim_matrix = kl_divergence(a_exp_dissim, b_exp_dissim)
-            return exp_dissim_matrix
+            return kl_divergence(a_exp_dissim, b_exp_dissim)
         case "selection_kl":
             return high_umi_gene_distance(a_exp_dissim, b_exp_dissim, 2000)
         case "pca":
@@ -425,4 +421,5 @@ def dissimilarity_metric(which, a_slice, b_slice, a_exp_dissim, b_exp_dissim, **
                 glmpca_distance(a_exp_dissim, b_exp_dissim, **kwargs)
             ).double()
         case _:
-            raise RuntimeError(f"Error: Invalid dissimilarity metric {which}")
+            msg = f"Error: Invalid dissimilarity metric {which}"
+            raise RuntimeError(msg)

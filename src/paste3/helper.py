@@ -262,7 +262,7 @@ def to_dense_array(X):
     return torch.Tensor(np_array).double()
 
 
-def get_common_genes(slices: list[AnnData]) -> list[AnnData]:
+def get_common_genes(slices: list[AnnData]) -> tuple[list[AnnData], np.ndarray]:
     """Returns common genes from multiple slices"""
     common_genes = slices[0].var.index
 
@@ -272,7 +272,17 @@ def get_common_genes(slices: list[AnnData]) -> list[AnnData]:
             logger.error(f"Slice {i} has no common genes with rest of the slices.")
             raise ValueError(f"Slice {i} has no common genes with rest of the slices.")
 
-    return [slice[:, common_genes] for slice in slices]
+    return [slice[:, common_genes] for slice in slices], common_genes
+
+
+def compute_slice_weights(slice_weights, pis, slices, device):
+    return sum(
+        [
+            slice_weights[i]
+            * torch.matmul(pis[i], to_dense_array(slices[i].X).to(device))
+            for i in range(len(slices))
+        ]
+    )
 
 
 def match_spots_using_spatial_heuristic(

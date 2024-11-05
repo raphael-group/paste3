@@ -76,7 +76,7 @@ def test_kl_divergence():
 
 
 def test_filter_for_common_genes(slices):
-    slices = get_common_genes(slices)
+    slices, _ = get_common_genes(slices)
 
     common_genes = list(np.genfromtxt(output_dir / "common_genes.csv", dtype=str))
     for slice in slices:
@@ -163,7 +163,7 @@ def test_high_umi_gene_distance(slices):
     [(True, "spots_mapping_true.csv"), (False, "spots_mapping_false.csv")],
 )
 def test_match_spots_using_spatial_heuristic(slices, _use_ot, filename):  # noqa: PT019
-    slices = get_common_genes(slices)
+    slices, _ = get_common_genes(slices)
 
     spots_mapping = match_spots_using_spatial_heuristic(
         slices[0].X, slices[1].X, use_ot=bool(_use_ot)

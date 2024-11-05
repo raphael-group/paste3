@@ -9,11 +9,11 @@ import pytest
 import torch
 from pandas.testing import assert_frame_equal
 
+from paste3.helper import intersect
 from paste3.paste import (
     center_align,
     center_NMF,
     center_ot,
-    intersect,
     line_search_partial,
     my_fused_gromov_wasserstein,
     pairwise_align,

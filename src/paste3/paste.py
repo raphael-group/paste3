@@ -14,9 +14,9 @@ from ot.lp import emd
 from sklearn.decomposition import NMF
 
 from paste3.helper import (
+    compute_slice_weights,
     dissimilarity_metric,
     get_common_genes,
-    intersect,
     to_dense_array,
 )
 
@@ -40,7 +40,7 @@ def pairwise_align(
     optimizeTheta=True,
     eps=1e-4,
     do_histology: bool = False,
-) -> tuple[np.ndarray, int | None]:
+) -> tuple[np.ndarray, dict | None]:
     r"""
     Returns a mapping :math:`( \Pi = [\pi_{ij}] )` between spots in one slice and spots in another slice
     while preserving gene expression and spatial distances of mapped spots, where :math:`\pi_{ij}` describes the probability that
@@ -137,7 +137,9 @@ def pairwise_align(
 
     device = "cuda" if use_gpu else "cpu"
 
-    a_slice, b_slice = get_common_genes([a_slice, b_slice])
+    slices, _ = get_common_genes([a_slice, b_slice])
+    a_slice, b_slice = slices
+
     a_dist = torch.Tensor(a_slice.obsm["spatial"]).double()
     b_dist = torch.Tensor(b_slice.obsm["spatial"]).double()
 
@@ -306,68 +308,43 @@ def center_align(
         logger.info("GPU is not available, resorting to torch CPU.")
         use_gpu = False
 
+    device = "cuda" if use_gpu else "cpu"
+
     if slice_weights is None:
         slice_weights = len(slices) * [1 / len(slices)]
 
     if spots_weights is None:
         spots_weights = len(slices) * [None]
 
-    # get common genes
-    common_genes = initial_slice.var.index
-    for s in slices:
-        common_genes = intersect(common_genes, s.var.index)
-
-    # subset common genes
+    slices, common_genes = get_common_genes(slices)
     initial_slice = initial_slice[:, common_genes]
-    for i in range(len(slices)):
-        slices[i] = slices[i][:, common_genes]
-    logger.info(
-        "Filtered all slices for common genes. There are "
-        + str(len(common_genes))
-        + " common genes."
+
+    exp_dissim_metric = exp_dissim_metric.lower()
+    nmf_model = NMF(
+        n_components=n_components,
+        init="random",
+        random_state=random_seed,
+        solver="cd" if exp_dissim_metric[:3] == "euc" else "mu",
+        beta_loss="frobenius" if exp_dissim_metric[:3] == "euc" else "kullback-leibler",
     )
 
-    # Run initial NMF
-    if exp_dissim_metric.lower() == "euclidean" or exp_dissim_metric.lower() == "euc":
-        nmf_model = NMF(
-            n_components=n_components,
-            init="random",
-            random_state=random_seed,
-        )
-    else:
-        nmf_model = NMF(
-            n_components=n_components,
-            solver="mu",
-            beta_loss="kullback-leibler",
-            init="random",
-            random_state=random_seed,
-        )
-
     if pi_inits is None:
-        pis = [None for i in range(len(slices))]
-        feature_matrix = nmf_model.fit_transform(initial_slice.X)
+        pis = [None for _ in slices]
+        slice_data = initial_slice.X
     else:
-        pis = pi_inits
-        feature_matrix = nmf_model.fit_transform(
+        pis = [torch.Tensor(pi).double().to(device) for pi in pi_inits]
+        slice_data = (
             initial_slice.shape[0]
-            * sum(
-                [
-                    slice_weights[i] * np.dot(pis[i], to_dense_array(slices[i].X))
-                    for i in range(len(slices))
-                ]
-            )
+            * compute_slice_weights(slice_weights, pis, slices, device).cpu().numpy()
         )
+    feature_matrix = nmf_model.fit_transform(slice_data)
     coeff_matrix = nmf_model.components_
-    center_coordinates = initial_slice.obsm["spatial"]
-
-    if not isinstance(center_coordinates, np.ndarray):
-        logger.warning("A.obsm['spatial'] is not of type numpy array.")
 
     # Initialize center_slice
     center_slice = AnnData(np.dot(feature_matrix, coeff_matrix))
     center_slice.var.index = common_genes
     center_slice.obs.index = initial_slice.obs.index
-    center_slice.obsm["spatial"] = center_coordinates
+    center_slice.obsm["spatial"] = initial_slice.obsm["spatial"]
 
     # Minimize loss
     iteration_count = 0
@@ -379,7 +356,7 @@ def center_align(
             feature_matrix,
             coeff_matrix,
             slices,
-            center_coordinates,
+            center_slice.obsm["spatial"],
             common_genes,
             alpha,
             use_gpu,
@@ -400,8 +377,7 @@ def center_align(
         loss_new = np.dot(loss, slice_weights)
         iteration_count += 1
         loss_diff = abs(loss_init - loss_new)
-        logger.info(f"Objective {loss_new}")
-        logger.info(f"Difference: {loss_diff}")
+        logger.info(f"Objective {loss_new} | Difference: {loss_diff}")
         loss_init = loss_new
     center_slice = initial_slice.copy()
     center_slice.X = np.dot(feature_matrix, coeff_matrix)
@@ -409,15 +385,7 @@ def center_align(
     center_slice.uns["paste_H"] = coeff_matrix
     center_slice.uns["full_rank"] = (
         center_slice.shape[0]
-        * sum(
-            [
-                slice_weights[i]
-                * torch.matmul(pis[i], to_dense_array(slices[i].X).to(pis[i].device))
-                for i in range(len(slices))
-            ]
-        )
-        .cpu()
-        .numpy()
+        * compute_slice_weights(slice_weights, pis, slices, device).cpu().numpy()
     )
     center_slice.uns["obj"] = loss_init
     return center_slice, pis

@@ -319,26 +319,19 @@ def center_align(
     slices, common_genes = get_common_genes(slices)
     initial_slice = initial_slice[:, common_genes]
 
-    exp_dissim_metric = exp_dissim_metric.lower()
-    nmf_model = NMF(
-        n_components=n_components,
-        init="random",
-        random_state=random_seed,
-        solver="cd" if exp_dissim_metric[:3] == "euc" else "mu",
-        beta_loss="frobenius" if exp_dissim_metric[:3] == "euc" else "kullback-leibler",
+    feature_matrix, coeff_matrix = center_NMF(
+        initial_slice.X,
+        slices,
+        pi_inits,
+        slice_weights,
+        n_components,
+        random_seed,
+        exp_dissim_metric=exp_dissim_metric,
+        device=device,
     )
 
     if pi_inits is None:
         pis = [None for _ in slices]
-        slice_data = initial_slice.X
-    else:
-        pis = [torch.Tensor(pi).double().to(device) for pi in pi_inits]
-        slice_data = (
-            initial_slice.shape[0]
-            * compute_slice_weights(slice_weights, pis, slices, device).cpu().numpy()
-        )
-    feature_matrix = nmf_model.fit_transform(slice_data)
-    coeff_matrix = nmf_model.components_
 
     # Initialize center_slice
     center_slice = AnnData(np.dot(feature_matrix, coeff_matrix))
@@ -373,6 +366,7 @@ def center_align(
             n_components,
             random_seed,
             exp_dissim_metric=exp_dissim_metric,
+            device=device,
         )
         loss_new = np.dot(loss, slice_weights)
         iteration_count += 1
@@ -480,11 +474,12 @@ def center_ot(
 def center_NMF(
     feature_matrix: np.ndarray,
     slices: list[AnnData],
-    pis: list[torch.Tensor],
+    pis: list[torch.Tensor] | None,
     slice_weights: list[float] | None,
     n_components: int,
     random_seed: float,
     exp_dissim_metric: str = "kl",
+    device="cpu",
 ):
     """
     Finds two low-rank matrices \( W \) (feature matrix) and \( H \) (coefficient matrix) that approximate expression matrices of all
@@ -521,30 +516,26 @@ def center_NMF(
             The updated matrix of coefficients resulting from the NMF decomposition.
     """
     logger.info("Solving Center Mapping NMF Problem.")
-    n_features = feature_matrix.shape[0]
-    weighted_features = n_features * sum(
-        [
-            slice_weights[i]
-            * torch.matmul(pis[i], to_dense_array(slices[i].X).to(pis[i].device))
-            for i in range(len(slices))
-        ]
+
+    exp_dissim_metric = exp_dissim_metric.lower()
+    nmf_model = NMF(
+        n_components=n_components,
+        init="random",
+        random_state=random_seed,
+        solver="cd" if exp_dissim_metric[:3] == "euc" else "mu",
+        beta_loss="frobenius" if exp_dissim_metric[:3] == "euc" else "kullback-leibler",
     )
-    if exp_dissim_metric.lower() == "euclidean" or exp_dissim_metric.lower() == "euc":
-        nmf_model = NMF(
-            n_components=n_components,
-            init="random",
-            random_state=random_seed,
+
+    if pis is not None:
+        pis = [torch.Tensor(pi).double().to(device) for pi in pis]
+        feature_matrix = (
+            feature_matrix.shape[0]
+            * compute_slice_weights(slice_weights, pis, slices, device).cpu().numpy()
         )
-    else:
-        nmf_model = NMF(
-            n_components=n_components,
-            solver="mu",
-            beta_loss="kullback-leibler",
-            init="random",
-            random_state=random_seed,
-        )
-    new_feature_matrix = nmf_model.fit_transform(weighted_features.cpu().numpy())
+
+    new_feature_matrix = nmf_model.fit_transform(feature_matrix)
     new_coeff_matrix = nmf_model.components_
+
     return new_feature_matrix, new_coeff_matrix
 
 

@@ -797,8 +797,10 @@ def solve_gromov_linesearch(
     dot = torch.matmul(torch.matmul(a_spatial_dist, pi_diff), b_spatial_dist.T)
     a = -2 * alpha * torch.sum(dot * pi_diff)
     b = torch.sum(exp_dissim_matrix * pi_diff) - 2 * alpha * (
-            torch.sum(dot * pi)
-        + torch.sum(torch.matmul(torch.matmul(a_spatial_dist, pi), b_spatial_dist.T) * pi_diff)
+        torch.sum(dot * pi)
+        + torch.sum(
+            torch.matmul(torch.matmul(a_spatial_dist, pi), b_spatial_dist.T) * pi_diff
+        )
     )
 
     minimal_cost = ot.optim.solve_1d_linesearch_quad(a, b)

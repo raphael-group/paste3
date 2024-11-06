@@ -216,8 +216,6 @@ def test_fused_gromov_wasserstein(spot_distance_matrix):
 
 
 def test_gromov_linesearch(spot_distance_matrix):
-    nx = ot.backend.TorchBackend()
-
     G = 1.509115054931788e-05 * torch.ones((251, 264)).double()
     deltaG = torch.Tensor(
         np.genfromtxt(input_dir / "deltaG.csv", delimiter=",")
@@ -232,7 +230,6 @@ def test_gromov_linesearch(spot_distance_matrix):
         spot_distance_matrix[2],
         exp_dissim_matrix=0.0,
         alpha=1.0,
-        nx=nx,
     )
     assert alpha == 1.0
     assert fc == 1

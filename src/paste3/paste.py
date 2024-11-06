@@ -749,7 +749,6 @@ def solve_gromov_linesearch(
     alpha: float,
     alpha_min: float | None = None,
     alpha_max: float | None = None,
-    nx: str | None = None,
 ):
     """
     Perform a line search to optimize the transport plan with respect to the Gromov-Wasserstein loss.
@@ -794,23 +793,12 @@ def solve_gromov_linesearch(
         "Optimal Transport for structured data with application on graphs"
         International Conference on Machine Learning (ICML). 2019.
     """
-    if nx is None:
-        pi, pi_diff, a_spatial_dist, b_spatial_dist = ot.utils.list_to_array(
-            pi, pi_diff, a_spatial_dist, b_spatial_dist
-        )
 
-        if isinstance(exp_dissim_matrix, (int | float)):
-            nx = ot.backend.get_backend(pi, pi_diff, a_spatial_dist, b_spatial_dist)
-        else:
-            nx = ot.backend.get_backend(
-                pi, pi_diff, a_spatial_dist, b_spatial_dist, exp_dissim_matrix
-            )
-
-    dot = nx.dot(nx.dot(a_spatial_dist, pi_diff), b_spatial_dist.T)
-    a = -2 * alpha * nx.sum(dot * pi_diff)
-    b = nx.sum(exp_dissim_matrix * pi_diff) - 2 * alpha * (
-        nx.sum(dot * pi)
-        + nx.sum(nx.dot(nx.dot(a_spatial_dist, pi), b_spatial_dist.T) * pi_diff)
+    dot = torch.matmul(torch.matmul(a_spatial_dist, pi_diff), b_spatial_dist.T)
+    a = -2 * alpha * torch.sum(dot * pi_diff)
+    b = torch.sum(exp_dissim_matrix * pi_diff) - 2 * alpha * (
+            torch.sum(dot * pi)
+        + torch.sum(torch.matmul(torch.matmul(a_spatial_dist, pi), b_spatial_dist.T) * pi_diff)
     )
 
     minimal_cost = ot.optim.solve_1d_linesearch_quad(a, b)

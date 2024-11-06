@@ -85,7 +85,6 @@
 
 <span class="kn">from</span> <span class="nn">paste3.helper</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">glmpca_distance</span><span class="p">,</span>
-    <span class="n">intersect</span><span class="p">,</span>
     <span class="n">to_dense_array</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">paste3.paste</span> <span class="kn">import</span> <span class="n">pairwise_align</span>
@@ -270,7 +269,7 @@
         <span class="mf">0.05</span><span class="p">,</span>
     <span class="p">]</span>
     <span class="c1"># subset for common genes</span>
-    <span class="n">common_genes</span> <span class="o">=</span> <span class="n">intersect</span><span class="p">(</span><span class="n">sliceA</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">sliceB</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">common_genes</span> <span class="o">=</span> <span class="n">sliceA</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">sliceB</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
     <span class="n">sliceA</span> <span class="o">=</span> <span class="n">sliceA</span><span class="p">[:,</span> <span class="n">common_genes</span><span class="p">]</span>
     <span class="n">sliceB</span> <span class="o">=</span> <span class="n">sliceB</span><span class="p">[:,</span> <span class="n">common_genes</span><span class="p">]</span>
     <span class="c1"># Get transport cost matrix</span>
@@ -291,6 +290,7 @@
             <span class="n">exp_dissim_matrix</span><span class="o">=</span><span class="n">M</span><span class="p">,</span>
             <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
             <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">return_obj</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">numItermax</span><span class="o">=</span><span class="n">numItermax</span><span class="p">,</span>
             <span class="n">maxIter</span><span class="o">=</span><span class="n">numItermax</span><span class="p">,</span>
         <span class="p">)</span>

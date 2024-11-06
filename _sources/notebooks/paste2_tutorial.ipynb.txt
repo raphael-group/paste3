@@ -168,7 +168,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "pi_AB, _ = paste.pairwise_align(sliceA, sliceB, overlap_fraction=0.7, maxIter=20)"
+    "pi_AB = paste.pairwise_align(sliceA, sliceB, overlap_fraction=0.7, maxIter=20)"
    ]
   },
   {
@@ -178,7 +178,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "pi_BC, _ = paste.pairwise_align(sliceB, sliceC, overlap_fraction=0.7, maxIter=20)"
+    "pi_BC = paste.pairwise_align(sliceB, sliceC, overlap_fraction=0.7, maxIter=20)"
    ]
   },
   {
@@ -188,7 +188,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "pi_CD, _ = paste.pairwise_align(sliceC, sliceD, overlap_fraction=0.7, maxIter=20)"
+    "pi_CD = paste.pairwise_align(sliceC, sliceD, overlap_fraction=0.7, maxIter=20)"
    ]
   },
   {
@@ -335,7 +335,7 @@
     "pis = [pi_AB, pi_BC, pi_CD]\n",
     "slices = [sliceA, sliceB, sliceC, sliceD]\n",
     "\n",
-    "new_slices, _, _ = visualization.stack_slices_pairwise(slices, pis, is_partial=True)"
+    "new_slices = visualization.stack_slices_pairwise(slices, pis, is_partial=True)"
    ]
   },
   {

@@ -218,7 +218,7 @@
     "pis = [pi12, pi23, pi34]\n",
     "slices = [slice1, slice2, slice3, slice4]\n",
     "\n",
-    "new_slices = stack_slices_pairwise(slices, pis)"
+    "new_slices, _, _ = stack_slices_pairwise(slices, pis)"
    ]
   },
   {
@@ -455,7 +455,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "center, new_slices = stack_slices_center(center_slice, slices, pis)"
+    "center, new_slices, _, _ = stack_slices_center(center_slice, slices, pis)"
    ]
   },
   {

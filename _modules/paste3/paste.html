@@ -203,8 +203,6 @@
 <span class="sd">        - info : Optional[int]</span>
 <span class="sd">          Information on the optimization process (if `return_obj` is True), else None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Convert every numpy array into tensors</span>
-
     <span class="k">if</span> <span class="n">use_gpu</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;GPU is not available, resorting to torch CPU.&quot;</span><span class="p">)</span>
         <span class="n">use_gpu</span> <span class="o">=</span> <span class="kc">False</span>

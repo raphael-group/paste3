@@ -129,8 +129,6 @@ def pairwise_align(
         - info : Optional[int]
           Information on the optimization process (if `return_obj` is True), else None.
     """
-    # Convert every numpy array into tensors
-
     if use_gpu and not torch.cuda.is_available():
         logger.info("GPU is not available, resorting to torch CPU.")
         use_gpu = False

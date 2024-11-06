@@ -368,7 +368,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "slices = get_common_genes(slices)\n",
+    "slices, _ = get_common_genes(slices)\n",
     "\n",
     "b = []\n",
     "for i in range(len(slices)):\n",

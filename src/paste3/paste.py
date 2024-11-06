@@ -330,8 +330,7 @@ def center_align(
         device=device,
     )
 
-    if pi_inits is None:
-        pis = [None for _ in slices]
+    pis = [None for _ in slices] if pi_inits is None else pi_inits
 
     # Initialize center_slice
     center_slice = AnnData(np.dot(feature_matrix, coeff_matrix))

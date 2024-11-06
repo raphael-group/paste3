@@ -332,23 +332,16 @@ def center_align(
 
     pis = [None for _ in slices] if pi_inits is None else pi_inits
 
-    # Initialize center_slice
-    center_slice = AnnData(np.dot(feature_matrix, coeff_matrix))
-    center_slice.var.index = common_genes
-    center_slice.obs.index = initial_slice.obs.index
-    center_slice.obsm["spatial"] = initial_slice.obsm["spatial"]
-
-    # Minimize loss
     iteration_count = 0
     loss_init = 0
     loss_diff = 100
     while loss_diff > threshold and iteration_count < max_iter:
-        logger.info("Iteration: " + str(iteration_count))
+        logger.info(f"Iteration: {iteration_count}")
         pis, loss = center_ot(
             feature_matrix,
             coeff_matrix,
             slices,
-            center_slice.obsm["spatial"],
+            initial_slice.obsm["spatial"],
             common_genes,
             alpha,
             use_gpu,
@@ -372,8 +365,11 @@ def center_align(
         loss_diff = abs(loss_init - loss_new)
         logger.info(f"Objective {loss_new} | Difference: {loss_diff}")
         loss_init = loss_new
-    center_slice = initial_slice.copy()
-    center_slice.X = np.dot(feature_matrix, coeff_matrix)
+
+    center_slice = AnnData(np.dot(feature_matrix, coeff_matrix))
+    center_slice.var.index = common_genes
+    center_slice.obs.index = initial_slice.obs.index
+    center_slice.obsm["spatial"] = initial_slice.obsm["spatial"]
     center_slice.uns["paste_W"] = feature_matrix
     center_slice.uns["paste_H"] = coeff_matrix
     center_slice.uns["full_rank"] = (

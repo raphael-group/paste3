@@ -74,6 +74,7 @@ stdlib-list==0.10.0
 sympy==1.13.3
 threadpoolctl==3.5.0
 torch==2.4.1
+torchnmf==0.3.5
 tqdm==4.66.5
 traitlets==5.14.3
 typing_extensions==4.12.2

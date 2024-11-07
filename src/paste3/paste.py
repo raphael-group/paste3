@@ -5,6 +5,7 @@ matrix of the spots
 """
 
 import logging
+from typing import Any
 
 import numpy as np
 import ot
@@ -12,10 +13,10 @@ import torch
 from anndata import AnnData
 from ot.lp import emd
 from sklearn.decomposition import NMF
+from torchnmf.nmf import NMF as TorchNMF
 
 from paste3.helper import (
     dissimilarity_metric,
-    intersect,
     to_dense_array,
 )
 
@@ -136,7 +137,7 @@ def pairwise_align(
         use_gpu = False
 
     # subset for common genes
-    common_genes = intersect(a_slice.var.index, b_slice.var.index)
+    common_genes = a_slice.var.index.intersection(b_slice.var.index)
     a_slice = a_slice[:, common_genes]
     b_slice = b_slice[:, common_genes]
 
@@ -267,6 +268,8 @@ def center_align(
     pi_inits: list[np.ndarray] | None = None,
     spots_weights=None,
     use_gpu: bool = True,
+    fast: bool = False,
+    pbar: Any = None,
 ) -> tuple[AnnData, list[np.ndarray]]:
     r"""
     Infers a "center" slice consisting of a low rank expression matrix :math:`X = WH` and a collection of
@@ -324,7 +327,11 @@ def center_align(
         Weights for individual spots in each slices. If None, uniform distribution is used.
     use_gpu : bool, default=True
         Whether to use GPU for computations. If True but no GPU is available, will default to CPU.
-
+    fast : bool, default=False
+        Whether to use the fast (untested) torch nmf library
+    pbar : Any, default=None
+        Progress bar (tqdm or derived) for tracking the optimization process.
+        Something that has an `update` method.
     Returns
     -------
     Tuple[AnnData, List[np.ndarray]]
@@ -351,7 +358,7 @@ def center_align(
     # get common genes
     common_genes = initial_slice.var.index
     for s in slices:
-        common_genes = intersect(common_genes, s.var.index)
+        common_genes = common_genes.intersection(s.var.index)
 
     # subset common genes
     initial_slice = initial_slice[:, common_genes]
@@ -382,6 +389,7 @@ def center_align(
     if pi_inits is None:
         pis = [None for i in range(len(slices))]
         feature_matrix = nmf_model.fit_transform(initial_slice.X)
+
     else:
         pis = pi_inits
         feature_matrix = nmf_model.fit_transform(
@@ -424,6 +432,7 @@ def center_align(
             pi_inits=pis,
             spot_weights=spots_weights,
         )
+        logger.info("center_ot done")
         feature_matrix, coeff_matrix = center_NMF(
             feature_matrix,
             slices,
@@ -432,6 +441,7 @@ def center_align(
             n_components,
             random_seed,
             exp_dissim_metric=exp_dissim_metric,
+            fast=fast,
         )
         loss_new = np.dot(loss, slice_weights)
         iteration_count += 1
@@ -439,6 +449,10 @@ def center_align(
         logger.info(f"Objective {loss_new}")
         logger.info(f"Difference: {loss_diff}")
         loss_init = loss_new
+
+        if pbar is not None:
+            pbar.update(1)
+
     center_slice = initial_slice.copy()
     center_slice.X = np.dot(feature_matrix, coeff_matrix)
     center_slice.uns["paste_W"] = feature_matrix
@@ -476,7 +490,7 @@ def center_ot(
     spot_weights: list[float] | None = None,
     numItermax: int = 200,
 ) -> tuple[list[np.ndarray], np.ndarray]:
-    """Computes the optimal mappings \Pi^{(1)}, \ldots, \Pi^{(t)} given W (specified features)
+    r"""Computes the optimal mappings \Pi^{(1)}, \ldots, \Pi^{(t)} given W (specified features)
     and H (coefficient matrix) by solving the pairwise slice alignment problem between the
     center slice and each slices separately
 
@@ -529,6 +543,7 @@ def center_ot(
     losses = []
     logger.info("Solving Pairwise Slice Alignment Problem.")
     for i in range(len(slices)):
+        logger.info(f"Slice {i}")
         pi, loss = pairwise_align(
             center_slice,
             slices[i],
@@ -554,8 +569,9 @@ def center_NMF(
     n_components: int,
     random_seed: float,
     exp_dissim_metric: str = "kl",
+    fast: bool = False,
 ):
-    """
+    r"""
     Finds two low-rank matrices \( W \) (feature matrix) and \( H \) (coefficient matrix) that approximate expression matrices of all
     slices by minimizing the following objective function:
 
@@ -579,7 +595,8 @@ def center_NMF(
     exp_dissim_metric : str, default="kl"
         The metric used for measuring dissimilarity. Options include "euclidean" and "kl"
         for Kullback-Leibler divergence.
-
+    fast : bool, default=False
+        Whether to use the fast (untested) torch nmf library
     Returns
     -------
     Tuple[np.ndarray, np.ndarray]
@@ -604,6 +621,10 @@ def center_NMF(
             init="random",
             random_state=random_seed,
         )
+    elif fast:
+        nmf_model = TorchNMF(weighted_features.T.shape, rank=n_components).to(
+            weighted_features.device
+        )
     else:
         nmf_model = NMF(
             n_components=n_components,
@@ -612,8 +633,14 @@ def center_NMF(
             init="random",
             random_state=random_seed,
         )
-    new_feature_matrix = nmf_model.fit_transform(weighted_features.cpu().numpy())
-    new_coeff_matrix = nmf_model.components_
+
+    if fast:
+        nmf_model.fit(weighted_features.T)
+        new_feature_matrix = nmf_model.W.double().detach().cpu().numpy()
+        new_coeff_matrix = nmf_model.H.T.detach().cpu().numpy()
+    else:
+        new_feature_matrix = nmf_model.fit_transform(weighted_features.cpu().numpy())
+        new_coeff_matrix = nmf_model.components_
     return new_feature_matrix, new_coeff_matrix
 
 

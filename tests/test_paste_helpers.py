@@ -12,7 +12,6 @@ from paste3.helper import (
     get_common_genes,
     glmpca_distance,
     high_umi_gene_distance,
-    intersect,
     kl_divergence,
     kl_divergence_backend,
     match_spots_using_spatial_heuristic,
@@ -27,7 +26,7 @@ output_dir = test_dir / "data/output"
 
 
 def test_intersect(slices):
-    common_genes = intersect(slices[1].var.index, slices[2].var.index)
+    common_genes = slices[1].var.index.intersection(slices[2].var.index)
     assert np.all(
         np.equal(
             common_genes,
@@ -123,7 +122,7 @@ def test_glmpca_distance():
 
 
 def test_pca_distance(slices2):
-    common_genes = intersect(slices2[1].var.index, slices2[2].var.index)
+    common_genes = slices2[1].var.index.intersection(slices2[2].var.index)
     sliceA = slices2[1][:, common_genes]
     sliceB = slices2[2][:, common_genes]
 
@@ -140,7 +139,7 @@ def test_pca_distance(slices2):
 
 
 def test_high_umi_gene_distance(slices):
-    common_genes = intersect(slices[1].var.index, slices[2].var.index)
+    common_genes = slices[1].var.index.intersection(slices[2].var.index)
     sliceA = slices[1][:, common_genes]
     sliceB = slices[2][:, common_genes]
 
@@ -178,7 +177,7 @@ def test_match_spots_using_spatial_heuristic(slices, _use_ot, filename):  # noqa
 
 
 def test_norm_and_center_coordinates(slices):
-    common_genes = intersect(slices[1].var.index, slices[2].var.index)
+    common_genes = slices[1].var.index.intersection(slices[2].var.index)
     sliceA = slices[1][:, common_genes]
     sliceB = slices[2][:, common_genes]
 
@@ -211,7 +210,7 @@ def test_norm_and_center_coordinates(slices):
 )
 def test_dissimilarity_metric(slices2, dissimilarity):
     sliceA, sliceB = slices2[:2]
-    common_genes = intersect(sliceA.var.index, sliceB.var.index)
+    common_genes = sliceA.var.index.intersection(sliceB.var.index)
     sliceA = sliceA[:, common_genes]
     sliceB = sliceB[:, common_genes]
 

@@ -1,0 +1,25 @@
+name: paste3
+display_name: Paste3
+# use 'hidden' to remove plugin from napari hub search results
+visibility: hidden
+
+contributions:
+  commands:
+    - id: paste3.get_reader
+      python_name: paste3.napari._reader:napari_get_reader
+      title: Open data with Paste3
+    - id: paste3.center_align_widget
+      python_name: paste3.napari:CenterAlignContainer
+      title: Center Align
+    - id: paste3.pairwise_align_widget
+      python_name: paste3.napari:PairwiseAlignContainer
+      title: Pairwise Align
+  readers:
+    - command: paste3.get_reader
+      accepts_directories: false
+      filename_patterns: [ '*.h5ad' ]
+  widgets:
+    - command: paste3.center_align_widget
+      display_name: Center Align
+    - command: paste3.pairwise_align_widget
+      display_name: Pairwise Align

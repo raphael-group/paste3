@@ -11,7 +11,6 @@ from scipy.spatial.distance import cdist
 
 from paste3.helper import (
     glmpca_distance,
-    intersect,
     to_dense_array,
 )
 from paste3.paste import pairwise_align
@@ -196,7 +195,7 @@ def select_overlap_fraction(sliceA, sliceB, alpha=0.1, show_plot=True, numIterma
         0.05,
     ]
     # subset for common genes
-    common_genes = intersect(sliceA.var.index, sliceB.var.index)
+    common_genes = sliceA.var.index.intersection(sliceB.var.index)
     sliceA = sliceA[:, common_genes]
     sliceB = sliceB[:, common_genes]
     # Get transport cost matrix

@@ -8,7 +8,6 @@ import torch
 from pandas.testing import assert_frame_equal
 from scipy.spatial import distance
 
-from paste3.helper import intersect
 from paste3.paste import my_fused_gromov_wasserstein, pairwise_align
 
 test_dir = Path(__file__).parent
@@ -36,7 +35,7 @@ def test_partial_pairwise_align_glmpca(fn, slices2):
 
 
 def test_partial_pairwise_align_given_cost_matrix(slices):
-    common_genes = intersect(slices[1].var.index, slices[2].var.index)
+    common_genes = slices[1].var.index.intersection(slices[2].var.index)
     sliceA = slices[1][:, common_genes]
     sliceB = slices[2][:, common_genes]
 
@@ -134,7 +133,7 @@ def test_partial_pairwise_align_histology(slices2):
     ],
 )
 def test_partial_fused_gromov_wasserstein(slices, armijo, expected_log, filename):
-    common_genes = intersect(slices[1].var.index, slices[2].var.index)
+    common_genes = slices[1].var.index.intersection(slices[2].var.index)
     sliceA = slices[1][:, common_genes]
     sliceB = slices[2][:, common_genes]
 

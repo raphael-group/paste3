@@ -9,7 +9,6 @@ import pytest
 import torch
 from pandas.testing import assert_frame_equal
 
-from paste3.helper import intersect
 from paste3.paste import (
     center_align,
     center_NMF,
@@ -119,7 +118,7 @@ def test_center_ot(slices):
 
     common_genes = slices[0].var.index
     for slice in slices[1:]:
-        common_genes = intersect(common_genes, slice.var.index)
+        common_genes = common_genes.intersection(slice.var.index)
 
     intersecting_slice = slices[0][:, common_genes]
     pairwise_info, r = center_ot(

@@ -16,7 +16,6 @@ from paste3.paste import (
     line_search_partial,
     my_fused_gromov_wasserstein,
     pairwise_align,
-    solve_gromov_linesearch,
 )
 
 test_dir = Path(__file__).parent
@@ -223,14 +222,14 @@ def test_gromov_linesearch(spot_distance_matrix):
     ).double()
     costG = 6.0935270338235075
 
-    alpha, fc, cost_G = solve_gromov_linesearch(
-        G,
-        deltaG,
-        costG,
-        spot_distance_matrix[1],
-        spot_distance_matrix[2],
-        exp_dissim_matrix=0.0,
-        alpha=1.0,
+    alpha, fc, cost_G = ot.gromov.solve_gromov_linesearch(
+        G=G,
+        deltaG=deltaG,
+        cost_G=costG,
+        C1=spot_distance_matrix[1],
+        C2=spot_distance_matrix[2],
+        M=0.0,
+        reg=2 * 1.0,
         nx=nx,
     )
     assert alpha == 1.0

@@ -860,7 +860,7 @@
     <span class="k">if</span> <span class="n">loss_fun</span> <span class="o">==</span> <span class="s2">&quot;kl_loss&quot;</span><span class="p">:</span>
         <span class="n">armijo</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># there is no closed form line-search with KL</span>
 
-    <span class="k">def</span> <span class="nf">line_search</span><span class="p">(</span><span class="n">f_cost</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">pi_diff</span><span class="p">,</span> <span class="n">linearized_matrix</span><span class="p">,</span> <span class="n">cost_pi</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">line_search</span><span class="p">(</span><span class="n">f_cost</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">pi_diff</span><span class="p">,</span> <span class="n">linearized_matrix</span><span class="p">,</span> <span class="n">cost_pi</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve the linesearch in the fused wasserstein iterations&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">overlap_fraction</span><span class="p">:</span>
             <span class="k">nonlocal</span> <span class="n">count</span>
@@ -883,14 +883,14 @@
                 <span class="n">pi_diff</span><span class="p">,</span>
                 <span class="n">loss_fun</span><span class="o">=</span><span class="n">loss_fun</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="n">solve_gromov_linesearch</span><span class="p">(</span>
-            <span class="n">pi</span><span class="p">,</span>
-            <span class="n">pi_diff</span><span class="p">,</span>
-            <span class="n">cost_pi</span><span class="p">,</span>
-            <span class="n">a_spatial_dist</span><span class="p">,</span>
-            <span class="n">b_spatial_dist</span><span class="p">,</span>
-            <span class="n">exp_dissim_matrix</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-            <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="k">return</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">solve_gromov_linesearch</span><span class="p">(</span>
+            <span class="n">G</span><span class="o">=</span><span class="n">pi</span><span class="p">,</span>
+            <span class="n">deltaG</span><span class="o">=</span><span class="n">pi_diff</span><span class="p">,</span>
+            <span class="n">cost_G</span><span class="o">=</span><span class="n">cost_pi</span><span class="p">,</span>
+            <span class="n">C1</span><span class="o">=</span><span class="n">a_spatial_dist</span><span class="p">,</span>
+            <span class="n">C2</span><span class="o">=</span><span class="n">b_spatial_dist</span><span class="p">,</span>
+            <span class="n">M</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">reg</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="mf">1.0</span><span class="p">,</span>
             <span class="n">nx</span><span class="o">=</span><span class="n">nx</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span>
@@ -950,90 +950,6 @@
         <span class="n">info</span><span class="p">[</span><span class="s2">&quot;u&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;u&quot;</span><span class="p">]</span>
         <span class="n">info</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">pi</span><span class="p">,</span> <span class="n">info</span>
-
-
-<span class="k">def</span> <span class="nf">solve_gromov_linesearch</span><span class="p">(</span>
-    <span class="n">pi</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="n">pi_diff</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="n">cost_pi</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">a_spatial_dist</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="n">b_spatial_dist</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="n">exp_dissim_matrix</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">alpha_min</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">alpha_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">nx</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Perform a line search to optimize the transport plan with respect to the Gromov-Wasserstein loss.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    pi : torch.Tensor</span>
-<span class="sd">        The transport map at a given iteration of the FW</span>
-<span class="sd">    pi_diff : torch.Tensor</span>
-<span class="sd">        Difference between the optimal map found by linearization in the fused wasserstein algorithm and the value at a given iteration</span>
-<span class="sd">    cost_pi : float</span>
-<span class="sd">        Value of the cost at `G`</span>
-<span class="sd">    a_spatial_dist : torch.Tensor</span>
-<span class="sd">        Spot distance matrix in the first slice.</span>
-<span class="sd">    b_spatial_dist : torch.Tensor</span>
-<span class="sd">        Spot distance matrix in the second slice.</span>
-<span class="sd">    exp_dissim_matrix : torch.Tensor</span>
-<span class="sd">         Expression dissimilarity matrix between two slices.</span>
-<span class="sd">    alpha : float</span>
-<span class="sd">        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.</span>
-<span class="sd">        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.</span>
-<span class="sd">    alpha_min : float, Optional</span>
-<span class="sd">        Minimum value for alpha</span>
-<span class="sd">    alpha_max : float, Optional</span>
-<span class="sd">        Maximum value for alpha</span>
-<span class="sd">    nx : str, Optional</span>
-<span class="sd">        If let to its default value None, a backend test will be conducted.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    minimal_cost : float</span>
-<span class="sd">        The optimal step size of the fused wasserstein</span>
-<span class="sd">    fc : int</span>
-<span class="sd">        Number of function call. (Not used in this case)</span>
-<span class="sd">    cost_pi : float</span>
-<span class="sd">        The final cost after the update of the transport plan.</span>
-
-<span class="sd">    .. _references-solve-linesearch:</span>
-<span class="sd">    References</span>
-<span class="sd">    ----------</span>
-<span class="sd">    .. [24] Vayer Titouan, Chapel Laetitia, Flamary Rémi, Tavenard Romain and Courty Nicolas</span>
-<span class="sd">        &quot;Optimal Transport for structured data with application on graphs&quot;</span>
-<span class="sd">        International Conference on Machine Learning (ICML). 2019.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">nx</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">pi</span><span class="p">,</span> <span class="n">pi_diff</span><span class="p">,</span> <span class="n">a_spatial_dist</span><span class="p">,</span> <span class="n">b_spatial_dist</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">list_to_array</span><span class="p">(</span>
-            <span class="n">pi</span><span class="p">,</span> <span class="n">pi_diff</span><span class="p">,</span> <span class="n">a_spatial_dist</span><span class="p">,</span> <span class="n">b_spatial_dist</span>
-        <span class="p">)</span>
-
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exp_dissim_matrix</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)):</span>
-            <span class="n">nx</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">pi_diff</span><span class="p">,</span> <span class="n">a_spatial_dist</span><span class="p">,</span> <span class="n">b_spatial_dist</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">nx</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span>
-                <span class="n">pi</span><span class="p">,</span> <span class="n">pi_diff</span><span class="p">,</span> <span class="n">a_spatial_dist</span><span class="p">,</span> <span class="n">b_spatial_dist</span><span class="p">,</span> <span class="n">exp_dissim_matrix</span>
-            <span class="p">)</span>
-
-    <span class="n">dot</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">a_spatial_dist</span><span class="p">,</span> <span class="n">pi_diff</span><span class="p">),</span> <span class="n">b_spatial_dist</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-    <span class="n">a</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dot</span> <span class="o">*</span> <span class="n">pi_diff</span><span class="p">)</span>
-    <span class="n">b</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">exp_dissim_matrix</span> <span class="o">*</span> <span class="n">pi_diff</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span>
-        <span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dot</span> <span class="o">*</span> <span class="n">pi</span><span class="p">)</span>
-        <span class="o">+</span> <span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">a_spatial_dist</span><span class="p">,</span> <span class="n">pi</span><span class="p">),</span> <span class="n">b_spatial_dist</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">*</span> <span class="n">pi_diff</span><span class="p">)</span>
-    <span class="p">)</span>
-
-    <span class="n">minimal_cost</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">solve_1d_linesearch_quad</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">alpha_min</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">alpha_max</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">minimal_cost</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">minimal_cost</span><span class="p">,</span> <span class="n">alpha_min</span><span class="p">,</span> <span class="n">alpha_max</span><span class="p">)</span>
-
-    <span class="c1"># the new cost is deduced from the line search quadratic function</span>
-    <span class="n">cost_pi</span> <span class="o">=</span> <span class="n">cost_pi</span> <span class="o">+</span> <span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">minimal_cost</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span> <span class="n">minimal_cost</span>
-
-    <span class="k">return</span> <span class="n">minimal_cost</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">cost_pi</span>
 
 
 <span class="k">def</span> <span class="nf">line_search_partial</span><span class="p">(</span>

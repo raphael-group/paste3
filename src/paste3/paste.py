@@ -786,7 +786,7 @@ def my_fused_gromov_wasserstein(
     if loss_fun == "kl_loss":
         armijo = True  # there is no closed form line-search with KL
 
-    def line_search(f_cost, pi, pi_diff, linearized_matrix, cost_pi, **kwargs):
+    def line_search(f_cost, pi, pi_diff, linearized_matrix, cost_pi, _, **kwargs):
         """Solve the linesearch in the fused wasserstein iterations"""
         if overlap_fraction:
             nonlocal count
@@ -809,14 +809,14 @@ def my_fused_gromov_wasserstein(
                 pi_diff,
                 loss_fun=loss_fun,
             )
-        return solve_gromov_linesearch(
-            pi,
-            pi_diff,
-            cost_pi,
-            a_spatial_dist,
-            b_spatial_dist,
-            exp_dissim_matrix=0.0,
-            alpha=1.0,
+        return ot.gromov.solve_gromov_linesearch(
+            G=pi,
+            deltaG=pi_diff,
+            cost_G=cost_pi,
+            C1=a_spatial_dist,
+            C2=b_spatial_dist,
+            M=0.0,
+            reg=2 * 1.0,
             nx=nx,
             **kwargs,
         )
@@ -876,90 +876,6 @@ def my_fused_gromov_wasserstein(
         info["u"] = info["u"]
         info["v"] = info["v"]
     return pi, info
-
-
-def solve_gromov_linesearch(
-    pi: torch.Tensor,
-    pi_diff: torch.Tensor,
-    cost_pi: float,
-    a_spatial_dist: torch.Tensor,
-    b_spatial_dist: torch.Tensor,
-    exp_dissim_matrix: float,
-    alpha: float,
-    alpha_min: float | None = None,
-    alpha_max: float | None = None,
-    nx: str | None = None,
-):
-    """
-    Perform a line search to optimize the transport plan with respect to the Gromov-Wasserstein loss.
-
-    Parameters
-    ----------
-    pi : torch.Tensor
-        The transport map at a given iteration of the FW
-    pi_diff : torch.Tensor
-        Difference between the optimal map found by linearization in the fused wasserstein algorithm and the value at a given iteration
-    cost_pi : float
-        Value of the cost at `G`
-    a_spatial_dist : torch.Tensor
-        Spot distance matrix in the first slice.
-    b_spatial_dist : torch.Tensor
-        Spot distance matrix in the second slice.
-    exp_dissim_matrix : torch.Tensor
-         Expression dissimilarity matrix between two slices.
-    alpha : float
-        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
-        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.
-    alpha_min : float, Optional
-        Minimum value for alpha
-    alpha_max : float, Optional
-        Maximum value for alpha
-    nx : str, Optional
-        If let to its default value None, a backend test will be conducted.
-
-    Returns
-    -------
-    minimal_cost : float
-        The optimal step size of the fused wasserstein
-    fc : int
-        Number of function call. (Not used in this case)
-    cost_pi : float
-        The final cost after the update of the transport plan.
-
-    .. _references-solve-linesearch:
-    References
-    ----------
-    .. [24] Vayer Titouan, Chapel Laetitia, Flamary Rémi, Tavenard Romain and Courty Nicolas
-        "Optimal Transport for structured data with application on graphs"
-        International Conference on Machine Learning (ICML). 2019.
-    """
-    if nx is None:
-        pi, pi_diff, a_spatial_dist, b_spatial_dist = ot.utils.list_to_array(
-            pi, pi_diff, a_spatial_dist, b_spatial_dist
-        )
-
-        if isinstance(exp_dissim_matrix, (int | float)):
-            nx = ot.backend.get_backend(pi, pi_diff, a_spatial_dist, b_spatial_dist)
-        else:
-            nx = ot.backend.get_backend(
-                pi, pi_diff, a_spatial_dist, b_spatial_dist, exp_dissim_matrix
-            )
-
-    dot = nx.dot(nx.dot(a_spatial_dist, pi_diff), b_spatial_dist.T)
-    a = -2 * alpha * nx.sum(dot * pi_diff)
-    b = nx.sum(exp_dissim_matrix * pi_diff) - 2 * alpha * (
-        nx.sum(dot * pi)
-        + nx.sum(nx.dot(nx.dot(a_spatial_dist, pi), b_spatial_dist.T) * pi_diff)
-    )
-
-    minimal_cost = ot.optim.solve_1d_linesearch_quad(a, b)
-    if alpha_min is not None or alpha_max is not None:
-        minimal_cost = np.clip(minimal_cost, alpha_min, alpha_max)
-
-    # the new cost is deduced from the line search quadratic function
-    cost_pi = cost_pi + a * (minimal_cost**2) + b * minimal_cost
-
-    return minimal_cost, 1, cost_pi
 
 
 def line_search_partial(

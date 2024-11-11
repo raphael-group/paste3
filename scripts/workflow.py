@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     dataset = AlignmentDataset(
-        "/home/vineetb/paste3/paste_reproducibility/data/SCC/cached-results/H5ADs/patient_2*"
+        glob_pattern="/home/vineetb/paste3/paste_reproducibility/data/SCC/cached-results/H5ADs/patient_2*"
     )
 
     all_points_orig = dataset.all_points()
@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     # ------- Center Align ------- #
     center_slice, pis = dataset.find_center_slice()
-    aligned_dataset = dataset.center_align(center_slice=center_slice, pis=pis)
+    aligned_dataset, *_ = dataset.center_align(center_slice=center_slice, pis=pis)
     all_points = aligned_dataset.all_points()
 
     center_slice.cluster(n_clusters, save_as="new_clusters")
@@ -29,6 +29,6 @@ if __name__ == "__main__":
     # ------- Center Align ------- #
 
     # ------- Pairwise Align ------- #
-    aligned_dataset = dataset.pairwise_align(overlap_fraction=0.7)
+    aligned_dataset, *_ = dataset.pairwise_align(overlap_fraction=0.7)
     all_points = aligned_dataset.all_points()
     # ------- Pairwise Align ------- #

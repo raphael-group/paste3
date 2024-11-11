@@ -5,6 +5,9 @@ visibility: hidden
 
 contributions:
   commands:
+    - id: paste3.make_sample_data
+      python_name: paste3.napari._sample_data:make_sample_data
+      title: Load sample data for Paste3
     - id: paste3.get_reader
       python_name: paste3.napari._reader:napari_get_reader
       title: Open data with Paste3
@@ -18,6 +21,10 @@ contributions:
     - command: paste3.get_reader
       accepts_directories: false
       filename_patterns: [ '*.h5ad' ]
+  sample_data:
+    - command: paste3.make_sample_data
+      display_name: Paste3 Sample Data
+      key: data.napari.paste3.raphael-group.github.com
   widgets:
     - command: paste3.center_align_widget
       display_name: Center Align

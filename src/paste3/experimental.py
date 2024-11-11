@@ -1,4 +1,5 @@
 import logging
+import os.path
 from functools import cached_property
 from glob import glob
 from pathlib import Path
@@ -53,12 +54,8 @@ class Slice:
     def get_obs_values(self, which, coordinates=None):
         assert which in self.obs.columns, f"Unknown column: {which}"
         if coordinates is None:
-            assert (
-                self.has_spatial_data
-            ), "Slice has no `spatial` obsm. Don't know which coordinates to query"
-            coordinates = self.adata.obsm["spatial"]
-
-        return self.obs.loc[coordinates.tolist()][which].tolist()
+            coordinates = self.obs.index.values
+        return self.obs.loc[coordinates][which].tolist()
 
     def set_obs_values(self, which, values):
         self.obs[which] = values
@@ -86,20 +83,33 @@ class Slice:
 class AlignmentDataset:
     def __init__(
         self,
+        file_paths: list[Path] | None = None,
         glob_pattern: str | None = None,
         slices: list[Slice] | None = None,
         max_slices: int | None = None,
+        name: str | None = None,
     ):
         if slices is not None:
             self.slices = slices[:max_slices]
-        else:
+        elif glob_pattern is not None:
             self.slices = [
                 Slice(filepath)
                 for filepath in sorted(glob(glob_pattern))[:max_slices]  # noqa: PTH207
             ]
+        else:
+            self.slices = [Slice(filepath) for filepath in file_paths[:max_slices]]
+
+        if name is not None:
+            self.name = name
+        else:
+            # Take common prefix of slice names, but remove the word "slice"
+            # and any trailing underscores
+            name = os.path.commonprefix([str(slice_) for slice_ in self])
+            name = name.replace("slice", "").rstrip("_")
+            self.name = name
 
     def __str__(self):
-        return f"Data with {len(self.slices)} slices"
+        return self.name
 
     def __iter__(self):
         return iter(self.slices)
@@ -159,8 +169,15 @@ class AlignmentDataset:
     ):
         if pis is None:
             pis = self.find_pis(overlap_fraction=overlap_fraction, max_iters=max_iters)
-        new_slices = stack_slices_pairwise(self.slices_adata, pis)
-        return AlignmentDataset(slices=[Slice(adata=s) for s in new_slices])
+        new_slices, rotation_angles, translations = stack_slices_pairwise(
+            self.slices_adata, pis, return_params=True
+        )
+        aligned_dataset = AlignmentDataset(
+            slices=[Slice(adata=s) for s in new_slices],
+            name=self.name + "_pairwise_aligned",
+        )
+
+        return aligned_dataset, rotation_angles, translations
 
     def find_center_slice(
         self,
@@ -210,16 +227,26 @@ class AlignmentDataset:
             center_slice, pis = self.find_center_slice(initial_slice=initial_slice)
 
         logger.info("Stacking slices around center slice")
-        _, new_slices = stack_slices_center(
-            center_slice=center_slice.adata, slices=self.slices_adata, pis=pis
+        new_center, new_slices, rotation_angles, translations = stack_slices_center(
+            center_slice=center_slice.adata,
+            slices=self.slices_adata,
+            pis=pis,
+            output_params=True,
         )
-        return AlignmentDataset(slices=[Slice(adata=s) for s in new_slices])
+        aligned_dataset = AlignmentDataset(
+            slices=[Slice(adata=s) for s in new_slices],
+            name=self.name + "_center_aligned",
+        )
 
-    def all_points(self) -> np.ndarray:
+        return aligned_dataset, rotation_angles, translations
+
+    def all_points(self, translation: np.ndarray | None = None) -> np.ndarray:
         layers = []
         for i, slice in enumerate(self.slices):
             adata = slice.adata
             points = adata.obsm["spatial"]
+            if translation is not None:
+                points = points + translation
             layer_data = np.pad(
                 points, pad_width=((0, 0), (1, 0)), mode="constant", constant_values=i
             )

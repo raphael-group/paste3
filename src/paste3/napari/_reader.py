@@ -6,9 +6,8 @@ implement multiple readers or even other plugin contributions. see:
 https://napari.org/stable/plugins/guides.html?#readers
 """
 
-import seaborn as sns
-
 from paste3.experimental import AlignmentDataset, Slice
+from paste3.napari._widget import init_widget
 
 
 def napari_get_reader(path):
@@ -66,44 +65,8 @@ def reader_function(path):
     slices = [Slice(filepath) for filepath in paths]
     dataset = AlignmentDataset(slices=slices)
 
-    face_color_cycle = sns.color_palette("Paired", 20)
+    init_widget(alignment_dataset=dataset)
 
-    layer_data = []
-    all_clusters = []
-    for slice in dataset.slices:
-        points = slice.adata.obsm["spatial"]
-        clusters = slice.get_obs_values("original_clusters")
-        all_clusters.extend(clusters)
-
-        layer_data.append(
-            (
-                points,
-                {
-                    "features": {"cluster": clusters},
-                    "face_color": "cluster",
-                    "face_color_cycle": face_color_cycle,
-                    "size": 1,
-                    "metadata": {"slice": slice},
-                    "name": f"{slice}",
-                },
-                "points",
-            )
-        )
-
-    layer_data.append(
-        (
-            dataset.all_points(),
-            {
-                "features": {"cluster": all_clusters},
-                "face_color": "cluster",
-                "face_color_cycle": face_color_cycle,
-                "ndim": 3,
-                "size": 1,
-                "scale": [3, 1, 1],
-                "name": "paste3_volume",
-            },
-            "points",
-        )
-    )
-
-    return layer_data
+    # We let the initialized widget handle the rest of the logic
+    # and add the layers to the viewer
+    return [(None,)]

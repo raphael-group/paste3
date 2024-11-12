@@ -18,6 +18,12 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+
+      - name: Install system dependencies
+        if: matrix.os == 'ubuntu-latest'
+        # needed for testing the napari plugin
+        run: sudo apt-get install '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5

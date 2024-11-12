@@ -24,9 +24,10 @@ jobs:
 
     steps:
 
-      - name: Set environment variables
+      - name: Install system dependencies
+        if: matrix.os == 'ubuntu-latest'
         # needed for testing the napari plugin
-        run: echo "QT_QPA_PLATFORM=offscreen" >> $GITHUB_ENV
+        run: sudo apt-get install '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev
 
       - uses: actions/checkout@main
 

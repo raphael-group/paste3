@@ -4,14 +4,14 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, vb/napari_enhancements ]
 
 jobs:
   build_wheels:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
         python-version: ["3.12"]
 
     name: Build wheel on ${{ matrix.os }}
@@ -23,6 +23,11 @@ jobs:
         shell: bash -l {0}
 
     steps:
+
+      - name: Set environment variables
+        # needed for testing the napari plugin
+        run: echo "QT_QPA_PLATFORM=offscreen" >> $GITHUB_ENV
+
       - uses: actions/checkout@main
 
       - uses: conda-incubator/setup-miniconda@v3

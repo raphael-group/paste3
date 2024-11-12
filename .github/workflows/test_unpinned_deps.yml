@@ -18,6 +18,10 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+      - name: Set environment variables
+        # needed for testing the napari plugin
+        run: echo "QT_QPA_PLATFORM=offscreen" >> $GITHUB_ENV
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5

@@ -3,7 +3,7 @@ import seaborn as sns
 from magicgui.widgets import Container, create_widget
 from napari.utils.progress import progress
 
-from paste3.experimental import AlignmentDataset
+from paste3.dataset import AlignmentDataset
 
 face_color_cycle = sns.color_palette("Paired", 20)
 

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import seaborn as sns
 
-from paste3.experimental import AlignmentDataset
+from paste3.dataset import AlignmentDataset
 from paste3.napari.data.ondemand import get_file
 
 

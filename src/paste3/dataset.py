@@ -34,11 +34,11 @@ class Slice:
     def __str__(self):
         if self.filepath is not None:
             return Path(self.filepath).stem
-        return "Slice with adata: " + str(self.adata)
+        return "Slice with adata: " + str(self.adata).split("\n")[0]
 
     @cached_property
     def adata(self):
-        return self._adata or sc.read_h5ad(self.filepath)
+        return self._adata or sc.read_h5ad(str(self.filepath))
 
     @cached_property
     def obs(self):

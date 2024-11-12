@@ -6,7 +6,7 @@ implement multiple readers or even other plugin contributions. see:
 https://napari.org/stable/plugins/guides.html?#readers
 """
 
-from paste3.experimental import AlignmentDataset, Slice
+from paste3.dataset import AlignmentDataset, Slice
 from paste3.napari._widget import init_widget
 
 

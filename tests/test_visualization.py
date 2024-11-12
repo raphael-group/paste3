@@ -40,20 +40,13 @@ def test_stack_slices_pairwise(slices):
 
     expected_thetas = [-0.25086326614894794, 0.5228805289947901, 0.02478065908672744]
     expected_translations = [
-        [16.44623228, 16.73757874],
-        [19.80709562, 15.74706375],
-        [16.32537879, 17.43314773],
-        [19.49901527, 17.35546565],
+        ([16.44623233, 16.73757875], [19.80709569, 15.74706369]),
+        ([-2.90017423e-08, -1.19685091e-08], [16.32537929, 17.43314825]),
+        ([1.58526981e-07, 6.97949045e-07], [19.49901545, 17.35546584]),
     ]
 
-    assert np.all(
-        np.isclose(expected_thetas, thetas, rtol=1e-05, atol=1e-08, equal_nan=True)
-    )
-    assert np.all(
-        np.isclose(
-            expected_translations, translations, rtol=1e-05, atol=1e-08, equal_nan=True
-        )
-    )
+    assert np.allclose(expected_thetas, thetas, rtol=1e-05, atol=1e-08)
+    assert np.allclose(expected_translations, translations, rtol=1e-05, atol=1e-08)
 
 
 def test_stack_slices_center(slices):
@@ -89,20 +82,14 @@ def test_stack_slices_center(slices):
         0.0245843732567813,
     ]
     expected_translations = [
-        [16.44623228, 16.73757874],
-        [19.80709562, 15.74706375],
-        [16.32537879, 17.43314773],
-        [19.49901527, 17.35546565],
+        ([16.44623224, 16.73757867], [16.44623224, 16.73757867]),
+        ([16.44623233, 16.73757876], [19.80709569, 15.7470637]),
+        ([16.44623251, 16.73757894], [16.325379, 17.43314794]),
+        ([16.44623234, 16.73757877], [19.49901525, 17.35546567]),
     ]
 
-    assert np.all(
-        np.isclose(expected_thetas, thetas, rtol=1e-05, atol=1e-08, equal_nan=True)
-    )
-    assert np.all(
-        np.isclose(
-            expected_translations, translations, rtol=1e-05, atol=1e-08, equal_nan=True
-        )
-    )
+    assert np.allclose(expected_thetas, thetas, rtol=1e-05, atol=1e-08)
+    assert np.allclose(expected_translations, translations, rtol=1e-05, atol=1e-08)
 
 
 def test_generalized_procrustes_analysis(slices):

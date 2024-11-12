@@ -1,10 +1,4 @@
-"""
-This module is an example of a barebones numpy reader plugin for napari.
-
-It implements the Reader specification, but your plugin may choose to
-implement multiple readers or even other plugin contributions. see:
-https://napari.org/stable/plugins/guides.html?#readers
-"""
+from pathlib import Path
 
 from paste3.dataset import AlignmentDataset, Slice
 from paste3.napari._widget import init_widget
@@ -31,7 +25,7 @@ def napari_get_reader(path):
         path = path[0]
 
     # if we know we cannot read the file, we immediately return None.
-    if not path.endswith(".h5ad"):
+    if not str(path).endswith(".h5ad"):
         return None
 
     # otherwise we return the *function* that can read ``path``.
@@ -61,7 +55,7 @@ def reader_function(path):
         default to layer_type=="image" if not provided
     """
     # handle both a string and a list of strings
-    paths = [path] if isinstance(path, str) else path
+    paths = [path] if isinstance(path, str | Path) else path
     slices = [Slice(filepath) for filepath in paths]
     dataset = AlignmentDataset(slices=slices)
 

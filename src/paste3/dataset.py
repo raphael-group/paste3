@@ -128,7 +128,7 @@ class AlignmentDataset:
         self,
         center_align: bool = False,
         pis: np.ndarray | None = None,
-        overlap_fraction: float | None = None,
+        overlap_fraction: float | list[float] | None = None,
         max_iters: int = 1000,
     ):
         if center_align:
@@ -146,7 +146,17 @@ class AlignmentDataset:
             overlap_fraction=overlap_fraction, pis=pis, max_iters=max_iters
         )
 
-    def find_pis(self, overlap_fraction: float, max_iters: int = 1000):
+    def find_pis(self, overlap_fraction: float | list[float], max_iters: int = 1000):
+        # If multiple overlap_fraction values are specified
+        # ensure that they are |slices| - 1 in length
+        try:
+            iter(overlap_fraction)
+        except TypeError:
+            overlap_fraction = [overlap_fraction] * (len(self) - 1)
+        assert (
+            len(overlap_fraction) == len(self) - 1
+        ), "Either specify a single overlap_fraction or one for each pair of slices"
+
         pis = []
         for i in range(len(self) - 1):
             logger.info(f"Finding Pi for slices {i} and {i+1}")
@@ -154,7 +164,7 @@ class AlignmentDataset:
                 pairwise_align(
                     self.slices[i].adata,
                     self.slices[i + 1].adata,
-                    overlap_fraction=overlap_fraction,
+                    overlap_fraction=overlap_fraction[i],
                     numItermax=max_iters,
                     maxIter=max_iters,
                 )
@@ -163,7 +173,7 @@ class AlignmentDataset:
 
     def pairwise_align(
         self,
-        overlap_fraction: float,
+        overlap_fraction: float | list[float],
         pis: list[np.ndarray] | None = None,
         max_iters: int = 1000,
     ):

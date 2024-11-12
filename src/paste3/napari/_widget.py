@@ -1,6 +1,7 @@
 import napari
 import seaborn as sns
 from magicgui.widgets import Container, create_widget
+from napari.utils.notifications import show_error
 from napari.utils.progress import progress
 
 from paste3.dataset import AlignmentDataset
@@ -18,11 +19,12 @@ class AlignContainer(Container):
 
     def show_dataset(
         self,
-        dataset: AlignmentDataset,
+        dataset: AlignmentDataset | None = None,
         show_slices: bool = True,
         show_volume: bool = True,
         first_layer_translation: list[float] | None = None,
     ):
+        dataset = dataset or self.dataset
         all_clusters = []
         for slice in dataset:
             points = slice.adata.obsm["spatial"]
@@ -227,14 +229,16 @@ class PairwiseAlignContainer(AlignContainer):
         else:
             self.dataset = alignment_dataset
 
-        keys = list(self.dataset.slices[0].adata.obs.keys())
         spot_color_key = None
-        for key in keys:
-            if "cluster" in key:
-                spot_color_key = key
-                break
-        if spot_color_key is None and len(keys) > 0:
-            spot_color_key = keys[0]
+        keys = []
+        if len(self.dataset) > 0:
+            keys = list(self.dataset.slices[0].adata.obs.keys())
+            for key in keys:
+                if "cluster" in key:
+                    spot_color_key = key
+                    break
+            if spot_color_key is None and len(keys) > 0:
+                spot_color_key = keys[0]
 
         self._spot_color_key_dropdown = create_widget(
             label="Spot Color Key",
@@ -245,14 +249,12 @@ class PairwiseAlignContainer(AlignContainer):
             value=spot_color_key,
         )
 
-        self._overlap_slider = create_widget(
-            label="Overlap", annotation=float, widget_type="FloatSlider", value=0.7
+        self._overlap_textbox = create_widget(
+            label="Overlap", annotation=str, value="0.7"
         )
-        self._overlap_slider.min = 0
-        self._overlap_slider.max = 1
 
         self._max_iterations_textbox = create_widget(
-            label="Max Iterations", annotation=int, value=10
+            label="Max Iterations", annotation=int, value=1000
         )
 
         self._run_button = create_widget(
@@ -264,23 +266,30 @@ class PairwiseAlignContainer(AlignContainer):
         self.extend(
             [
                 self._spot_color_key_dropdown,
-                self._overlap_slider,
+                self._overlap_textbox,
                 self._max_iterations_textbox,
                 self._run_button,
             ]
         )
 
     def _run(self):
+        overlap = [float(w) for w in self._overlap_textbox.value.split(",")]
+        if len(overlap) == 1:  # scalar provided
+            overlap = [overlap[0]] * (len(self.dataset) - 1)
+        if len(overlap) != len(self.dataset) - 1:
+            return show_error(
+                "Overlap fraction must be a scalar or a list of length n-1, where n is the number of slices"
+            )
+
         aligned_dataset, _, translations = self.dataset.pairwise_align(
-            overlap_fraction=self._overlap_slider.value,
+            overlap_fraction=overlap,
             max_iters=self._max_iterations_textbox.value,
         )
         # We'll translate all points w.r.t translations in the first layer
         # so that the first layer in original volume and the aligned volume are
         # coincident
         first_layer_translation = translations[0][0].detach().cpu().numpy()
-
-        self.show_dataset(
+        return self.show_dataset(
             aligned_dataset,
             show_slices=False,
             show_volume=True,

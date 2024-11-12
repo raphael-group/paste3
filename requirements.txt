@@ -57,6 +57,7 @@ pynndescent==0.5.13
 pyparsing==3.1.4
 pyproject_hooks==1.2.0
 pytest==8.3.3
+pytest-qt==4.4.0
 pytest-xdist==3.6.1
 python-dateutil==2.9.0.post0
 pytz==2024.2

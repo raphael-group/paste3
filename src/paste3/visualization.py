@@ -155,6 +155,7 @@ def stack_slices_center(
     translations = []
 
     for i in range(len(slices)):
+        logger.info(f"Aligning slice {i} to center slice")
         if not output_params:
             source_coordinates, target_coordinates = generalized_procrustes_analysis(
                 torch.Tensor(center_slice.obsm["spatial"])

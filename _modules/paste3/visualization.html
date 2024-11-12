@@ -229,6 +229,7 @@
     <span class="n">translations</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Aligning slice </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> to center slice&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">output_params</span><span class="p">:</span>
             <span class="n">source_coordinates</span><span class="p">,</span> <span class="n">target_coordinates</span> <span class="o">=</span> <span class="n">generalized_procrustes_analysis</span><span class="p">(</span>
                 <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">center_slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">])</span>

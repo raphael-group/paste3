@@ -260,7 +260,6 @@ def test_line_search_partial(spot_distance_matrix):
     alpha = 0.1
     Mi = M + alpha * f_gradient(G)
 
-
     alpha, a, cost_G = line_search_partial(
         alpha=0.1,
         exp_dissim_matrix=M,
@@ -268,7 +267,7 @@ def test_line_search_partial(spot_distance_matrix):
         a_spatial_dist=spot_distance_matrix[1],
         b_spatial_dist=spot_distance_matrix[2],
         pi_diff=deltaG,
-        Mi=Mi
+        Mi=Mi,
     )
     assert alpha == 1.0
     assert pytest.approx(a) == 0.4858849047237918

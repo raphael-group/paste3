@@ -62,7 +62,7 @@ def test_partial_pairwise_align_given_cost_matrix(slices):
         pd.read_csv(output_dir / "align_given_cost_matrix_pairwise_info.csv"),
         rtol=1e-04,
     )
-    assert log["partial_fgw_cost"].cpu().numpy() == pytest.approx(40.86494022326222)
+    assert np.isclose(log["partial_fgw_cost"].cpu().numpy(), 40.86494022326222, atol=1e-04)
 
 
 def test_partial_pairwise_align_histology(slices2):

@@ -942,14 +942,14 @@ def line_search_partial(
     a = alpha * torch.sum(dot * pi_diff)
     a_ = alpha * f(pi_diff, type='loss')
 
-    dot_ = torch.matmul(-torch.matmul(a_spatial_dist, pi_diff), h2(b_spatial_dist).T)
-    a__ = alpha * torch.sum(dot_ * pi_diff)
+    dot_ = torch.matmul(torch.matmul(a_spatial_dist, pi_diff), h2(b_spatial_dist).T)
+    a__ = -2 * alpha * torch.sum(dot_ * pi_diff)
     try:
         assert np.isclose(a_, a__)
     except AssertionError:
         print('what happened here')
     b = torch.sum(Mi * pi_diff) - alpha * (
-        torch.sum(dot_ * pi)
+        torch.sum(dot_ * -pi)
         + torch.sum(
             torch.matmul(torch.matmul(a_spatial_dist, pi), h2(b_spatial_dist).T)
             * pi_diff
@@ -970,4 +970,4 @@ def line_search_partial(
     except AssertionError:
         print('why???')
 
-    return minimal_cost, a, cost_G_
+    return minimal_cost_, a, cost_G_

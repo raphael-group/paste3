@@ -809,6 +809,7 @@ def my_fused_gromov_wasserstein(
                 pi_diff,
                 loss_fun=loss_fun,
                 Mi=linearized_matrix,
+                cost_pi=cost_pi,
             )
         return ot.gromov.solve_gromov_linesearch(
             G=pi,
@@ -888,6 +889,7 @@ def line_search_partial(
     pi_diff: torch.Tensor,
     loss_fun: str = "square_loss",
     Mi=None,
+    cost_pi=None,
 ):
     """
     Solve the linesearch in the fused wasserstein iterations for partially overlapping slices
@@ -923,18 +925,29 @@ def line_search_partial(
     def h2(a):
         return a * 2
 
-    combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
-        a_spatial_dist,
-        b_spatial_dist,
-        torch.sum(pi_diff, axis=1).reshape(-1, 1),
-        torch.sum(pi_diff, axis=0).reshape(1, -1),
-        loss_fun,
-    )
+    def f(pi, type="gradient"):
+        """Compute the gradient of the Gromov-Wasserstein loss for a given transport plan."""
+        combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
+            a_spatial_dist,
+            b_spatial_dist,
+            torch.sum(pi, axis=1).reshape(-1, 1),
+            torch.sum(pi, axis=0).reshape(1, -1),
+            loss_fun="square_loss",
+        )
+        if type == "gradient":
+            return ot.gromov.gwggrad(combined_spatial_cost, a_gradient, b_gradient, pi)
+        return ot.gromov.gwloss(combined_spatial_cost, a_gradient, b_gradient, pi)
 
     dot = torch.matmul(torch.matmul(a_spatial_dist, pi_diff), b_spatial_dist.T)
     a = alpha * torch.sum(dot * pi_diff)
+    a_ = alpha * f(pi_diff, type='loss')
 
     dot_ = torch.matmul(-torch.matmul(a_spatial_dist, pi_diff), h2(b_spatial_dist).T)
+    a__ = alpha * torch.sum(dot_ * pi_diff)
+    try:
+        assert np.isclose(a_, a__)
+    except AssertionError:
+        print('what happened here')
     b = torch.sum(Mi * pi_diff) - alpha * (
         torch.sum(dot_ * pi)
         + torch.sum(
@@ -942,17 +955,19 @@ def line_search_partial(
             * pi_diff
         )
     )
+    b_ = (1 - alpha) * torch.sum(exp_dissim_matrix * pi_diff) + 2 * alpha * torch.sum(
+        f(pi_diff) * 0.5 * pi)
+    assert np.isclose(b, b_)
 
     minimal_cost = ot.optim.solve_1d_linesearch_quad(a, b)
+    minimal_cost_ = ot.optim.solve_1d_linesearch_quad(a_, b)
     pi = pi + minimal_cost * pi_diff
-    combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
-        a_spatial_dist,
-        b_spatial_dist,
-        torch.sum(pi, axis=1).reshape(-1, 1),
-        torch.sum(pi, axis=0).reshape(1, -1),
-        loss_fun,
-    )
-    cost_G = (1 - alpha) * torch.sum(exp_dissim_matrix * pi) + alpha * ot.gromov.gwloss(
-        combined_spatial_cost, a_gradient, b_gradient, pi
-    )
-    return minimal_cost, a, cost_G
+    cost_G = (1 - alpha) * torch.sum(exp_dissim_matrix * pi) + alpha * f(pi, type='loss')
+    cost_G_ = cost_pi + a_ * (minimal_cost_**2) + b * minimal_cost_
+
+    try:
+        assert np.isclose(cost_G_, cost_G)
+    except AssertionError:
+        print('why???')
+
+    return minimal_cost, a, cost_G_

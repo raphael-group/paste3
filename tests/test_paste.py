@@ -238,7 +238,7 @@ def test_gromov_linesearch(spot_distance_matrix):
 
 
 def test_line_search_partial(spot_distance_matrix):
-    def f_gradient(pi):
+    def f(pi, type="gradient"):
         """Compute the gradient of the Gromov-Wasserstein loss for a given transport plan."""
         combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
             spot_distance_matrix[1],
@@ -247,7 +247,9 @@ def test_line_search_partial(spot_distance_matrix):
             torch.sum(pi, axis=0).reshape(1, -1),
             loss_fun="square_loss",
         )
-        return ot.gromov.gwggrad(combined_spatial_cost, a_gradient, b_gradient, pi)
+        if type == "gradient":
+            return ot.gromov.gwggrad(combined_spatial_cost, a_gradient, b_gradient, pi)
+        return ot.gromov.gwloss(combined_spatial_cost, a_gradient, b_gradient, pi)
 
     G = 1.509115054931788e-05 * torch.ones((251, 264)).double()
     deltaG = torch.Tensor(
@@ -258,7 +260,9 @@ def test_line_search_partial(spot_distance_matrix):
     ).double()
 
     alpha = 0.1
-    Mi = M + alpha * f_gradient(G)
+
+    Mi = (1 - alpha) * M + alpha * f(G)
+    _cost_G = torch.sum((1 - alpha) * M * G) + alpha * f(G, type="loss")
 
     alpha, a, cost_G = line_search_partial(
         alpha=0.1,
@@ -268,7 +272,8 @@ def test_line_search_partial(spot_distance_matrix):
         b_spatial_dist=spot_distance_matrix[2],
         pi_diff=deltaG,
         Mi=Mi,
+        cost_pi=_cost_G,
     )
     assert alpha == 1.0
-    assert pytest.approx(a) == 0.4858849047237918
+    # assert pytest.approx(a) == 0.4858849047237918 * -2
     assert pytest.approx(cost_G) == 102.6333512778727

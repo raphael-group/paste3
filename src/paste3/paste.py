@@ -808,6 +808,7 @@ def my_fused_gromov_wasserstein(
                 b_spatial_dist,
                 pi_diff,
                 loss_fun=loss_fun,
+                Mi=linearized_matrix
             )
         return ot.gromov.solve_gromov_linesearch(
             G=pi,
@@ -886,6 +887,7 @@ def line_search_partial(
     b_spatial_dist: torch.Tensor,
     pi_diff: torch.Tensor,
     loss_fun: str = "square_loss",
+    Mi = None,
 ):
     """
     Solve the linesearch in the fused wasserstein iterations for partially overlapping slices
@@ -917,6 +919,9 @@ def line_search_partial(
     cost_G : float
         The final cost after the update of the transport plan.
     """
+    def h2(a):
+        return a * 2
+
     combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
         a_spatial_dist,
         b_spatial_dist,
@@ -932,6 +937,11 @@ def line_search_partial(
         * 0.5
         * pi
     )
+    dot_ = torch.matmul(-torch.matmul(a_spatial_dist, pi_diff), h2(b_spatial_dist).T)
+    b = torch.sum(Mi * pi_diff) - alpha * (torch.sum(dot_ * pi) +
+                                             torch.sum(torch.matmul(torch.matmul(a_spatial_dist, pi), h2(b_spatial_dist).T)* pi_diff))
+
+
     minimal_cost = ot.optim.solve_1d_linesearch_quad(a, b)
     pi = pi + minimal_cost * pi_diff
     combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(

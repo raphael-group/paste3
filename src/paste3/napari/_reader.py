@@ -1,14 +1,7 @@
-"""
-This module is an example of a barebones numpy reader plugin for napari.
+from pathlib import Path
 
-It implements the Reader specification, but your plugin may choose to
-implement multiple readers or even other plugin contributions. see:
-https://napari.org/stable/plugins/guides.html?#readers
-"""
-
-import seaborn as sns
-
-from paste3.experimental import AlignmentDataset, Slice
+from paste3.dataset import AlignmentDataset, Slice
+from paste3.napari._widget import init_widget
 
 
 def napari_get_reader(path):
@@ -32,7 +25,7 @@ def napari_get_reader(path):
         path = path[0]
 
     # if we know we cannot read the file, we immediately return None.
-    if not path.endswith(".h5ad"):
+    if not str(path).endswith(".h5ad"):
         return None
 
     # otherwise we return the *function* that can read ``path``.
@@ -62,48 +55,12 @@ def reader_function(path):
         default to layer_type=="image" if not provided
     """
     # handle both a string and a list of strings
-    paths = [path] if isinstance(path, str) else path
+    paths = [path] if isinstance(path, str | Path) else path
     slices = [Slice(filepath) for filepath in paths]
     dataset = AlignmentDataset(slices=slices)
 
-    face_color_cycle = sns.color_palette("Paired", 20)
+    init_widget(alignment_dataset=dataset)
 
-    layer_data = []
-    all_clusters = []
-    for slice in dataset.slices:
-        points = slice.adata.obsm["spatial"]
-        clusters = slice.get_obs_values("original_clusters")
-        all_clusters.extend(clusters)
-
-        layer_data.append(
-            (
-                points,
-                {
-                    "features": {"cluster": clusters},
-                    "face_color": "cluster",
-                    "face_color_cycle": face_color_cycle,
-                    "size": 1,
-                    "metadata": {"slice": slice},
-                    "name": f"{slice}",
-                },
-                "points",
-            )
-        )
-
-    layer_data.append(
-        (
-            dataset.all_points(),
-            {
-                "features": {"cluster": all_clusters},
-                "face_color": "cluster",
-                "face_color_cycle": face_color_cycle,
-                "ndim": 3,
-                "size": 1,
-                "scale": [3, 1, 1],
-                "name": "paste3_volume",
-            },
-            "points",
-        )
-    )
-
-    return layer_data
+    # We let the initialized widget handle the rest of the logic
+    # and add the layers to the viewer
+    return [(None,)]

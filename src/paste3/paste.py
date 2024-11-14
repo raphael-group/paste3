@@ -530,10 +530,9 @@ def center_NMF(
             feature_matrix.shape[0]
             * compute_slice_weights(slice_weights, pis, slices, device).cpu().numpy()
         )
+    feature_matrix = torch.Tensor(feature_matrix).to(device)
     if fast:
-        nmf_model = TorchNMF(feature_matrix.T.shape, rank=n_components).to(
-            feature_matrix.device
-        )
+        nmf_model = TorchNMF(feature_matrix.T.shape, rank=n_components)
     else:
         exp_dissim_metric = exp_dissim_metric.lower()
         nmf_model = NMF(

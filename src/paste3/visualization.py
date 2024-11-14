@@ -60,8 +60,7 @@ def stack_slices_pairwise(
         is_partial=is_partial,
     )
     rotation_angles.append(rotation_angle)
-    translations.append(x_translation)
-    translations.append(y_translation)
+    translations.append((x_translation, y_translation))
     aligned_coordinates.append(source_coordinates)
     aligned_coordinates.append(target_coordinates)
     for i in range(1, len(slices) - 1):
@@ -80,8 +79,7 @@ def stack_slices_pairwise(
             is_partial=is_partial,
         )
         rotation_angles.append(rotation_angle)
-        translations.append(y_translation)
-
+        translations.append((x_translation, y_translation))
         if is_partial:
             shift = aligned_coordinates[i][0, :] - source_coordinates[0, :]
             target_coordinates = target_coordinates + shift
@@ -151,7 +149,7 @@ def stack_slices_center(
             pis[i],
         )
         rotation_angles.append(rotation_angle)
-        translations.append(y_translation)
+        translations.append((x_translation, y_translation))
         aligned_coordinates.append(target_coordinates)
 
     new_slices = []

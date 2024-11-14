@@ -6,6 +6,8 @@ import pytest
 import scanpy as sc
 import torch
 
+from paste3.napari.data.ondemand import get_file
+
 test_dir = Path(__file__).parent
 input_dir = test_dir / "data/input"
 
@@ -69,6 +71,16 @@ def slices2():
         slices.append(_slice)
 
     return slices
+
+
+@pytest.fixture(scope="session")
+def sample_data_files():
+    files = [
+        "paste3_sample_patient_2_slice_0.h5ad",
+        "paste3_sample_patient_2_slice_1.h5ad",
+        "paste3_sample_patient_2_slice_2.h5ad",
+    ]
+    return [Path(get_file(f)) for f in files]
 
 
 @pytest.fixture(autouse=True)

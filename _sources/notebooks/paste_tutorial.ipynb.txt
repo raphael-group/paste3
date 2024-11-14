@@ -36,7 +36,7 @@
     "import scanpy as sc\n",
     "import torch\n",
     "\n",
-    "from paste3.helper import filter_for_common_genes, match_spots_using_spatial_heuristic\n",
+    "from paste3.helper import get_common_genes, match_spots_using_spatial_heuristic\n",
     "from paste3.paste import center_align, pairwise_align\n",
     "from paste3.visualization import plot_slice, stack_slices_center, stack_slices_pairwise"
    ]
@@ -186,9 +186,9 @@
    "source": [
     "start = time.time()\n",
     "\n",
-    "pi12 = pairwise_align(slice1, slice2)\n",
-    "pi23 = pairwise_align(slice2, slice3)\n",
-    "pi34 = pairwise_align(slice3, slice4)\n",
+    "pi12, _ = pairwise_align(slice1, slice2)\n",
+    "pi23, _ = pairwise_align(slice2, slice3)\n",
+    "pi34, _ = pairwise_align(slice3, slice4)\n",
     "\n",
     "print(\"Runtime: \" + str(time.time() - start))"
    ]
@@ -218,7 +218,7 @@
     "pis = [pi12, pi23, pi34]\n",
     "slices = [slice1, slice2, slice3, slice4]\n",
     "\n",
-    "new_slices = stack_slices_pairwise(slices, pis)"
+    "new_slices, _, _ = stack_slices_pairwise(slices, pis)"
    ]
   },
   {
@@ -368,7 +368,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "filter_for_common_genes(slices)\n",
+    "slices, _ = get_common_genes(slices)\n",
     "\n",
     "b = []\n",
     "for i in range(len(slices)):\n",
@@ -455,7 +455,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "center, new_slices = stack_slices_center(center_slice, slices, pis)"
+    "center, new_slices, _, _ = stack_slices_center(center_slice, slices, pis)"
    ]
   },
   {
@@ -645,9 +645,9 @@
    "source": [
     "start = time.time()\n",
     "\n",
-    "pi12 = pairwise_align(slice1, slice2, use_gpu=True)\n",
-    "pi23 = pairwise_align(slice2, slice3, use_gpu=True)\n",
-    "pi34 = pairwise_align(slice3, slice4, use_gpu=True)\n",
+    "pi12, _ = pairwise_align(slice1, slice2, use_gpu=True)\n",
+    "pi23, _ = pairwise_align(slice2, slice3, use_gpu=True)\n",
+    "pi34, _ = pairwise_align(slice3, slice4, use_gpu=True)\n",
     "\n",
     "print(\"Runtime: \" + str(time.time() - start))"
    ]

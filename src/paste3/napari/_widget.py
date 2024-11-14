@@ -1,23 +1,97 @@
 import napari
 import seaborn as sns
 from magicgui.widgets import Container, create_widget
+from napari.utils.notifications import show_error
 from napari.utils.progress import progress
 
-from paste3.experimental import AlignmentDataset
+from paste3.dataset import AlignmentDataset
 
 face_color_cycle = sns.color_palette("Paired", 20)
 
 
-class CenterAlignContainer(Container):
-    def __init__(self, viewer: "napari.viewer.Viewer"):
+class AlignContainer(Container):
+    def valid_slice_layers(self):
+        return [
+            layer
+            for layer in self._viewer.layers
+            if isinstance(layer, napari.layers.Points) and "slice" in layer.metadata
+        ]
+
+    def show_dataset(
+        self,
+        dataset: AlignmentDataset | None = None,
+        show_slices: bool = True,
+        show_volume: bool = True,
+        first_layer_translation: list[float] | None = None,
+    ):
+        dataset = dataset or self.dataset
+        all_clusters = []
+        for slice in dataset:
+            points = slice.adata.obsm["spatial"]
+            clusters = slice.get_obs_values(self._spot_color_key_dropdown.value)
+            all_clusters.extend(clusters)
+
+            if show_slices:
+                self._viewer.add_points(
+                    points,
+                    features={"cluster": clusters},
+                    face_color="cluster",
+                    face_color_cycle=face_color_cycle,
+                    size=1,
+                    metadata={"slice": slice},
+                    name=f"{slice}",
+                )
+
+        if show_volume:
+            self._viewer.add_points(
+                dataset.all_points(translation=first_layer_translation),
+                features={"cluster": all_clusters},
+                face_color="cluster",
+                face_color_cycle=face_color_cycle,
+                ndim=3,
+                size=1,
+                scale=[5, 1, 1],
+                name=f"{dataset}",
+            )
+
+
+class CenterAlignContainer(AlignContainer):
+    def __init__(
+        self,
+        viewer: "napari.viewer.Viewer",
+        alignment_dataset: AlignmentDataset | None = None,
+    ):
         super().__init__()
         self._viewer = viewer
+        if alignment_dataset is None:
+            slices = [layer.metadata["slice"] for layer in self.valid_slice_layers()]
+            self.dataset = AlignmentDataset(slices=slices)
+        else:
+            self.dataset = alignment_dataset
 
         self._reference_slice_dropdown = create_widget(
             label="Reference Slice",
             annotation=str,
             widget_type="ComboBox",
-            options={"choices": [layer.name for layer in self.valid_slice_layers()]},
+            options={"choices": [str(slice) for slice in self.dataset]},
+        )
+
+        keys = list(self.dataset.slices[0].adata.obs.keys())
+        spot_color_key = None
+        for key in keys:
+            if "cluster" in key:
+                spot_color_key = key
+                break
+        if spot_color_key is None and len(keys) > 0:
+            spot_color_key = keys[0]
+
+        self._spot_color_key_dropdown = create_widget(
+            label="Spot Color Key",
+            annotation=str,
+            widget_type="ComboBox",
+            # Show first slices's obs keys, assume all slices have the same.
+            options={"choices": keys},
+            value=spot_color_key,
         )
 
         self._slice_weights_textbox = create_widget(
@@ -62,13 +136,12 @@ class CenterAlignContainer(Container):
             label="Run", annotation=None, widget_type="PushButton"
         )
 
-        # connect your own callbacks
         self._run_button.changed.connect(self._run)
 
-        # append into/extend the container with your widgets
         self.extend(
             [
                 self._reference_slice_dropdown,
+                self._spot_color_key_dropdown,
                 self._slice_weights_textbox,
                 self._alpha_slider,
                 self._n_components_textbox,
@@ -81,27 +154,13 @@ class CenterAlignContainer(Container):
             ]
         )
 
-    def valid_slice_layers(self):
-        return [
-            layer
-            for layer in self._viewer.layers
-            if isinstance(layer, napari.layers.Points) and "slice" in layer.metadata
-        ]
-
     def _run(self):
-        slices = [layer.metadata["slice"] for layer in self.valid_slice_layers()]
-        dataset = AlignmentDataset(slices=slices)
-
         cluster_indices = set()
-        for slice in dataset.slices:
-            clusters = set(slice.get_obs_values("original_clusters"))
+        for slice in self.dataset:
+            clusters = set(slice.get_obs_values(self._spot_color_key_dropdown.value))
             cluster_indices |= clusters
         n_clusters = len(cluster_indices)
 
-        # Align !
-        # We could do
-        # dataset.align(center_align=True, overlap_fraction=self._alpha_slider.value, max_iters=self._max_iterations_textbox.value)
-        # but we need to do it in parts so we can get `center_slice`
         reference_slice = self._viewer.layers[
             self._reference_slice_dropdown.value
         ].metadata["slice"]
@@ -114,7 +173,7 @@ class CenterAlignContainer(Container):
             slice_weights = None
 
         with progress(total=self._max_iterations_textbox.value) as pbar:
-            center_slice, pis = dataset.find_center_slice(
+            center_slice, pis = self.dataset.find_center_slice(
                 initial_slice=reference_slice,
                 slice_weights=slice_weights,
                 alpha=self._alpha_slider.value,
@@ -127,16 +186,22 @@ class CenterAlignContainer(Container):
                 pbar=pbar,
             )
 
-        aligned_dataset = dataset.center_align(center_slice=center_slice, pis=pis)
+        aligned_dataset, _, translations = self.dataset.center_align(
+            center_slice=center_slice, pis=pis
+        )
+        # We'll translate all points w.r.t translations in the first layer
+        # so that the first layer in original volume and the aligned volume are
+        # coincident
+        first_layer_translation = translations[0][0].detach().cpu().numpy()
 
-        self._viewer.add_points(
-            aligned_dataset.all_points(),
-            ndim=3,
-            size=1,
-            scale=(3, 1, 1),
-            name="paste3_center_aligned_volume",
+        self.show_dataset(
+            aligned_dataset,
+            show_slices=False,
+            show_volume=True,
+            first_layer_translation=first_layer_translation,
         )
 
+        # Show center slice
         center_slice_points = center_slice.adata.obsm["spatial"]
         center_slice_clusters = center_slice.cluster(n_clusters)
         self._viewer.add_points(
@@ -146,61 +211,104 @@ class CenterAlignContainer(Container):
             features={"cluster": center_slice_clusters},
             face_color="cluster",
             face_color_cycle=face_color_cycle,
-            name="paste3_aligned_center_slice",
+            name="paste3_center_slice",
         )
 
 
-class PairwiseAlignContainer(Container):
-    def __init__(self, viewer: "napari.viewer.Viewer"):
+class PairwiseAlignContainer(AlignContainer):
+    def __init__(
+        self,
+        viewer: "napari.viewer.Viewer",
+        alignment_dataset: AlignmentDataset | None = None,
+    ):
         super().__init__()
         self._viewer = viewer
+        if alignment_dataset is None:
+            slices = [layer.metadata["slice"] for layer in self.valid_slice_layers()]
+            self.dataset = AlignmentDataset(slices=slices)
+        else:
+            self.dataset = alignment_dataset
 
-        self._overlap_slider = create_widget(
-            label="Overlap", annotation=float, widget_type="FloatSlider", value=0.1
+        spot_color_key = None
+        keys = []
+        if len(self.dataset) > 0:
+            keys = list(self.dataset.slices[0].adata.obs.keys())
+            for key in keys:
+                if "cluster" in key:
+                    spot_color_key = key
+                    break
+            if spot_color_key is None and len(keys) > 0:
+                spot_color_key = keys[0]
+
+        self._spot_color_key_dropdown = create_widget(
+            label="Spot Color Key",
+            annotation=str,
+            widget_type="ComboBox",
+            # Show first slices's obs keys, assume all slices have the same.
+            options={"choices": keys},
+            value=spot_color_key,
         )
-        self._overlap_slider.min = 0
-        self._overlap_slider.max = 1
+
+        self._overlap_textbox = create_widget(
+            label="Overlap", annotation=str, value="0.7"
+        )
 
         self._max_iterations_textbox = create_widget(
-            label="Max Iterations", annotation=int, value=10
+            label="Max Iterations", annotation=int, value=1000
         )
 
         self._run_button = create_widget(
             label="Run", annotation=None, widget_type="PushButton"
         )
 
-        # connect your own callbacks
         self._run_button.changed.connect(self._run)
 
-        # append into/extend the container with your widgets
         self.extend(
             [
-                self._overlap_slider,
+                self._spot_color_key_dropdown,
+                self._overlap_textbox,
                 self._max_iterations_textbox,
                 self._run_button,
             ]
         )
 
-    def valid_slice_layers(self):
-        return [
-            layer
-            for layer in self._viewer.layers
-            if isinstance(layer, napari.layers.Points) and "slice" in layer.metadata
-        ]
-
     def _run(self):
-        slices = [layer.metadata["slice"] for layer in self.valid_slice_layers()]
-        dataset = AlignmentDataset(slices=slices)
+        overlap = [float(w) for w in self._overlap_textbox.value.split(",")]
+        if len(overlap) == 1:  # scalar provided
+            overlap = [overlap[0]] * (len(self.dataset) - 1)
+        if len(overlap) != len(self.dataset) - 1:
+            return show_error(
+                "Overlap fraction must be a scalar or a list of length n-1, where n is the number of slices"
+            )
 
-        aligned_dataset = dataset.pairwise_align(
-            overlap_fraction=self._overlap_slider.value,
+        aligned_dataset, _, translations = self.dataset.pairwise_align(
+            overlap_fraction=overlap,
             max_iters=self._max_iterations_textbox.value,
         )
-
-        self._viewer.add_points(
-            aligned_dataset.all_points(),
-            ndim=3,
-            size=1,
-            scale=(3, 1, 1),
-            name="paste3_pairwise_aligned_volume",
+        # We'll translate all points w.r.t translations in the first layer
+        # so that the first layer in original volume and the aligned volume are
+        # coincident
+        first_layer_translation = translations[0][0].detach().cpu().numpy()
+        return self.show_dataset(
+            aligned_dataset,
+            show_slices=False,
+            show_volume=True,
+            first_layer_translation=first_layer_translation,
         )
+
+
+def init_widget(alignment_dataset: AlignmentDataset):
+    viewer = napari.current_viewer()
+
+    center_align_container = CenterAlignContainer(viewer, alignment_dataset)
+    viewer.window.add_dock_widget(center_align_container, name="Paste3 Center Align")
+
+    pairwise_align_container = PairwiseAlignContainer(viewer, alignment_dataset)
+    viewer.window.add_dock_widget(
+        pairwise_align_container, name="Paste3 Pairwise Align"
+    )
+
+    # We could also have done
+    # pairwise_align_container.show_dataset(alignment_dataset)
+    # but we only need to add the dataset to the viewer once
+    center_align_container.show_dataset(alignment_dataset)

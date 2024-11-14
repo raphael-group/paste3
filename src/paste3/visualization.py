@@ -66,8 +66,7 @@ def stack_slices_pairwise(
             y_translation,
         ) = result
         rotation_angles.append(rotation_angle)
-        translations.append(x_translation)
-        translations.append(y_translation)
+        translations.append((x_translation, y_translation))
     else:
         source_coordinates, target_coordinates = result
     aligned_coordinates.append(source_coordinates)
@@ -91,7 +90,7 @@ def stack_slices_pairwise(
                 y_translation,
             ) = result
             rotation_angles.append(rotation_angle)
-            translations.append(y_translation)
+            translations.append((x_translation, y_translation))
         else:
             source_coordinates, target_coordinates = result
 
@@ -156,6 +155,7 @@ def stack_slices_center(
     translations = []
 
     for i in range(len(slices)):
+        logger.info(f"Aligning slice {i} to center slice")
         if not output_params:
             source_coordinates, target_coordinates = generalized_procrustes_analysis(
                 torch.Tensor(center_slice.obsm["spatial"])
@@ -185,7 +185,7 @@ def stack_slices_center(
                 return_as_matrix=matrix,
             )
             rotation_angles.append(rotation_angle)
-            translations.append(y_translation)
+            translations.append((x_translation, y_translation))
         aligned_coordinates.append(target_coordinates)
 
     new_slices = []
@@ -266,7 +266,7 @@ def generalized_procrustes_analysis(
     rotation_matrix = Vt.T.matmul(U.T)
     target_coordinates = rotation_matrix.matmul(target_coordinates.T).T
     if return_params and not return_as_matrix:
-        M = torch.Tensor([[0, -1], [1, 0]]).double()
+        M = torch.Tensor([[0, -1], [1, 0]]).to(covariance_matrix)
         rotation_angle = torch.arctan(
             torch.trace(M.matmul(covariance_matrix)) / torch.trace(covariance_matrix)
         )

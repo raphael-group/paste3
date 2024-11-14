@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "setuptools_scm>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "paste"
+name = "paste3"
 authors = [
     {name="Max Land", email="max.ruikang.land@gmail.com"}
 ]
@@ -14,6 +14,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
+    "Framework :: Napari",
 ]
 
 dependencies = [

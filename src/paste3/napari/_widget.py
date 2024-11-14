@@ -203,7 +203,9 @@ class CenterAlignContainer(AlignContainer):
 
         # Show center slice
         center_slice_points = center_slice.adata.obsm["spatial"]
-        center_slice_clusters = center_slice.cluster(n_clusters)
+        center_slice_clusters = center_slice.cluster(
+            n_clusters=n_clusters, uns_key="paste_W"
+        )
         self._viewer.add_points(
             center_slice_points,
             ndim=2,

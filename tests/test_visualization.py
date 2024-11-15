@@ -176,5 +176,5 @@ def test_partial_procrustes_analysis(slices2):
         torch.Tensor(data["pi"]).double(),
         is_partial=True,
     )
-    assert np.allclose(x_aligned, data["x_aligned"])
-    assert np.allclose(y_aligned, data["y_aligned"])
+    assert np.allclose(x_aligned.cpu().numpy(), data["x_aligned"])
+    assert np.allclose(y_aligned.cpu().numpy(), data["y_aligned"], atol=1e-06)

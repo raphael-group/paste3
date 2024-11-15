@@ -254,13 +254,16 @@ def generalized_procrustes_analysis(
     assert target_coordinates.shape[1] == 2
 
     weighted_source = pi.sum(axis=1).matmul(source_coordinates)
-    weighted_targed = pi.sum(axis=0).matmul(target_coordinates)
-    source_coordinates = source_coordinates - weighted_source
-    target_coordinates = target_coordinates - weighted_targed
+    weighted_target = pi.sum(axis=0).matmul(target_coordinates)
+
     if is_partial:
         m = torch.sum(pi)
-        source_coordinates = source_coordinates * (1.0 / m)
-        target_coordinates = target_coordinates * (1.0 / m)
+        weighted_source = weighted_source * (1.0 / m)
+        weighted_target = weighted_target * (1.0 / m)
+
+    source_coordinates = source_coordinates - weighted_source
+    target_coordinates = target_coordinates - weighted_target
+
     covariance_matrix = target_coordinates.T.matmul(pi.T.matmul(source_coordinates))
     U, S, Vt = torch.linalg.svd(covariance_matrix, full_matrices=True)
     rotation_matrix = Vt.T.matmul(U.T)
@@ -275,7 +278,7 @@ def generalized_procrustes_analysis(
             target_coordinates,
             rotation_angle,
             weighted_source,
-            weighted_targed,
+            weighted_target,
         )
     if return_params and return_as_matrix:
         return (
@@ -283,6 +286,6 @@ def generalized_procrustes_analysis(
             target_coordinates,
             rotation_matrix,
             weighted_source,
-            weighted_targed,
+            weighted_target,
         )
     return source_coordinates, target_coordinates

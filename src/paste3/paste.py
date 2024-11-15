@@ -5,7 +5,6 @@ matrix of the spots
 """
 
 import logging
-from typing import Any
 
 import numpy as np
 import ot
@@ -224,7 +223,7 @@ def pairwise_align(
     if norm:
         a_spatial_dist /= nx.min(a_spatial_dist[a_spatial_dist > 0])
         b_spatial_dist /= nx.min(b_spatial_dist[b_spatial_dist > 0])
-        if overlap_fraction:
+        if overlap_fraction is not None:
             a_spatial_dist /= a_spatial_dist[a_spatial_dist > 0].max()
             a_spatial_dist *= exp_dissim_matrix.max()
             b_spatial_dist /= b_spatial_dist[b_spatial_dist > 0].max()
@@ -246,7 +245,7 @@ def pairwise_align(
         numItermax=maxIter if overlap_fraction else numItermax,
         use_gpu=use_gpu,
     )
-    if not overlap_fraction:
+    if overlap_fraction is None:
         info = info["fgw_dist"].item()
 
     if return_obj:
@@ -269,7 +268,6 @@ def center_align(
     spots_weights=None,
     use_gpu: bool = True,
     fast: bool = False,
-    pbar: Any = None,
 ) -> tuple[AnnData, list[np.ndarray]]:
     r"""
     Infers a "center" slice consisting of a low rank expression matrix :math:`X = WH` and a collection of
@@ -329,9 +327,7 @@ def center_align(
         Whether to use GPU for computations. If True but no GPU is available, will default to CPU.
     fast : bool, default=False
         Whether to use the fast (untested) torch nmf library
-    pbar : Any, default=None
-        Progress bar (tqdm or derived) for tracking the optimization process.
-        Something that has an `update` method.
+
     Returns
     -------
     Tuple[AnnData, List[np.ndarray]]
@@ -418,6 +414,8 @@ def center_align(
     loss_init = 0
     loss_diff = 100
     while loss_diff > threshold and iteration_count < max_iter:
+        # import time
+        # time.sleep(3)
         logger.info("Iteration: " + str(iteration_count))
         pis, loss = center_ot(
             feature_matrix,
@@ -450,8 +448,7 @@ def center_align(
         logger.info(f"Difference: {loss_diff}")
         loss_init = loss_new
 
-        if pbar is not None:
-            pbar.update(1)
+        yield
 
     center_slice = initial_slice.copy()
     center_slice.X = np.dot(feature_matrix, coeff_matrix)

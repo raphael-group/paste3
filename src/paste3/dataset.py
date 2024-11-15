@@ -394,7 +394,7 @@ class AlignmentDataset:
         exp_dissim_metric: str = "kl",
         norm: bool = False,
         random_seed: int | None = None,
-        pbar: Any = None,
+        block: bool = True,
     ) -> tuple[Slice, list[np.ndarray]]:
         r"""
         Find the center slice of the dataset.
@@ -422,9 +422,9 @@ class AlignmentDataset:
             If True, normalize spatial distances.
         random_seed : Optional[int], default=None
             Random seed for reproducibility.
-        pbar : Any, optional
-            Progress bar object. From `tqdm` or a compatible API.
-            Should support the `update` method.
+        block : bool, optional, default True
+            Whether to block till the center slice is found.
+            Set False to return a generator.
 
         Returns
         -------
@@ -440,7 +440,7 @@ class AlignmentDataset:
         if initial_slice is None:
             initial_slice = self.slices[0]
 
-        center_slice, pis = center_align(
+        gen = center_align(
             initial_slice=initial_slice.adata,
             slices=self.slices_adata,
             slice_weights=slice_weights,
@@ -451,10 +451,18 @@ class AlignmentDataset:
             exp_dissim_metric=exp_dissim_metric,
             norm=norm,
             random_seed=random_seed,
-            pbar=pbar,
             fast=True,
         )
-        return Slice(adata=center_slice, name=self.name + "_center_slice"), pis
+
+        if block:
+            try:
+                while True:
+                    next(gen)
+            except StopIteration as e:
+                center_slice, pis = e.value
+                return Slice(adata=center_slice, name=self.name + "_center_slice"), pis
+        else:
+            return iter(gen)
 
     def center_align(
         self,
@@ -468,7 +476,9 @@ class AlignmentDataset:
                 logger.warning(
                     "Ignoring pis argument since center_slice is not provided"
                 )
-            center_slice, pis = self.find_center_slice(initial_slice=initial_slice)
+            center_slice, pis = self.find_center_slice(
+                initial_slice=initial_slice, block=True
+            )
 
         logger.info("Stacking slices around center slice")
         new_center, new_slices, rotation_angles, translations = stack_slices_center(

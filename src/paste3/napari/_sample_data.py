@@ -6,13 +6,8 @@ from paste3.dataset import AlignmentDataset
 from paste3.napari.data.ondemand import get_file
 
 
-def make_sample_data():
-    remote_files = [
-        "paste3_sample_patient_2_slice_0.h5ad",
-        "paste3_sample_patient_2_slice_1.h5ad",
-        "paste3_sample_patient_2_slice_2.h5ad",
-    ]
-    local_files = [get_file(file) for file in remote_files]  # paths to local files
+def make_sample_data(prefix):
+    local_files = get_file(prefix)  # paths to local files
     dataset = AlignmentDataset(file_paths=[Path(file) for file in local_files])
 
     data = []  # list of 3-tuples (data, kwargs, layer_type)
@@ -55,3 +50,19 @@ def make_sample_data():
     )
 
     return data
+
+
+def make_sample_data0():
+    return make_sample_data("paste3_sample_patient_2_")
+
+
+def make_sample_data1():
+    return make_sample_data("paste3_sample_patient_5_")
+
+
+def make_sample_data2():
+    return make_sample_data("paste3_sample_patient_9_")
+
+
+def make_sample_data3():
+    return make_sample_data("paste3_sample_patient_10_")

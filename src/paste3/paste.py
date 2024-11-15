@@ -5,6 +5,7 @@ matrix of the spots
 """
 
 import logging
+from collections.abc import Callable
 from typing import Any
 
 import numpy as np
@@ -654,26 +655,24 @@ def my_fused_gromov_wasserstein(
             ]
         )
 
-    def f_loss(pi):
-        """Compute the Gromov-Wasserstein loss for a given transport plan."""
-        combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
+    def transform_matrix(pi):
+        p, q = torch.sum(pi, axis=1), torch.sum(pi, axis=0)
+        return ot.gromov.init_matrix(
             a_spatial_dist,
             b_spatial_dist,
-            torch.sum(pi, axis=1).reshape(-1, 1).to(a_spatial_dist.dtype),
-            torch.sum(pi, axis=0).reshape(1, -1).to(b_spatial_dist.dtype),
+            p,
+            q,
             loss_fun,
         )
+
+    def f_loss(pi):
+        """Compute the Gromov-Wasserstein loss for a given transport plan."""
+        combined_spatial_cost, a_gradient, b_gradient = transform_matrix(pi)
         return ot.gromov.gwloss(combined_spatial_cost, a_gradient, b_gradient, pi)
 
     def f_gradient(pi):
         """Compute the gradient of the Gromov-Wasserstein loss for a given transport plan."""
-        combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
-            a_spatial_dist,
-            b_spatial_dist,
-            torch.sum(pi, axis=1).reshape(-1, 1),
-            torch.sum(pi, axis=0).reshape(1, -1),
-            loss_fun,
-        )
+        combined_spatial_cost, a_gradient, b_gradient = transform_matrix(pi)
         return ot.gromov.gwggrad(combined_spatial_cost, a_gradient, b_gradient, pi)
 
     def line_search(f_cost, pi, pi_diff, linearized_matrix, cost_pi, _, **kwargs):
@@ -697,7 +696,8 @@ def my_fused_gromov_wasserstein(
                 a_spatial_dist,
                 b_spatial_dist,
                 pi_diff,
-                loss_fun=loss_fun,
+                f_cost,
+                f_gradient,
             )
         return ot.gromov.solve_gromov_linesearch(
             G=pi,
@@ -767,7 +767,8 @@ def line_search_partial(
     a_spatial_dist: torch.Tensor,
     b_spatial_dist: torch.Tensor,
     pi_diff: torch.Tensor,
-    loss_fun: str = "square_loss",
+    f_cost: Callable,
+    f_gradient: Callable,
 ):
     """
     Solve the linesearch in the fused wasserstein iterations for partially overlapping slices
@@ -799,31 +800,12 @@ def line_search_partial(
     cost_G : float
         The final cost after the update of the transport plan.
     """
-    combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
-        a_spatial_dist,
-        b_spatial_dist,
-        torch.sum(pi_diff, axis=1).reshape(-1, 1),
-        torch.sum(pi_diff, axis=0).reshape(1, -1),
-        loss_fun,
-    )
 
     dot = torch.matmul(torch.matmul(a_spatial_dist, pi_diff), b_spatial_dist.T)
     a = alpha * torch.sum(dot * pi_diff)
     b = (1 - alpha) * torch.sum(exp_dissim_matrix * pi_diff) + 2 * alpha * torch.sum(
-        ot.gromov.gwggrad(combined_spatial_cost, a_gradient, b_gradient, pi_diff)
-        * 0.5
-        * pi
+        f_gradient(pi_diff) * 0.5 * pi
     )
     minimal_cost = ot.optim.solve_1d_linesearch_quad(a, b)
-    pi = pi + minimal_cost * pi_diff
-    combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
-        a_spatial_dist,
-        b_spatial_dist,
-        torch.sum(pi, axis=1).reshape(-1, 1),
-        torch.sum(pi, axis=0).reshape(1, -1),
-        loss_fun,
-    )
-    cost_G = (1 - alpha) * torch.sum(exp_dissim_matrix * pi) + alpha * ot.gromov.gwloss(
-        combined_spatial_cost, a_gradient, b_gradient, pi
-    )
+    cost_G = f_cost(pi + minimal_cost * pi_diff)
     return minimal_cost, a, cost_G

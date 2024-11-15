@@ -235,6 +235,7 @@ def test_gromov_linesearch(spot_distance_matrix):
 
 
 def test_line_search_partial(spot_distance_matrix):
+    d1, d2 = spot_distance_matrix[1], spot_distance_matrix[2]
     G = 1.509115054931788e-05 * torch.ones((251, 264)).double()
     deltaG = torch.Tensor(
         np.genfromtxt(input_dir / "deltaG.csv", delimiter=",")
@@ -242,15 +243,30 @@ def test_line_search_partial(spot_distance_matrix):
     M = torch.Tensor(
         np.genfromtxt(input_dir / "euc_dissimilarity.csv", delimiter=",")
     ).double()
+    alpha = 0.1
 
-    alpha, a, cost_G = line_search_partial(
-        alpha=0.1,
+    def f_cost(pi):
+        p, q = torch.sum(pi, axis=1), torch.sum(pi, axis=0)
+        constC, hC1, hC2 = ot.gromov.init_matrix(d1, d2, p, q)
+        return (1 - alpha) * torch.sum(M * pi) + alpha * ot.gromov.gwloss(
+            constC, hC1, hC2, pi
+        )
+
+    def f_gradient(pi):
+        p, q = torch.sum(pi, axis=1), torch.sum(pi, axis=0)
+        constC, hC1, hC2 = ot.gromov.init_matrix(d1, d2, p, q)
+        return ot.gromov.gwggrad(constC, hC1, hC2, pi)
+
+    minimal_cost, a, cost_G = line_search_partial(
+        alpha=alpha,
         exp_dissim_matrix=M,
         pi=G,
         a_spatial_dist=spot_distance_matrix[1],
         b_spatial_dist=spot_distance_matrix[2],
         pi_diff=deltaG,
+        f_cost=f_cost,
+        f_gradient=f_gradient,
     )
-    assert alpha == 1.0
+    assert minimal_cost == 1.0
     assert pytest.approx(a) == 0.4858849047237918
     assert pytest.approx(cost_G) == 102.6333512778727

@@ -165,29 +165,16 @@ def test_partial_stack_slices_pairwise(slices):
         )
 
 
-def test_partial_procrustes_analysis(slices):
-    center_slice = sc.read_h5ad(input_dir / "center_slice.h5ad")
+def test_partial_procrustes_analysis(slices2):
+    data = np.load(output_dir / "partial_procrustes_analysis.npz")
 
-    pairwise_info = torch.Tensor(
-        np.genfromtxt(input_dir / "center_slice1_pairwise.csv", delimiter=",")
-    ).double()
+    assert torch.sum(torch.Tensor(data["pi"])) < 0.99999999
 
-    assert torch.sum(pairwise_info) < 0.99999999
-
-    aligned_center, aligned_slice = generalized_procrustes_analysis(
-        torch.Tensor(center_slice.obsm["spatial"]).double(),
-        torch.Tensor(slices[0].obsm["spatial"]).double(),
-        pairwise_info,
+    x_aligned, y_aligned = generalized_procrustes_analysis(
+        torch.Tensor(slices2[0].obsm["spatial"]).double(),
+        torch.Tensor(slices2[1].obsm["spatial"]).double(),
+        torch.Tensor(data["pi"]).double(),
         is_partial=True,
     )
-
-    assert_frame_equal(
-        pd.DataFrame(aligned_center, columns=["0", "1"]),
-        pd.read_csv(output_dir / "aligned_center.csv"),
-        atol=1e-6,
-    )
-    assert_frame_equal(
-        pd.DataFrame(aligned_slice, columns=["0", "1"]),
-        pd.read_csv(output_dir / "aligned_slice.csv"),
-        atol=1e-6,
-    )
+    assert np.allclose(x_aligned, data["x_aligned"])
+    assert np.allclose(y_aligned, data["y_aligned"])

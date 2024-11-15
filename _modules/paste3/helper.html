@@ -94,9 +94,10 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">kl_divergence</span><span class="p">(</span><span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">b_exp_dissim</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">kl_divergence</span><span class="p">(</span><span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">b_exp_dissim</span><span class="p">,</span> <span class="n">is_generalized</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculates the Kullback-Leibler divergence between two distributions.</span>
+<span class="sd">    Calculates the Kullback-Leibler divergence (KL) or generalized KL</span>
+<span class="sd">    divergence between two distributions.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -105,6 +106,9 @@
 
 <span class="sd">    b_exp_dissim : torch.Tensor</span>
 <span class="sd">       A tensor representing the second probability distribution.</span>
+
+<span class="sd">    is_generalized: bool</span>
+<span class="sd">        If True, computes generalized KL divergence between two distribution</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -115,45 +119,24 @@
         <span class="n">a_exp_dissim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">b_exp_dissim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     <span class="p">),</span> <span class="s2">&quot;X and Y do not have the same number of features.&quot;</span>
 
-    <span class="n">a_exp_dissim</span> <span class="o">=</span> <span class="n">a_exp_dissim</span> <span class="o">/</span> <span class="n">a_exp_dissim</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">b_exp_dissim</span> <span class="o">=</span> <span class="n">b_exp_dissim</span> <span class="o">/</span> <span class="n">b_exp_dissim</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">a_log_exp_dissim</span> <span class="o">=</span> <span class="n">a_exp_dissim</span><span class="o">.</span><span class="n">log</span><span class="p">()</span>
-    <span class="n">b_log_exp_dissim</span> <span class="o">=</span> <span class="n">b_exp_dissim</span><span class="o">.</span><span class="n">log</span><span class="p">()</span>
-    <span class="n">a_weighted_dissim_sum</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">a_exp_dissim</span> <span class="o">*</span> <span class="n">a_log_exp_dissim</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span>
-        <span class="n">torch</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:</span>
-    <span class="p">]</span>
-    <span class="k">return</span> <span class="n">a_weighted_dissim_sum</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">b_log_exp_dissim</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">generalized_kl_divergence</span><span class="p">(</span><span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">b_exp_dissim</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Computes the generalized Kullback-Leibler (KL) divergence between two distributions</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    a_exp_dissim : torch.Tensor</span>
-<span class="sd">        A tensor representing first probability distribution.</span>
-
-<span class="sd">    b_exp_dissim : torch.Tensor</span>
-<span class="sd">        A tensor representing the second probability distribution.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    divergence : torch.Tensor</span>
-<span class="sd">        A tensor containing the generalized Kullback-Leibler divergence for each sample.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">assert</span> <span class="p">(</span>
-        <span class="n">a_exp_dissim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">b_exp_dissim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="p">),</span> <span class="s2">&quot;X and Y do not have the same number of features.&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_generalized</span><span class="p">:</span>
+        <span class="n">a_exp_dissim</span> <span class="o">=</span> <span class="n">a_exp_dissim</span> <span class="o">/</span> <span class="n">a_exp_dissim</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">b_exp_dissim</span> <span class="o">=</span> <span class="n">b_exp_dissim</span> <span class="o">/</span> <span class="n">b_exp_dissim</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">a_log_exp_dissim</span> <span class="o">=</span> <span class="n">a_exp_dissim</span><span class="o">.</span><span class="n">log</span><span class="p">()</span>
     <span class="n">b_log_exp_dissim</span> <span class="o">=</span> <span class="n">b_exp_dissim</span><span class="o">.</span><span class="n">log</span><span class="p">()</span>
+
     <span class="n">a_weighted_dissim_sum</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">a_exp_dissim</span> <span class="o">*</span> <span class="n">a_log_exp_dissim</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span>
         <span class="n">torch</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:</span>
     <span class="p">]</span>
+
     <span class="n">divergence</span> <span class="o">=</span> <span class="n">a_weighted_dissim_sum</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span>
         <span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">b_log_exp_dissim</span><span class="o">.</span><span class="n">T</span>
     <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_generalized</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">divergence</span>
+
     <span class="n">sum_a_exp_dissim</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">sum_b_exp_dissim</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">b_exp_dissim</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">divergence</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">sum_a_exp_dissim</span><span class="p">)</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="n">sum_b_exp_dissim</span><span class="o">.</span><span class="n">T</span>
@@ -406,41 +389,6 @@
     <span class="k">return</span> <span class="n">pi</span></div>
 
 
-<span class="k">def</span> <span class="nf">kl_divergence_backend</span><span class="p">(</span><span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">b_exp_dissim</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculates the Kullback-Leibler divergence between two distributions.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    a_exp_dissim : torch.Tensor</span>
-<span class="sd">        A tensor representing the first probability distribution.</span>
-
-<span class="sd">    b_exp_dissim : torch.Tensor</span>
-<span class="sd">        A tensor representing the second probability distribution.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    divergence : np.ndarray</span>
-<span class="sd">        A tensor containing the Kullback-Leibler divergence for each sample.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">assert</span> <span class="p">(</span>
-        <span class="n">a_exp_dissim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">b_exp_dissim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="p">),</span> <span class="s2">&quot;X and Y do not have the same number of features.&quot;</span>
-
-    <span class="n">nx</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">b_exp_dissim</span><span class="p">)</span>
-
-    <span class="n">a_exp_dissim</span> <span class="o">=</span> <span class="n">a_exp_dissim</span> <span class="o">/</span> <span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">b_exp_dissim</span> <span class="o">=</span> <span class="n">b_exp_dissim</span> <span class="o">/</span> <span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">b_exp_dissim</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">a_log_exp_dissim</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">a_exp_dissim</span><span class="p">)</span>
-    <span class="n">b_log_exp_dissim</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">b_exp_dissim</span><span class="p">)</span>
-    <span class="n">a_weighted_dissim_sum</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;ij,ij-&gt;i&quot;</span><span class="p">,</span> <span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">a_log_exp_dissim</span><span class="p">)</span>
-    <span class="n">a_weighted_dissim_sum</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
-        <span class="n">a_weighted_dissim_sum</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">a_weighted_dissim_sum</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="p">)</span>
-    <span class="n">divergence</span> <span class="o">=</span> <span class="n">a_weighted_dissim_sum</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">nx</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">b_log_exp_dissim</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">divergence</span><span class="p">)</span>
-
-
 <span class="k">def</span> <span class="nf">dissimilarity_metric</span><span class="p">(</span><span class="n">which</span><span class="p">,</span> <span class="n">a_slice</span><span class="p">,</span> <span class="n">b_slice</span><span class="p">,</span> <span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">b_exp_dissim</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes a dissimilarity matrix between two distribution using a specified</span>
@@ -481,7 +429,9 @@
         <span class="k">case</span> <span class="s2">&quot;gkl&quot;</span><span class="p">:</span>
             <span class="n">a_exp_dissim</span> <span class="o">=</span> <span class="n">a_exp_dissim</span> <span class="o">+</span> <span class="mf">0.01</span>
             <span class="n">b_exp_dissim</span> <span class="o">=</span> <span class="n">b_exp_dissim</span> <span class="o">+</span> <span class="mf">0.01</span>
-            <span class="n">exp_dissim_matrix</span> <span class="o">=</span> <span class="n">generalized_kl_divergence</span><span class="p">(</span><span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">b_exp_dissim</span><span class="p">)</span>
+            <span class="n">exp_dissim_matrix</span> <span class="o">=</span> <span class="n">kl_divergence</span><span class="p">(</span>
+                <span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">b_exp_dissim</span><span class="p">,</span> <span class="n">is_generalized</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
             <span class="n">exp_dissim_matrix</span> <span class="o">/=</span> <span class="n">exp_dissim_matrix</span><span class="p">[</span><span class="n">exp_dissim_matrix</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
             <span class="n">exp_dissim_matrix</span> <span class="o">*=</span> <span class="mi">10</span>
             <span class="k">return</span> <span class="n">exp_dissim_matrix</span>

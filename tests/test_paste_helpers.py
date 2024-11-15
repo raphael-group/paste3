@@ -8,12 +8,10 @@ from pandas.testing import assert_frame_equal
 
 from paste3.helper import (
     dissimilarity_metric,
-    generalized_kl_divergence,
     get_common_genes,
     glmpca_distance,
     high_umi_gene_distance,
     kl_divergence,
-    kl_divergence_backend,
     match_spots_using_spatial_heuristic,
     norm_and_center_coordinates,
     pca_distance,
@@ -36,10 +34,10 @@ def test_intersect(slices):
 
 
 def test_kl_divergence_backend():
-    X = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    Y = np.array([[2, 4, 6], [8, 10, 12], [14, 16, 28]])
+    X = torch.Tensor(np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])).double()
+    Y = torch.Tensor(np.array([[2, 4, 6], [8, 10, 12], [14, 16, 28]])).double()
 
-    kl_divergence_matrix = kl_divergence_backend(X, Y)
+    kl_divergence_matrix = kl_divergence(X, Y)
     expected_kl_divergence_matrix = np.array(
         [
             [0.0, 0.03323784, 0.01889736],
@@ -86,7 +84,7 @@ def test_generalized_kl_divergence():
     X = torch.Tensor([[1, 2, 3], [4, 5, 6], [7, 8, 9]]).double()
     Y = torch.Tensor([[2, 4, 6], [8, 10, 12], [14, 16, 28]]).double()
 
-    generalized_kl_divergence_matrix = generalized_kl_divergence(X, Y)
+    generalized_kl_divergence_matrix = kl_divergence(X, Y, is_generalized=True)
     expected_kl_divergence_matrix = np.array(
         [
             [1.84111692, 14.54279955, 38.50128292],

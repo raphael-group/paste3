@@ -20,9 +20,10 @@ from paste3.glmpca import glmpca
 logger = logging.getLogger(__name__)
 
 
-def kl_divergence(a_exp_dissim, b_exp_dissim):
+def kl_divergence(a_exp_dissim, b_exp_dissim, is_generalized=False):
     """
-    Calculates the Kullback-Leibler divergence between two distributions.
+    Calculates the Kullback-Leibler divergence (KL) or generalized KL
+    divergence between two distributions.
 
     Parameters
     ----------
@@ -31,6 +32,9 @@ def kl_divergence(a_exp_dissim, b_exp_dissim):
 
     b_exp_dissim : torch.Tensor
        A tensor representing the second probability distribution.
+
+    is_generalized: bool
+        If True, computes generalized KL divergence between two distribution
 
     Returns
     -------
@@ -41,45 +45,24 @@ def kl_divergence(a_exp_dissim, b_exp_dissim):
         a_exp_dissim.shape[1] == b_exp_dissim.shape[1]
     ), "X and Y do not have the same number of features."
 
-    a_exp_dissim = a_exp_dissim / a_exp_dissim.sum(axis=1, keepdims=True)
-    b_exp_dissim = b_exp_dissim / b_exp_dissim.sum(axis=1, keepdims=True)
-    a_log_exp_dissim = a_exp_dissim.log()
-    b_log_exp_dissim = b_exp_dissim.log()
-    a_weighted_dissim_sum = torch.sum(a_exp_dissim * a_log_exp_dissim, axis=1)[
-        torch.newaxis, :
-    ]
-    return a_weighted_dissim_sum.T - torch.matmul(a_exp_dissim, b_log_exp_dissim.T)
-
-
-def generalized_kl_divergence(a_exp_dissim, b_exp_dissim):
-    """
-    Computes the generalized Kullback-Leibler (KL) divergence between two distributions
-
-    Parameters
-    ----------
-    a_exp_dissim : torch.Tensor
-        A tensor representing first probability distribution.
-
-    b_exp_dissim : torch.Tensor
-        A tensor representing the second probability distribution.
-
-    Returns
-    -------
-    divergence : torch.Tensor
-        A tensor containing the generalized Kullback-Leibler divergence for each sample.
-    """
-    assert (
-        a_exp_dissim.shape[1] == b_exp_dissim.shape[1]
-    ), "X and Y do not have the same number of features."
+    if not is_generalized:
+        a_exp_dissim = a_exp_dissim / a_exp_dissim.sum(axis=1, keepdims=True)
+        b_exp_dissim = b_exp_dissim / b_exp_dissim.sum(axis=1, keepdims=True)
 
     a_log_exp_dissim = a_exp_dissim.log()
     b_log_exp_dissim = b_exp_dissim.log()
+
     a_weighted_dissim_sum = torch.sum(a_exp_dissim * a_log_exp_dissim, axis=1)[
         torch.newaxis, :
     ]
+
     divergence = a_weighted_dissim_sum.T - torch.matmul(
         a_exp_dissim, b_log_exp_dissim.T
     )
+
+    if not is_generalized:
+        return divergence
+
     sum_a_exp_dissim = torch.sum(a_exp_dissim, axis=1)
     sum_b_exp_dissim = torch.sum(b_exp_dissim, axis=1)
     return (divergence.T - sum_a_exp_dissim).T + sum_b_exp_dissim.T
@@ -332,41 +315,6 @@ def match_spots_using_spatial_heuristic(
     return pi
 
 
-def kl_divergence_backend(a_exp_dissim, b_exp_dissim):
-    """
-    Calculates the Kullback-Leibler divergence between two distributions.
-
-    Parameters
-    ----------
-    a_exp_dissim : torch.Tensor
-        A tensor representing the first probability distribution.
-
-    b_exp_dissim : torch.Tensor
-        A tensor representing the second probability distribution.
-
-    Returns
-    -------
-    divergence : np.ndarray
-        A tensor containing the Kullback-Leibler divergence for each sample.
-    """
-    assert (
-        a_exp_dissim.shape[1] == b_exp_dissim.shape[1]
-    ), "X and Y do not have the same number of features."
-
-    nx = ot.backend.get_backend(a_exp_dissim, b_exp_dissim)
-
-    a_exp_dissim = a_exp_dissim / nx.sum(a_exp_dissim, axis=1, keepdims=True)
-    b_exp_dissim = b_exp_dissim / nx.sum(b_exp_dissim, axis=1, keepdims=True)
-    a_log_exp_dissim = nx.log(a_exp_dissim)
-    b_log_exp_dissim = nx.log(b_exp_dissim)
-    a_weighted_dissim_sum = nx.einsum("ij,ij->i", a_exp_dissim, a_log_exp_dissim)
-    a_weighted_dissim_sum = nx.reshape(
-        a_weighted_dissim_sum, (1, a_weighted_dissim_sum.shape[0])
-    )
-    divergence = a_weighted_dissim_sum.T - nx.dot(a_exp_dissim, b_log_exp_dissim.T)
-    return nx.to_numpy(divergence)
-
-
 def dissimilarity_metric(which, a_slice, b_slice, a_exp_dissim, b_exp_dissim, **kwargs):
     """
     Computes a dissimilarity matrix between two distribution using a specified
@@ -407,7 +355,9 @@ def dissimilarity_metric(which, a_slice, b_slice, a_exp_dissim, b_exp_dissim, **
         case "gkl":
             a_exp_dissim = a_exp_dissim + 0.01
             b_exp_dissim = b_exp_dissim + 0.01
-            exp_dissim_matrix = generalized_kl_divergence(a_exp_dissim, b_exp_dissim)
+            exp_dissim_matrix = kl_divergence(
+                a_exp_dissim, b_exp_dissim, is_generalized=True
+            )
             exp_dissim_matrix /= exp_dissim_matrix[exp_dissim_matrix > 0].max()
             exp_dissim_matrix *= 10
             return exp_dissim_matrix

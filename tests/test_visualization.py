@@ -172,6 +172,8 @@ def test_partial_procrustes_analysis(slices):
         np.genfromtxt(input_dir / "center_slice1_pairwise.csv", delimiter=",")
     ).double()
 
+    assert torch.sum(pairwise_info) < 0.99999999
+
     aligned_center, aligned_slice = generalized_procrustes_analysis(
         torch.Tensor(center_slice.obsm["spatial"]).double(),
         torch.Tensor(slices[0].obsm["spatial"]).double(),

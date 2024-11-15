@@ -79,6 +79,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Callable</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -90,7 +91,9 @@
 <span class="kn">from</span> <span class="nn">torchnmf.nmf</span> <span class="kn">import</span> <span class="n">NMF</span> <span class="k">as</span> <span class="n">TorchNMF</span>
 
 <span class="kn">from</span> <span class="nn">paste3.helper</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">compute_slice_weights</span><span class="p">,</span>
     <span class="n">dissimilarity_metric</span><span class="p">,</span>
+    <span class="n">get_common_genes</span><span class="p">,</span>
     <span class="n">to_dense_array</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -110,12 +113,11 @@
     <span class="n">norm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">numItermax</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
     <span class="n">use_gpu</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="n">return_obj</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">maxIter</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
     <span class="n">optimizeTheta</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">eps</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
     <span class="n">do_histology</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a mapping :math:`( \Pi = [\pi_{ij}] )` between spots in one slice and spots in another slice</span>
 <span class="sd">    while preserving gene expression and spatial distances of mapped spots, where :math:`\pi_{ij}` describes the probability that</span>
@@ -187,8 +189,6 @@
 <span class="sd">        Maximum number of iterations for the optimization.</span>
 <span class="sd">    use_gpu : bool, default=True</span>
 <span class="sd">        Whether to use GPU for computations. If True but no GPU is available, will default to CPU.</span>
-<span class="sd">    return_obj : bool, default=False</span>
-<span class="sd">        If True, returns the optimization object along with the transport plan.</span>
 <span class="sd">    maxIter : int, default=1000</span>
 <span class="sd">        Maximum number of iterations for the dissimilarity calculation.</span>
 <span class="sd">    optimizeTheta : bool, default=True</span>
@@ -210,41 +210,19 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;GPU is not available, resorting to torch CPU.&quot;</span><span class="p">)</span>
         <span class="n">use_gpu</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="c1"># subset for common genes</span>
-    <span class="n">common_genes</span> <span class="o">=</span> <span class="n">a_slice</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">b_slice</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
-    <span class="n">a_slice</span> <span class="o">=</span> <span class="n">a_slice</span><span class="p">[:,</span> <span class="n">common_genes</span><span class="p">]</span>
-    <span class="n">b_slice</span> <span class="o">=</span> <span class="n">b_slice</span><span class="p">[:,</span> <span class="n">common_genes</span><span class="p">]</span>
+    <span class="n">device</span> <span class="o">=</span> <span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">use_gpu</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span>
 
-    <span class="c1"># check if slices are valid</span>
-    <span class="k">for</span> <span class="nb">slice</span> <span class="ow">in</span> <span class="p">[</span><span class="n">a_slice</span><span class="p">,</span> <span class="n">b_slice</span><span class="p">]:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="nb">slice</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found empty `AnnData`:</span><span class="se">\n</span><span class="si">{</span><span class="n">a_slice</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="n">slices</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_common_genes</span><span class="p">([</span><span class="n">a_slice</span><span class="p">,</span> <span class="n">b_slice</span><span class="p">])</span>
+    <span class="n">a_slice</span><span class="p">,</span> <span class="n">b_slice</span> <span class="o">=</span> <span class="n">slices</span>
 
-    <span class="c1"># Backend</span>
-    <span class="n">nx</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">TorchBackend</span><span class="p">()</span>
+    <span class="n">a_dist</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">a_slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
+    <span class="n">b_dist</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">b_slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
 
-    <span class="c1"># Calculate spatial distances</span>
-    <span class="n">a_coordinates</span> <span class="o">=</span> <span class="n">a_slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="n">a_coordinates</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">a_coordinates</span><span class="p">)</span>
-    <span class="n">b_coordinates</span> <span class="o">=</span> <span class="n">b_slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="n">b_coordinates</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">b_coordinates</span><span class="p">)</span>
+    <span class="n">a_exp_dissim</span> <span class="o">=</span> <span class="n">to_dense_array</span><span class="p">(</span><span class="n">a_slice</span><span class="o">.</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">double</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+    <span class="n">b_exp_dissim</span> <span class="o">=</span> <span class="n">to_dense_array</span><span class="p">(</span><span class="n">b_slice</span><span class="o">.</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">double</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 
-    <span class="n">a_spatial_dist</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">a_coordinates</span><span class="p">,</span> <span class="n">a_coordinates</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;euclidean&quot;</span><span class="p">)</span>
-    <span class="n">b_spatial_dist</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">dist</span><span class="p">(</span><span class="n">b_coordinates</span><span class="p">,</span> <span class="n">b_coordinates</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;euclidean&quot;</span><span class="p">)</span>
-
-    <span class="n">a_spatial_dist</span> <span class="o">=</span> <span class="n">a_spatial_dist</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
-    <span class="n">b_spatial_dist</span> <span class="o">=</span> <span class="n">b_spatial_dist</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">use_gpu</span><span class="p">:</span>
-        <span class="n">a_spatial_dist</span> <span class="o">=</span> <span class="n">a_spatial_dist</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
-        <span class="n">b_spatial_dist</span> <span class="o">=</span> <span class="n">b_spatial_dist</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
-
-    <span class="c1"># Calculate expression dissimilarity</span>
-    <span class="n">a_exp_dissim</span> <span class="o">=</span> <span class="n">to_dense_array</span><span class="p">(</span><span class="n">a_slice</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>
-    <span class="n">b_exp_dissim</span> <span class="o">=</span> <span class="n">to_dense_array</span><span class="p">(</span><span class="n">b_slice</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">use_gpu</span><span class="p">:</span>
-        <span class="n">a_exp_dissim</span> <span class="o">=</span> <span class="n">a_exp_dissim</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
-        <span class="n">b_exp_dissim</span> <span class="o">=</span> <span class="n">b_exp_dissim</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+    <span class="n">a_spatial_dist</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span><span class="n">a_dist</span><span class="p">,</span> <span class="n">a_dist</span><span class="p">)</span><span class="o">.</span><span class="n">double</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+    <span class="n">b_spatial_dist</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span><span class="n">b_dist</span><span class="p">,</span> <span class="n">b_dist</span><span class="p">)</span><span class="o">.</span><span class="n">double</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">exp_dissim_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">exp_dissim_matrix</span> <span class="o">=</span> <span class="n">dissimilarity_metric</span><span class="p">(</span>
@@ -259,6 +237,7 @@
             <span class="n">eps</span><span class="o">=</span><span class="n">eps</span><span class="p">,</span>
             <span class="n">optimizeTheta</span><span class="o">=</span><span class="n">optimizeTheta</span><span class="p">,</span>
         <span class="p">)</span>
+    <span class="n">exp_dissim_matrix</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">exp_dissim_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">double</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">do_histology</span><span class="p">:</span>
         <span class="c1"># Calculate RGB dissimilarity</span>
@@ -268,7 +247,7 @@
                 <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">b_slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;rgb&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">double</span><span class="p">(),</span>
             <span class="p">)</span>
             <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">exp_dissim_matrix</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">exp_dissim_matrix</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
         <span class="p">)</span>
 
         <span class="c1"># Scale M_exp and rgb_dissim_matrix, obtain M by taking half from each</span>
@@ -276,38 +255,32 @@
         <span class="n">rgb_dissim_matrix</span> <span class="o">*=</span> <span class="n">exp_dissim_matrix</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
         <span class="n">exp_dissim_matrix</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">exp_dissim_matrix</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">rgb_dissim_matrix</span>
 
-    <span class="c1"># init distributions</span>
     <span class="k">if</span> <span class="n">a_spots_weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">a_spots_weight</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">a_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],))</span> <span class="o">/</span> <span class="n">a_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">a_spots_weight</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">a_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],))</span> <span class="o">/</span> <span class="n">a_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">a_spots_weight</span> <span class="o">=</span> <span class="n">a_spots_weight</span><span class="o">.</span><span class="n">double</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">a_spots_weight</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">a_spots_weight</span><span class="p">)</span>
+        <span class="n">a_spots_weight</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">a_spots_weight</span><span class="p">)</span><span class="o">.</span><span class="n">double</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">b_spots_weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">b_spots_weight</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">b_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],))</span> <span class="o">/</span> <span class="n">b_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">b_spots_weight</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">b_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],))</span> <span class="o">/</span> <span class="n">b_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">b_spots_weight</span> <span class="o">=</span> <span class="n">b_spots_weight</span><span class="o">.</span><span class="n">double</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">b_spots_weight</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">b_spots_weight</span><span class="p">)</span>
-
-    <span class="n">exp_dissim_matrix</span> <span class="o">=</span> <span class="n">exp_dissim_matrix</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
-    <span class="n">a_spots_weight</span> <span class="o">=</span> <span class="n">a_spots_weight</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
-    <span class="n">b_spots_weight</span> <span class="o">=</span> <span class="n">b_spots_weight</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">use_gpu</span><span class="p">:</span>
-        <span class="n">exp_dissim_matrix</span> <span class="o">=</span> <span class="n">exp_dissim_matrix</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
-        <span class="n">a_spots_weight</span> <span class="o">=</span> <span class="n">a_spots_weight</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
-        <span class="n">b_spots_weight</span> <span class="o">=</span> <span class="n">b_spots_weight</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+        <span class="n">b_spots_weight</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">b_spots_weight</span><span class="p">)</span><span class="o">.</span><span class="n">double</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">norm</span><span class="p">:</span>
-        <span class="n">a_spatial_dist</span> <span class="o">/=</span> <span class="n">nx</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">a_spatial_dist</span><span class="p">[</span><span class="n">a_spatial_dist</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span>
-        <span class="n">b_spatial_dist</span> <span class="o">/=</span> <span class="n">nx</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">b_spatial_dist</span><span class="p">[</span><span class="n">b_spatial_dist</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">a_spatial_dist</span> <span class="o">/=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">a_spatial_dist</span><span class="p">[</span><span class="n">a_spatial_dist</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">b_spatial_dist</span> <span class="o">/=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">b_spatial_dist</span><span class="p">[</span><span class="n">b_spatial_dist</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">overlap_fraction</span><span class="p">:</span>
             <span class="n">a_spatial_dist</span> <span class="o">/=</span> <span class="n">a_spatial_dist</span><span class="p">[</span><span class="n">a_spatial_dist</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
             <span class="n">a_spatial_dist</span> <span class="o">*=</span> <span class="n">exp_dissim_matrix</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
             <span class="n">b_spatial_dist</span> <span class="o">/=</span> <span class="n">b_spatial_dist</span><span class="p">[</span><span class="n">b_spatial_dist</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
             <span class="n">b_spatial_dist</span> <span class="o">*=</span> <span class="n">exp_dissim_matrix</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
 
-    <span class="c1"># Run OT</span>
-    <span class="k">if</span> <span class="n">pi_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">use_gpu</span><span class="p">:</span>
-        <span class="n">pi_init</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
-    <span class="n">pi</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">my_fused_gromov_wasserstein</span><span class="p">(</span>
+    <span class="k">if</span> <span class="n">pi_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">pi_init</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">pi_init</span><span class="p">)</span><span class="o">.</span><span class="n">double</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">pi_init</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pi_init</span><span class="p">))</span> <span class="o">*</span> <span class="n">pi_init</span>
+
+    <span class="k">return</span> <span class="n">my_fused_gromov_wasserstein</span><span class="p">(</span>
         <span class="n">exp_dissim_matrix</span><span class="p">,</span>
         <span class="n">a_spatial_dist</span><span class="p">,</span>
         <span class="n">b_spatial_dist</span><span class="p">,</span>
@@ -318,14 +291,7 @@
         <span class="n">pi_init</span><span class="o">=</span><span class="n">pi_init</span><span class="p">,</span>
         <span class="n">loss_fun</span><span class="o">=</span><span class="s2">&quot;square_loss&quot;</span><span class="p">,</span>
         <span class="n">numItermax</span><span class="o">=</span><span class="n">maxIter</span> <span class="k">if</span> <span class="n">overlap_fraction</span> <span class="k">else</span> <span class="n">numItermax</span><span class="p">,</span>
-        <span class="n">use_gpu</span><span class="o">=</span><span class="n">use_gpu</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">overlap_fraction</span><span class="p">:</span>
-        <span class="n">info</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;fgw_dist&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-
-    <span class="k">if</span> <span class="n">return_obj</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">pi</span><span class="p">,</span> <span class="n">info</span>
-    <span class="k">return</span> <span class="n">pi</span></div>
+    <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="center_align"><a class="viewcode-back" href="../../api/paste3.paste.center_align.html#paste3.paste.center_align">[docs]</a><span class="k">def</span> <span class="nf">center_align</span><span class="p">(</span>
@@ -423,81 +389,40 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;GPU is not available, resorting to torch CPU.&quot;</span><span class="p">)</span>
         <span class="n">use_gpu</span> <span class="o">=</span> <span class="kc">False</span>
 
+    <span class="n">device</span> <span class="o">=</span> <span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">use_gpu</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span>
+
     <span class="k">if</span> <span class="n">slice_weights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">slice_weights</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)</span> <span class="o">*</span> <span class="p">[</span><span class="mi">1</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)]</span>
 
     <span class="k">if</span> <span class="n">spots_weights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">spots_weights</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)</span> <span class="o">*</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>
 
-    <span class="c1"># get common genes</span>
-    <span class="n">common_genes</span> <span class="o">=</span> <span class="n">initial_slice</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span>
-    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">slices</span><span class="p">:</span>
-        <span class="n">common_genes</span> <span class="o">=</span> <span class="n">common_genes</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
-
-    <span class="c1"># subset common genes</span>
+    <span class="n">slices</span><span class="p">,</span> <span class="n">common_genes</span> <span class="o">=</span> <span class="n">get_common_genes</span><span class="p">(</span><span class="n">slices</span><span class="p">)</span>
     <span class="n">initial_slice</span> <span class="o">=</span> <span class="n">initial_slice</span><span class="p">[:,</span> <span class="n">common_genes</span><span class="p">]</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">)):</span>
-        <span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">][:,</span> <span class="n">common_genes</span><span class="p">]</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-        <span class="s2">&quot;Filtered all slices for common genes. There are &quot;</span>
-        <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">common_genes</span><span class="p">))</span>
-        <span class="o">+</span> <span class="s2">&quot; common genes.&quot;</span>
+
+    <span class="n">feature_matrix</span><span class="p">,</span> <span class="n">coeff_matrix</span> <span class="o">=</span> <span class="n">center_NMF</span><span class="p">(</span>
+        <span class="n">initial_slice</span><span class="o">.</span><span class="n">X</span><span class="p">,</span>
+        <span class="n">slices</span><span class="p">,</span>
+        <span class="n">pi_inits</span><span class="p">,</span>
+        <span class="n">slice_weights</span><span class="p">,</span>
+        <span class="n">n_components</span><span class="p">,</span>
+        <span class="n">random_seed</span><span class="p">,</span>
+        <span class="n">exp_dissim_metric</span><span class="o">=</span><span class="n">exp_dissim_metric</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="c1"># Run initial NMF</span>
-    <span class="k">if</span> <span class="n">exp_dissim_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;euclidean&quot;</span> <span class="ow">or</span> <span class="n">exp_dissim_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;euc&quot;</span><span class="p">:</span>
-        <span class="n">nmf_model</span> <span class="o">=</span> <span class="n">NMF</span><span class="p">(</span>
-            <span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">,</span>
-            <span class="n">init</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">,</span>
-            <span class="n">random_state</span><span class="o">=</span><span class="n">random_seed</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">nmf_model</span> <span class="o">=</span> <span class="n">NMF</span><span class="p">(</span>
-            <span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">,</span>
-            <span class="n">solver</span><span class="o">=</span><span class="s2">&quot;mu&quot;</span><span class="p">,</span>
-            <span class="n">beta_loss</span><span class="o">=</span><span class="s2">&quot;kullback-leibler&quot;</span><span class="p">,</span>
-            <span class="n">init</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">,</span>
-            <span class="n">random_state</span><span class="o">=</span><span class="n">random_seed</span><span class="p">,</span>
-        <span class="p">)</span>
+    <span class="n">pis</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">slices</span><span class="p">]</span> <span class="k">if</span> <span class="n">pi_inits</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">pi_inits</span>
 
-    <span class="k">if</span> <span class="n">pi_inits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">pis</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">))]</span>
-        <span class="n">feature_matrix</span> <span class="o">=</span> <span class="n">nmf_model</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">initial_slice</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>
-
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">pis</span> <span class="o">=</span> <span class="n">pi_inits</span>
-        <span class="n">feature_matrix</span> <span class="o">=</span> <span class="n">nmf_model</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span>
-            <span class="n">initial_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span>
-                <span class="p">[</span>
-                    <span class="n">slice_weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_dense_array</span><span class="p">(</span><span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">X</span><span class="p">))</span>
-                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">))</span>
-                <span class="p">]</span>
-            <span class="p">)</span>
-        <span class="p">)</span>
-    <span class="n">coeff_matrix</span> <span class="o">=</span> <span class="n">nmf_model</span><span class="o">.</span><span class="n">components_</span>
-    <span class="n">center_coordinates</span> <span class="o">=</span> <span class="n">initial_slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">center_coordinates</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;A.obsm[&#39;spatial&#39;] is not of type numpy array.&quot;</span><span class="p">)</span>
-
-    <span class="c1"># Initialize center_slice</span>
-    <span class="n">center_slice</span> <span class="o">=</span> <span class="n">AnnData</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">feature_matrix</span><span class="p">,</span> <span class="n">coeff_matrix</span><span class="p">))</span>
-    <span class="n">center_slice</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">common_genes</span>
-    <span class="n">center_slice</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">initial_slice</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span>
-    <span class="n">center_slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">center_coordinates</span>
-
-    <span class="c1"># Minimize loss</span>
     <span class="n">iteration_count</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">loss_init</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">loss_diff</span> <span class="o">=</span> <span class="mi">100</span>
     <span class="k">while</span> <span class="n">loss_diff</span> <span class="o">&gt;</span> <span class="n">threshold</span> <span class="ow">and</span> <span class="n">iteration_count</span> <span class="o">&lt;</span> <span class="n">max_iter</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Iteration: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">iteration_count</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Iteration: </span><span class="si">{</span><span class="n">iteration_count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">pis</span><span class="p">,</span> <span class="n">loss</span> <span class="o">=</span> <span class="n">center_ot</span><span class="p">(</span>
             <span class="n">feature_matrix</span><span class="p">,</span>
             <span class="n">coeff_matrix</span><span class="p">,</span>
             <span class="n">slices</span><span class="p">,</span>
-            <span class="n">center_coordinates</span><span class="p">,</span>
+            <span class="n">initial_slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">],</span>
             <span class="n">common_genes</span><span class="p">,</span>
             <span class="n">alpha</span><span class="p">,</span>
             <span class="n">use_gpu</span><span class="p">,</span>
@@ -515,13 +440,13 @@
             <span class="n">n_components</span><span class="p">,</span>
             <span class="n">random_seed</span><span class="p">,</span>
             <span class="n">exp_dissim_metric</span><span class="o">=</span><span class="n">exp_dissim_metric</span><span class="p">,</span>
+            <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
             <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">loss_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">slice_weights</span><span class="p">)</span>
         <span class="n">iteration_count</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="n">loss_diff</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">loss_init</span> <span class="o">-</span> <span class="n">loss_new</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Objective </span><span class="si">{</span><span class="n">loss_new</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Difference: </span><span class="si">{</span><span class="n">loss_diff</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Objective </span><span class="si">{</span><span class="n">loss_new</span><span class="si">}</span><span class="s2"> | Difference: </span><span class="si">{</span><span class="n">loss_diff</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">loss_init</span> <span class="o">=</span> <span class="n">loss_new</span>
 
         <span class="k">if</span> <span class="n">pbar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -533,15 +458,7 @@
     <span class="n">center_slice</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;paste_H&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">coeff_matrix</span>
     <span class="n">center_slice</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;full_rank&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">center_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span>
-            <span class="p">[</span>
-                <span class="n">slice_weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_dense_array</span><span class="p">(</span><span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">))</span>
-            <span class="p">]</span>
-        <span class="p">)</span>
-        <span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
-        <span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="o">*</span> <span class="n">compute_slice_weights</span><span class="p">(</span><span class="n">slice_weights</span><span class="p">,</span> <span class="n">pis</span><span class="p">,</span> <span class="n">slices</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
     <span class="p">)</span>
     <span class="n">center_slice</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;obj&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">loss_init</span>
     <span class="k">return</span> <span class="n">center_slice</span><span class="p">,</span> <span class="n">pis</span></div>
@@ -623,26 +540,26 @@
             <span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
             <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
             <span class="n">exp_dissim_metric</span><span class="o">=</span><span class="n">exp_dissim_metric</span><span class="p">,</span>
-            <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span>
-            <span class="n">numItermax</span><span class="o">=</span><span class="n">numItermax</span><span class="p">,</span>
-            <span class="n">return_obj</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">pi_init</span><span class="o">=</span><span class="n">pi_inits</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
             <span class="n">b_spots_weight</span><span class="o">=</span><span class="n">spot_weights</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span>
+            <span class="n">numItermax</span><span class="o">=</span><span class="n">numItermax</span><span class="p">,</span>
             <span class="n">use_gpu</span><span class="o">=</span><span class="n">use_gpu</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">pis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
-        <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+        <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="p">[</span><span class="s2">&quot;loss&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">pis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">center_NMF</span><span class="p">(</span>
     <span class="n">feature_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">slices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AnnData</span><span class="p">],</span>
-    <span class="n">pis</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
+    <span class="n">pis</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">slice_weights</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">random_seed</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">exp_dissim_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;kl&quot;</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span>
     <span class="n">fast</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
@@ -681,39 +598,34 @@
 <span class="sd">            The updated matrix of coefficients resulting from the NMF decomposition.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Solving Center Mapping NMF Problem.&quot;</span><span class="p">)</span>
-    <span class="n">n_features</span> <span class="o">=</span> <span class="n">feature_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">weighted_features</span> <span class="o">=</span> <span class="n">n_features</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span>
-        <span class="p">[</span>
-            <span class="n">slice_weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-            <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">to_dense_array</span><span class="p">(</span><span class="n">slices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">pis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">slices</span><span class="p">))</span>
-        <span class="p">]</span>
-    <span class="p">)</span>
-    <span class="k">if</span> <span class="n">exp_dissim_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;euclidean&quot;</span> <span class="ow">or</span> <span class="n">exp_dissim_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;euc&quot;</span><span class="p">:</span>
-        <span class="n">nmf_model</span> <span class="o">=</span> <span class="n">NMF</span><span class="p">(</span>
-            <span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">,</span>
-            <span class="n">init</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">,</span>
-            <span class="n">random_state</span><span class="o">=</span><span class="n">random_seed</span><span class="p">,</span>
+
+    <span class="k">if</span> <span class="n">pis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">pis</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span><span class="o">.</span><span class="n">double</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span> <span class="k">for</span> <span class="n">pi</span> <span class="ow">in</span> <span class="n">pis</span><span class="p">]</span>
+        <span class="n">feature_matrix</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">feature_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="o">*</span> <span class="n">compute_slice_weights</span><span class="p">(</span><span class="n">slice_weights</span><span class="p">,</span> <span class="n">pis</span><span class="p">,</span> <span class="n">slices</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
         <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">fast</span><span class="p">:</span>
-        <span class="n">nmf_model</span> <span class="o">=</span> <span class="n">TorchNMF</span><span class="p">(</span><span class="n">weighted_features</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="n">n_components</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span>
-            <span class="n">weighted_features</span><span class="o">.</span><span class="n">device</span>
-        <span class="p">)</span>
+    <span class="n">feature_matrix</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">feature_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fast</span><span class="p">:</span>
+        <span class="n">nmf_model</span> <span class="o">=</span> <span class="n">TorchNMF</span><span class="p">(</span><span class="n">feature_matrix</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="n">n_components</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
+        <span class="n">exp_dissim_metric</span> <span class="o">=</span> <span class="n">exp_dissim_metric</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
         <span class="n">nmf_model</span> <span class="o">=</span> <span class="n">NMF</span><span class="p">(</span>
             <span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">,</span>
-            <span class="n">solver</span><span class="o">=</span><span class="s2">&quot;mu&quot;</span><span class="p">,</span>
-            <span class="n">beta_loss</span><span class="o">=</span><span class="s2">&quot;kullback-leibler&quot;</span><span class="p">,</span>
             <span class="n">init</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">,</span>
             <span class="n">random_state</span><span class="o">=</span><span class="n">random_seed</span><span class="p">,</span>
+            <span class="n">solver</span><span class="o">=</span><span class="s2">&quot;cd&quot;</span> <span class="k">if</span> <span class="n">exp_dissim_metric</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;euc&quot;</span> <span class="k">else</span> <span class="s2">&quot;mu&quot;</span><span class="p">,</span>
+            <span class="n">beta_loss</span><span class="o">=</span><span class="s2">&quot;frobenius&quot;</span>
+            <span class="k">if</span> <span class="n">exp_dissim_metric</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;euc&quot;</span>
+            <span class="k">else</span> <span class="s2">&quot;kullback-leibler&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">fast</span><span class="p">:</span>
-        <span class="n">nmf_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">weighted_features</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">nmf_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">feature_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
         <span class="n">new_feature_matrix</span> <span class="o">=</span> <span class="n">nmf_model</span><span class="o">.</span><span class="n">W</span><span class="o">.</span><span class="n">double</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
         <span class="n">new_coeff_matrix</span> <span class="o">=</span> <span class="n">nmf_model</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">new_feature_matrix</span> <span class="o">=</span> <span class="n">nmf_model</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">weighted_features</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+        <span class="n">new_feature_matrix</span> <span class="o">=</span> <span class="n">nmf_model</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">feature_matrix</span><span class="p">)</span>
         <span class="n">new_coeff_matrix</span> <span class="o">=</span> <span class="n">nmf_model</span><span class="o">.</span><span class="n">components_</span>
     <span class="k">return</span> <span class="n">new_feature_matrix</span><span class="p">,</span> <span class="n">new_coeff_matrix</span>
 
@@ -732,11 +644,10 @@
     <span class="n">numItermax</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
     <span class="n">tol_rel</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">,</span>
     <span class="n">tol_abs</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">,</span>
-    <span class="n">use_gpu</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">numItermaxEmd</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">100000</span><span class="p">,</span>
     <span class="n">dummy</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-<span class="p">):</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes a transport plan to align two weighted spatial distributions based on expression</span>
 <span class="sd">    dissimilarity matrix and spatial distances, using the Gromov-Wasserstein framework.</span>
@@ -771,8 +682,6 @@
 <span class="sd">        Relative tolerance for convergence, by default 1e-9.</span>
 <span class="sd">    tol_abs : float, Optional</span>
 <span class="sd">        Absolute tolerance for convergence, by default 1e-9.</span>
-<span class="sd">    use_gpu : bool, Optional</span>
-<span class="sd">        Whether to use GPU for computations. If True but no GPU is available, will default to CPU.</span>
 <span class="sd">    numItermaxEmd : int, Optional</span>
 <span class="sd">        Maximum iterations for Earth Mover&#39;s Distance (EMD) solver.</span>
 <span class="sd">    dummy : int, Optional</span>
@@ -790,16 +699,6 @@
 
 <span class="sd">    For more info, see: https://pythonot.github.io/gen_modules/ot.gromov.html</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">a_spots_weight</span><span class="p">,</span> <span class="n">b_spots_weight</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">list_to_array</span><span class="p">(</span>
-        <span class="n">a_spots_weight</span><span class="p">,</span> <span class="n">b_spots_weight</span>
-    <span class="p">)</span>
-    <span class="n">nx</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span>
-        <span class="n">a_spots_weight</span><span class="p">,</span>
-        <span class="n">b_spots_weight</span><span class="p">,</span>
-        <span class="n">a_spatial_dist</span><span class="p">,</span>
-        <span class="n">b_spatial_dist</span><span class="p">,</span>
-        <span class="n">exp_dissim_matrix</span><span class="p">,</span>
-    <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">overlap_fraction</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">overlap_fraction</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -830,35 +729,25 @@
             <span class="p">]</span>
         <span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">pi_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">pi_init</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pi_init</span><span class="p">))</span> <span class="o">*</span> <span class="n">pi_init</span>
-        <span class="k">if</span> <span class="n">use_gpu</span><span class="p">:</span>
-            <span class="n">pi_init</span> <span class="o">=</span> <span class="n">pi_init</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">transform_matrix</span><span class="p">(</span><span class="n">pi</span><span class="p">):</span>
+        <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">init_matrix</span><span class="p">(</span>
+            <span class="n">a_spatial_dist</span><span class="p">,</span>
+            <span class="n">b_spatial_dist</span><span class="p">,</span>
+            <span class="n">p</span><span class="p">,</span>
+            <span class="n">q</span><span class="p">,</span>
+            <span class="n">loss_fun</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">f_loss</span><span class="p">(</span><span class="n">pi</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the Gromov-Wasserstein loss for a given transport plan.&quot;&quot;&quot;</span>
-        <span class="n">combined_spatial_cost</span><span class="p">,</span> <span class="n">a_gradient</span><span class="p">,</span> <span class="n">b_gradient</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">init_matrix</span><span class="p">(</span>
-            <span class="n">a_spatial_dist</span><span class="p">,</span>
-            <span class="n">b_spatial_dist</span><span class="p">,</span>
-            <span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">a_spatial_dist</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
-            <span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">b_spatial_dist</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
-            <span class="n">loss_fun</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="n">combined_spatial_cost</span><span class="p">,</span> <span class="n">a_gradient</span><span class="p">,</span> <span class="n">b_gradient</span> <span class="o">=</span> <span class="n">transform_matrix</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">gwloss</span><span class="p">(</span><span class="n">combined_spatial_cost</span><span class="p">,</span> <span class="n">a_gradient</span><span class="p">,</span> <span class="n">b_gradient</span><span class="p">,</span> <span class="n">pi</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">f_gradient</span><span class="p">(</span><span class="n">pi</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the gradient of the Gromov-Wasserstein loss for a given transport plan.&quot;&quot;&quot;</span>
-        <span class="n">combined_spatial_cost</span><span class="p">,</span> <span class="n">a_gradient</span><span class="p">,</span> <span class="n">b_gradient</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">init_matrix</span><span class="p">(</span>
-            <span class="n">a_spatial_dist</span><span class="p">,</span>
-            <span class="n">b_spatial_dist</span><span class="p">,</span>
-            <span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-            <span class="n">nx</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
-            <span class="n">loss_fun</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="n">combined_spatial_cost</span><span class="p">,</span> <span class="n">a_gradient</span><span class="p">,</span> <span class="n">b_gradient</span> <span class="o">=</span> <span class="n">transform_matrix</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">gwggrad</span><span class="p">(</span><span class="n">combined_spatial_cost</span><span class="p">,</span> <span class="n">a_gradient</span><span class="p">,</span> <span class="n">b_gradient</span><span class="p">,</span> <span class="n">pi</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">loss_fun</span> <span class="o">==</span> <span class="s2">&quot;kl_loss&quot;</span><span class="p">:</span>
-        <span class="n">armijo</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># there is no closed form line-search with KL</span>
 
     <span class="k">def</span> <span class="nf">line_search</span><span class="p">(</span><span class="n">f_cost</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">pi_diff</span><span class="p">,</span> <span class="n">linearized_matrix</span><span class="p">,</span> <span class="n">cost_pi</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve the linesearch in the fused wasserstein iterations&quot;&quot;&quot;</span>
@@ -869,9 +758,9 @@
                 <span class="n">_info</span><span class="p">[</span><span class="s2">&quot;err&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">pi_diff</span><span class="p">))</span>
             <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
 
-        <span class="k">if</span> <span class="n">armijo</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">loss_fun</span> <span class="o">==</span> <span class="s2">&quot;kl_loss&quot;</span> <span class="ow">or</span> <span class="n">armijo</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">ot</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">line_search_armijo</span><span class="p">(</span>
-                <span class="n">f_cost</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">pi_diff</span><span class="p">,</span> <span class="n">linearized_matrix</span><span class="p">,</span> <span class="n">cost_pi</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="n">nx</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+                <span class="n">f_cost</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">pi_diff</span><span class="p">,</span> <span class="n">linearized_matrix</span><span class="p">,</span> <span class="n">cost_pi</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">overlap_fraction</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">line_search_partial</span><span class="p">(</span>
@@ -881,7 +770,8 @@
                 <span class="n">a_spatial_dist</span><span class="p">,</span>
                 <span class="n">b_spatial_dist</span><span class="p">,</span>
                 <span class="n">pi_diff</span><span class="p">,</span>
-                <span class="n">loss_fun</span><span class="o">=</span><span class="n">loss_fun</span><span class="p">,</span>
+                <span class="n">f_cost</span><span class="p">,</span>
+                <span class="n">f_gradient</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">solve_gromov_linesearch</span><span class="p">(</span>
             <span class="n">G</span><span class="o">=</span><span class="n">pi</span><span class="p">,</span>
@@ -891,7 +781,6 @@
             <span class="n">C2</span><span class="o">=</span><span class="n">b_spatial_dist</span><span class="p">,</span>
             <span class="n">M</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
             <span class="n">reg</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="mf">1.0</span><span class="p">,</span>
-            <span class="n">nx</span><span class="o">=</span><span class="n">nx</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -923,7 +812,7 @@
             <span class="n">log</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="n">return_val</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">generic_conditional_gradient</span><span class="p">(</span>
+    <span class="n">pi</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">generic_conditional_gradient</span><span class="p">(</span>
         <span class="n">a</span><span class="o">=</span><span class="n">a_spots_weight</span><span class="p">,</span>
         <span class="n">b</span><span class="o">=</span><span class="n">b_spots_weight</span><span class="p">,</span>
         <span class="n">M</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp_dissim_matrix</span><span class="p">,</span>
@@ -940,15 +829,8 @@
         <span class="n">stopThr2</span><span class="o">=</span><span class="n">tol_abs</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span>
-
-    <span class="n">pi</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">return_val</span>
     <span class="k">if</span> <span class="n">overlap_fraction</span><span class="p">:</span>
-        <span class="n">info</span><span class="p">[</span><span class="s2">&quot;partial_fgw_cost&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;loss&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">info</span><span class="p">[</span><span class="s2">&quot;err&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_info</span><span class="p">[</span><span class="s2">&quot;err&quot;</span><span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">info</span><span class="p">[</span><span class="s2">&quot;fgw_dist&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;loss&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">info</span><span class="p">[</span><span class="s2">&quot;u&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;u&quot;</span><span class="p">]</span>
-        <span class="n">info</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">pi</span><span class="p">,</span> <span class="n">info</span>
 
 
@@ -959,7 +841,8 @@
     <span class="n">a_spatial_dist</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
     <span class="n">b_spatial_dist</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
     <span class="n">pi_diff</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-    <span class="n">loss_fun</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;square_loss&quot;</span><span class="p">,</span>
+    <span class="n">f_cost</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">f_gradient</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Solve the linesearch in the fused wasserstein iterations for partially overlapping slices</span>
@@ -991,33 +874,14 @@
 <span class="sd">    cost_G : float</span>
 <span class="sd">        The final cost after the update of the transport plan.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">combined_spatial_cost</span><span class="p">,</span> <span class="n">a_gradient</span><span class="p">,</span> <span class="n">b_gradient</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">init_matrix</span><span class="p">(</span>
-        <span class="n">a_spatial_dist</span><span class="p">,</span>
-        <span class="n">b_spatial_dist</span><span class="p">,</span>
-        <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pi_diff</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-        <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pi_diff</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
-        <span class="n">loss_fun</span><span class="p">,</span>
-    <span class="p">)</span>
 
     <span class="n">dot</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">a_spatial_dist</span><span class="p">,</span> <span class="n">pi_diff</span><span class="p">),</span> <span class="n">b_spatial_dist</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
     <span class="n">a</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dot</span> <span class="o">*</span> <span class="n">pi_diff</span><span class="p">)</span>
     <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">exp_dissim_matrix</span> <span class="o">*</span> <span class="n">pi_diff</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
-        <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">gwggrad</span><span class="p">(</span><span class="n">combined_spatial_cost</span><span class="p">,</span> <span class="n">a_gradient</span><span class="p">,</span> <span class="n">b_gradient</span><span class="p">,</span> <span class="n">pi_diff</span><span class="p">)</span>
-        <span class="o">*</span> <span class="mf">0.5</span>
-        <span class="o">*</span> <span class="n">pi</span>
+        <span class="n">f_gradient</span><span class="p">(</span><span class="n">pi_diff</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">pi</span>
     <span class="p">)</span>
     <span class="n">minimal_cost</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">solve_1d_linesearch_quad</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
-    <span class="n">pi</span> <span class="o">=</span> <span class="n">pi</span> <span class="o">+</span> <span class="n">minimal_cost</span> <span class="o">*</span> <span class="n">pi_diff</span>
-    <span class="n">combined_spatial_cost</span><span class="p">,</span> <span class="n">a_gradient</span><span class="p">,</span> <span class="n">b_gradient</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">init_matrix</span><span class="p">(</span>
-        <span class="n">a_spatial_dist</span><span class="p">,</span>
-        <span class="n">b_spatial_dist</span><span class="p">,</span>
-        <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-        <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
-        <span class="n">loss_fun</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">cost_G</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">exp_dissim_matrix</span> <span class="o">*</span> <span class="n">pi</span><span class="p">)</span> <span class="o">+</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">gwloss</span><span class="p">(</span>
-        <span class="n">combined_spatial_cost</span><span class="p">,</span> <span class="n">a_gradient</span><span class="p">,</span> <span class="n">b_gradient</span><span class="p">,</span> <span class="n">pi</span>
-    <span class="p">)</span>
+    <span class="n">cost_G</span> <span class="o">=</span> <span class="n">f_cost</span><span class="p">(</span><span class="n">pi</span> <span class="o">+</span> <span class="n">minimal_cost</span> <span class="o">*</span> <span class="n">pi_diff</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">minimal_cost</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">cost_G</span>
 </pre></div>
 

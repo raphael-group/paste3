@@ -547,7 +547,7 @@
             <span class="n">use_gpu</span><span class="o">=</span><span class="n">use_gpu</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">pis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
-        <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="p">[</span><span class="s2">&quot;loss&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="p">[</span><span class="s2">&quot;loss&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
     <span class="k">return</span> <span class="n">pis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span>
 
 
@@ -621,11 +621,11 @@
         <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">fast</span><span class="p">:</span>
-        <span class="n">nmf_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">feature_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">nmf_model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">feature_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">feature_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
         <span class="n">new_feature_matrix</span> <span class="o">=</span> <span class="n">nmf_model</span><span class="o">.</span><span class="n">W</span><span class="o">.</span><span class="n">double</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
         <span class="n">new_coeff_matrix</span> <span class="o">=</span> <span class="n">nmf_model</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">new_feature_matrix</span> <span class="o">=</span> <span class="n">nmf_model</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">feature_matrix</span><span class="p">)</span>
+        <span class="n">new_feature_matrix</span> <span class="o">=</span> <span class="n">nmf_model</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">feature_matrix</span><span class="o">.</span><span class="n">cpu</span><span class="p">())</span>
         <span class="n">new_coeff_matrix</span> <span class="o">=</span> <span class="n">nmf_model</span><span class="o">.</span><span class="n">components_</span>
     <span class="k">return</span> <span class="n">new_feature_matrix</span><span class="p">,</span> <span class="n">new_coeff_matrix</span>
 

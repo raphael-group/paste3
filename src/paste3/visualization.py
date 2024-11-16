@@ -225,7 +225,7 @@ def generalized_procrustes_analysis(
     U, S, Vt = torch.linalg.svd(covariance_matrix, full_matrices=True)
     rotation_matrix = Vt.T.matmul(U.T)
     target_coordinates = rotation_matrix.matmul(target_coordinates.T).T
-    M = torch.Tensor([[0, -1], [1, 0]]).double()
+    M = torch.Tensor([[0, -1], [1, 0]]).to(covariance_matrix)
     rotation_angle = torch.arctan(
         torch.trace(M.matmul(covariance_matrix)) / torch.trace(covariance_matrix)
     )

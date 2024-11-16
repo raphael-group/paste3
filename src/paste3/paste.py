@@ -473,7 +473,7 @@ def center_ot(
             use_gpu=use_gpu,
         )
         pis.append(pi)
-        losses.append(loss["loss"][-1])
+        losses.append(loss["loss"][-1].item())
     return pis, np.array(losses)
 
 
@@ -547,11 +547,11 @@ def center_NMF(
         )
 
     if fast:
-        nmf_model.fit(feature_matrix.T)
+        nmf_model.to(feature_matrix).fit(feature_matrix.T)
         new_feature_matrix = nmf_model.W.double().detach().cpu().numpy()
         new_coeff_matrix = nmf_model.H.T.detach().cpu().numpy()
     else:
-        new_feature_matrix = nmf_model.fit_transform(feature_matrix)
+        new_feature_matrix = nmf_model.fit_transform(feature_matrix.cpu())
         new_coeff_matrix = nmf_model.components_
     return new_feature_matrix, new_coeff_matrix
 

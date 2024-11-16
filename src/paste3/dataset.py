@@ -11,7 +11,8 @@ import scanpy as sc
 from anndata import AnnData
 from sklearn.cluster import KMeans
 
-from paste3.paste import center_align, pairwise_align
+from paste3.helper import wait
+from paste3.paste import center_align_gen, pairwise_align
 from paste3.visualization import stack_slices_center, stack_slices_pairwise
 
 logger = logging.getLogger(__name__)
@@ -440,7 +441,7 @@ class AlignmentDataset:
         if initial_slice is None:
             initial_slice = self.slices[0]
 
-        gen = center_align(
+        gen = center_align_gen(
             initial_slice=initial_slice.adata,
             slices=self.slices_adata,
             slice_weights=slice_weights,
@@ -455,14 +456,9 @@ class AlignmentDataset:
         )
 
         if block:
-            try:
-                while True:
-                    next(gen)
-            except StopIteration as e:
-                center_slice, pis = e.value
-                return Slice(adata=center_slice, name=self.name + "_center_slice"), pis
-        else:
-            return iter(gen)
+            center_slice, pis = wait(gen)
+            return Slice(adata=center_slice, name=self.name + "_center_slice"), pis
+        return iter(gen)
 
     def center_align(
         self,

@@ -1,8 +1,8 @@
 import napari
 import seaborn as sns
 from magicgui.widgets import Container, create_widget
-from napari.qt.threading import thread_worker
-from napari.utils.notifications import show_error, show_info
+from napari.qt.threading import create_worker
+from napari.utils.notifications import show_error
 
 from paste3.dataset import AlignmentDataset, Slice
 
@@ -62,7 +62,6 @@ class CenterAlignContainer(AlignContainer):
         alignment_dataset: AlignmentDataset | None = None,
     ):
         super().__init__()
-        self.busy = False
         self._viewer = viewer
         if alignment_dataset is None:
             slices = [layer.metadata["slice"] for layer in self.valid_slice_layers()]
@@ -157,14 +156,13 @@ class CenterAlignContainer(AlignContainer):
             ]
         )
 
-    @thread_worker(progress=True)
+    # @thread_worker(progress=True)
     def _run(self):
         """
         Start center alignment.
         Since center alignment is typically a long running process,
         we'll run it in a separate thread and yield for progress updates.
         """
-        self.busy = True
         if self.dataset is None or len(self.dataset) < 2:
             return show_error("Please select a dataset with at least 2 slices.")
 
@@ -200,6 +198,7 @@ class CenterAlignContainer(AlignContainer):
 
         try:
             while True:
+                # Be a good citizen and yield for progress updates
                 yield next(gen)
         except StopIteration as e:
             center_slice, pis = e.value
@@ -238,10 +237,10 @@ class CenterAlignContainer(AlignContainer):
         )
 
     def run(self):
-        worker = self._run()
-        worker.returned.connect(lambda: show_info("Center alignment complete."))
-        worker.finished.connect(lambda: setattr(self, "busy", False))
-        worker.errored.connect(lambda: setattr(self, "busy", False))
+        worker = create_worker(self._run, _start_thread=False, _progress=True)
+        worker.returned.connect(self.done)
+        worker.finished.connect(self.done)
+        worker.errored.connect(self.done)
 
         worker.start()
 

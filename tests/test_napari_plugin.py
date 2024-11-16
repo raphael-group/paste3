@@ -1,6 +1,5 @@
-from time import sleep
-
 from paste3.dataset import AlignmentDataset
+from paste3.helper import wait
 from paste3.napari import (
     CenterAlignContainer,
     PairwiseAlignContainer,
@@ -47,10 +46,7 @@ def test_center_align_widget(sample_data_files, make_napari_viewer_proxy):
     widget._reference_slice_dropdown.value = "paste3_sample_patient_2_slice_0"
     widget._max_iterations_textbox.value = "1"
 
-    widget.run()
-    while widget.busy:
-        sleep(0.1)
-
+    wait(widget._run())  # wait for completion
     layers = viewer.layers
 
     # We should have 6 Point layers

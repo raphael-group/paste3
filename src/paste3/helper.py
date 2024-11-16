@@ -1,9 +1,3 @@
-"""
-This module provides helper functions to compute an optimal transport plan that aligns multiple tissue slices
-using result of an ST experiment that includes a p genes by n spots transcript count matrix and coordinate
-matrix of the spots
-"""
-
 import logging
 
 import anndata as ad
@@ -429,3 +423,15 @@ def dissimilarity_metric(which, a_slice, b_slice, a_exp_dissim, b_exp_dissim, **
         case _:
             msg = f"Error: Invalid dissimilarity metric {which}"
             raise RuntimeError(msg)
+
+
+def wait(gen):
+    """
+    Wait for the completion of a passed-in generator,
+    returning the final value.
+    """
+    try:
+        while True:
+            next(gen)
+    except StopIteration as e:
+        return e.value

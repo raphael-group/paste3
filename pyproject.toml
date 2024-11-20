@@ -59,8 +59,7 @@ docs = [
     "sphinx-autodoc-annotation",
     "jupyterlab",
     "plotly",
-    "squidpy",
-    "napari"
+    "squidpy"
 ]
 
 [project.entry-points."napari.manifest"]

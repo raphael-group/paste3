@@ -238,10 +238,6 @@ class CenterAlignContainer(AlignContainer):
 
     def run(self):
         worker = create_worker(self._run, _start_thread=False, _progress=True)
-        worker.returned.connect(self.done)
-        worker.finished.connect(self.done)
-        worker.errored.connect(self.done)
-
         worker.start()
 
 

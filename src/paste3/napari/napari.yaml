@@ -19,10 +19,10 @@ contributions:
       python_name: paste3.napari._reader:napari_get_reader
       title: Open data with Paste3
     - id: paste3.center_align_widget
-      python_name: paste3.napari:CenterAlignContainer
+      python_name: paste3.napari._widget:CenterAlignContainer
       title: Center Align
     - id: paste3.pairwise_align_widget
-      python_name: paste3.napari:PairwiseAlignContainer
+      python_name: paste3.napari._widget:PairwiseAlignContainer
       title: Pairwise Align
   readers:
     - command: paste3.get_reader

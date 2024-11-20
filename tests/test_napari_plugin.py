@@ -1,11 +1,8 @@
 from paste3.dataset import AlignmentDataset
 from paste3.helper import wait
-from paste3.napari import (
-    CenterAlignContainer,
-    PairwiseAlignContainer,
-    make_sample_data,
-    napari_get_reader,
-)
+from paste3.napari._reader import napari_get_reader
+from paste3.napari._sample_data import make_sample_data
+from paste3.napari._widget import CenterAlignContainer, PairwiseAlignContainer
 
 
 def test_reader(sample_data_files, make_napari_viewer_proxy):

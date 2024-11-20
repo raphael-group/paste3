@@ -22,7 +22,7 @@ def test_partial_pairwise_align_glmpca(fn, slices2):
     data = np.load(output_dir / "test_partial_pairwise_align.npz")
     fn.return_value = torch.Tensor(data["glmpca"]).double()
 
-    pi_BC = pairwise_align(
+    pi_BC, _ = pairwise_align(
         slices2[0],
         slices2[1],
         overlap_fraction=0.7,
@@ -52,7 +52,6 @@ def test_partial_pairwise_align_given_cost_matrix(slices):
         exp_dissim_matrix=glmpca_distance_matrix,
         alpha=0.1,
         norm=True,
-        return_obj=True,
         numItermax=10,
         maxIter=10,
     )
@@ -62,7 +61,7 @@ def test_partial_pairwise_align_given_cost_matrix(slices):
         pd.read_csv(output_dir / "align_given_cost_matrix_pairwise_info.csv"),
         rtol=1e-04,
     )
-    assert log["partial_fgw_cost"].cpu().numpy() == pytest.approx(40.86494022326222)
+    assert log["loss"][-1].cpu().numpy() == pytest.approx(40.86494022326222)
 
 
 def test_partial_pairwise_align_histology(slices2):
@@ -71,14 +70,13 @@ def test_partial_pairwise_align_histology(slices2):
         slices2[1],
         overlap_fraction=0.7,
         alpha=0.1,
-        return_obj=True,
         exp_dissim_metric="euclidean",
         norm=True,
         numItermax=10,
         maxIter=10,
         do_histology=True,
     )
-    assert log["partial_fgw_cost"].cpu().numpy() == pytest.approx(88.06713721008786)
+    assert log["loss"][-1].cpu().numpy() == pytest.approx(88.06713721008786)
     assert np.allclose(
         pairwise_info.cpu().numpy(),
         pd.read_csv(output_dir / "partial_pairwise_align_histology.csv").to_numpy(),
@@ -172,4 +170,7 @@ def test_partial_fused_gromov_wasserstein(slices, armijo, expected_log, filename
     )
 
     for k, v in expected_log.items():
-        assert np.allclose(log[k], v, rtol=1e-05)
+        if k == "partial_fgw_cost":
+            assert np.allclose(log["loss"][-1], v, rtol=1e-05)
+        else:
+            assert np.allclose(log[k], v, rtol=1e-05)

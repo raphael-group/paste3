@@ -53,11 +53,11 @@ def test_edge_inconsistency_score():
 
 
 def test_calculate_convex_hull_edge_inconsistency(slices):
-    pairwise_info = pairwise_align(
+    pairwise_info, _ = pairwise_align(
         slices[0],
         slices[1],
-        exp_dissim_metric="glmpca",
         overlap_fraction=0.7,
+        exp_dissim_metric="glmpca",
         norm=True,
         maxIter=10,
     )

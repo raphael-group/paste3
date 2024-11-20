@@ -5,6 +5,7 @@ matrix of the spots
 """
 
 import logging
+from collections.abc import Callable
 from time import sleep
 
 import numpy as np
@@ -15,7 +16,13 @@ from ot.lp import emd
 from sklearn.decomposition import NMF
 from torchnmf.nmf import NMF as TorchNMF
 
-from paste3.helper import dissimilarity_metric, to_dense_array, wait
+from paste3.helper import (
+    compute_slice_weights,
+    dissimilarity_metric,
+    get_common_genes,
+    to_dense_array,
+    wait,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -33,12 +40,11 @@ def pairwise_align(
     norm: bool = False,
     numItermax: int = 200,
     use_gpu: bool = True,
-    return_obj: bool = False,
     maxIter=1000,
     optimizeTheta=True,
     eps=1e-4,
     do_histology: bool = False,
-) -> tuple[np.ndarray, int | None]:
+) -> tuple[np.ndarray, dict | None]:
     r"""
     Returns a mapping :math:`( \Pi = [\pi_{ij}] )` between spots in one slice and spots in another slice
     while preserving gene expression and spatial distances of mapped spots, where :math:`\pi_{ij}` describes the probability that
@@ -110,8 +116,6 @@ def pairwise_align(
         Maximum number of iterations for the optimization.
     use_gpu : bool, default=True
         Whether to use GPU for computations. If True but no GPU is available, will default to CPU.
-    return_obj : bool, default=False
-        If True, returns the optimization object along with the transport plan.
     maxIter : int, default=1000
         Maximum number of iterations for the dissimilarity calculation.
     optimizeTheta : bool, default=True
@@ -133,41 +137,19 @@ def pairwise_align(
         logger.info("GPU is not available, resorting to torch CPU.")
         use_gpu = False
 
-    # subset for common genes
-    common_genes = a_slice.var.index.intersection(b_slice.var.index)
-    a_slice = a_slice[:, common_genes]
-    b_slice = b_slice[:, common_genes]
+    device = "cuda" if use_gpu else "cpu"
 
-    # check if slices are valid
-    for slice in [a_slice, b_slice]:
-        if not len(slice):
-            raise ValueError(f"Found empty `AnnData`:\n{a_slice}.")
+    slices, _ = get_common_genes([a_slice, b_slice])
+    a_slice, b_slice = slices
 
-    # Backend
-    nx = ot.backend.TorchBackend()
+    a_dist = torch.Tensor(a_slice.obsm["spatial"]).double()
+    b_dist = torch.Tensor(b_slice.obsm["spatial"]).double()
 
-    # Calculate spatial distances
-    a_coordinates = a_slice.obsm["spatial"].copy()
-    a_coordinates = nx.from_numpy(a_coordinates)
-    b_coordinates = b_slice.obsm["spatial"].copy()
-    b_coordinates = nx.from_numpy(b_coordinates)
+    a_exp_dissim = to_dense_array(a_slice.X).double().to(device)
+    b_exp_dissim = to_dense_array(b_slice.X).double().to(device)
 
-    a_spatial_dist = ot.dist(a_coordinates, a_coordinates, metric="euclidean")
-    b_spatial_dist = ot.dist(b_coordinates, b_coordinates, metric="euclidean")
-
-    a_spatial_dist = a_spatial_dist.double()
-    b_spatial_dist = b_spatial_dist.double()
-    if use_gpu:
-        a_spatial_dist = a_spatial_dist.cuda()
-        b_spatial_dist = b_spatial_dist.cuda()
-
-    # Calculate expression dissimilarity
-    a_exp_dissim = to_dense_array(a_slice.X)
-    b_exp_dissim = to_dense_array(b_slice.X)
-
-    if use_gpu:
-        a_exp_dissim = a_exp_dissim.cuda()
-        b_exp_dissim = b_exp_dissim.cuda()
+    a_spatial_dist = torch.cdist(a_dist, a_dist).double().to(device)
+    b_spatial_dist = torch.cdist(b_dist, b_dist).double().to(device)
 
     if exp_dissim_matrix is None:
         exp_dissim_matrix = dissimilarity_metric(
@@ -182,6 +164,7 @@ def pairwise_align(
             eps=eps,
             optimizeTheta=optimizeTheta,
         )
+    exp_dissim_matrix = torch.Tensor(exp_dissim_matrix).double().to(device)
 
     if do_histology:
         # Calculate RGB dissimilarity
@@ -191,7 +174,7 @@ def pairwise_align(
                 torch.Tensor(b_slice.obsm["rgb"]).double(),
             )
             .to(exp_dissim_matrix.dtype)
-            .to(exp_dissim_matrix.device)
+            .to(device)
         )
 
         # Scale M_exp and rgb_dissim_matrix, obtain M by taking half from each
@@ -199,38 +182,32 @@ def pairwise_align(
         rgb_dissim_matrix *= exp_dissim_matrix.max()
         exp_dissim_matrix = 0.5 * exp_dissim_matrix + 0.5 * rgb_dissim_matrix
 
-    # init distributions
     if a_spots_weight is None:
-        a_spots_weight = nx.ones((a_slice.shape[0],)) / a_slice.shape[0]
+        a_spots_weight = torch.ones((a_slice.shape[0],)) / a_slice.shape[0]
+        a_spots_weight = a_spots_weight.double().to(device)
     else:
-        a_spots_weight = nx.from_numpy(a_spots_weight)
+        a_spots_weight = torch.Tensor(a_spots_weight).double().to(device)
 
     if b_spots_weight is None:
-        b_spots_weight = nx.ones((b_slice.shape[0],)) / b_slice.shape[0]
+        b_spots_weight = torch.ones((b_slice.shape[0],)) / b_slice.shape[0]
+        b_spots_weight = b_spots_weight.double().to(device)
     else:
-        b_spots_weight = nx.from_numpy(b_spots_weight)
-
-    exp_dissim_matrix = exp_dissim_matrix.double()
-    a_spots_weight = a_spots_weight.double()
-    b_spots_weight = b_spots_weight.double()
-    if use_gpu:
-        exp_dissim_matrix = exp_dissim_matrix.cuda()
-        a_spots_weight = a_spots_weight.cuda()
-        b_spots_weight = b_spots_weight.cuda()
+        b_spots_weight = torch.Tensor(b_spots_weight).double().to(device)
 
     if norm:
-        a_spatial_dist /= nx.min(a_spatial_dist[a_spatial_dist > 0])
-        b_spatial_dist /= nx.min(b_spatial_dist[b_spatial_dist > 0])
+        a_spatial_dist /= torch.min(a_spatial_dist[a_spatial_dist > 0])
+        b_spatial_dist /= torch.min(b_spatial_dist[b_spatial_dist > 0])
         if overlap_fraction is not None:
             a_spatial_dist /= a_spatial_dist[a_spatial_dist > 0].max()
             a_spatial_dist *= exp_dissim_matrix.max()
             b_spatial_dist /= b_spatial_dist[b_spatial_dist > 0].max()
             b_spatial_dist *= exp_dissim_matrix.max()
 
-    # Run OT
-    if pi_init is not None and use_gpu:
-        pi_init.cuda()
-    pi, info = my_fused_gromov_wasserstein(
+    if pi_init is not None:
+        pi_init = torch.Tensor(pi_init).double().to(device)
+        pi_init = (1 / torch.sum(pi_init)) * pi_init
+
+    return my_fused_gromov_wasserstein(
         exp_dissim_matrix,
         a_spatial_dist,
         b_spatial_dist,
@@ -241,14 +218,7 @@ def pairwise_align(
         pi_init=pi_init,
         loss_fun="square_loss",
         numItermax=maxIter if overlap_fraction else numItermax,
-        use_gpu=use_gpu,
     )
-    if overlap_fraction is None:
-        info = info["fgw_dist"].item()
-
-    if return_obj:
-        return pi, info
-    return pi
 
 
 def center_align_gen(
@@ -276,83 +246,40 @@ def center_align_gen(
         logger.info("GPU is not available, resorting to torch CPU.")
         use_gpu = False
 
+    device = "cuda" if use_gpu else "cpu"
+
     if slice_weights is None:
         slice_weights = len(slices) * [1 / len(slices)]
 
     if spots_weights is None:
         spots_weights = len(slices) * [None]
 
-    # get common genes
-    common_genes = initial_slice.var.index
-    for s in slices:
-        common_genes = common_genes.intersection(s.var.index)
-
-    # subset common genes
+    slices, common_genes = get_common_genes(slices)
     initial_slice = initial_slice[:, common_genes]
-    for i in range(len(slices)):
-        slices[i] = slices[i][:, common_genes]
-    logger.info(
-        "Filtered all slices for common genes. There are "
-        + str(len(common_genes))
-        + " common genes."
+
+    feature_matrix, coeff_matrix = center_NMF(
+        initial_slice.X,
+        slices,
+        pi_inits,
+        slice_weights,
+        n_components,
+        random_seed,
+        exp_dissim_metric=exp_dissim_metric,
+        device=device,
     )
 
-    # Run initial NMF
-    if exp_dissim_metric.lower() == "euclidean" or exp_dissim_metric.lower() == "euc":
-        nmf_model = NMF(
-            n_components=n_components,
-            init="random",
-            random_state=random_seed,
-        )
-    else:
-        nmf_model = NMF(
-            n_components=n_components,
-            solver="mu",
-            beta_loss="kullback-leibler",
-            init="random",
-            random_state=random_seed,
-        )
+    pis = [None for _ in slices] if pi_inits is None else pi_inits
 
-    if pi_inits is None:
-        pis = [None for i in range(len(slices))]
-        feature_matrix = nmf_model.fit_transform(initial_slice.X)
-
-    else:
-        pis = pi_inits
-        feature_matrix = nmf_model.fit_transform(
-            initial_slice.shape[0]
-            * sum(
-                [
-                    slice_weights[i] * np.dot(pis[i], to_dense_array(slices[i].X))
-                    for i in range(len(slices))
-                ]
-            )
-        )
-    coeff_matrix = nmf_model.components_
-    center_coordinates = initial_slice.obsm["spatial"]
-
-    if not isinstance(center_coordinates, np.ndarray):
-        logger.warning("A.obsm['spatial'] is not of type numpy array.")
-
-    # Initialize center_slice
-    center_slice = AnnData(np.dot(feature_matrix, coeff_matrix))
-    center_slice.var.index = common_genes
-    center_slice.obs.index = initial_slice.obs.index
-    center_slice.obsm["spatial"] = center_coordinates
-
-    # Minimize loss
     iteration_count = 0
     loss_init = 0
     loss_diff = 100
     while loss_diff > threshold and iteration_count < max_iter:
-        # import time
-        # time.sleep(3)
-        logger.info("Iteration: " + str(iteration_count))
+        logger.info(f"Iteration: {iteration_count}")
         pis, loss = center_ot(
             feature_matrix,
             coeff_matrix,
             slices,
-            center_coordinates,
+            initial_slice.obsm["spatial"],
             common_genes,
             alpha,
             use_gpu,
@@ -370,13 +297,13 @@ def center_align_gen(
             n_components,
             random_seed,
             exp_dissim_metric=exp_dissim_metric,
+            device=device,
             fast=fast,
         )
         loss_new = np.dot(loss, slice_weights)
         iteration_count += 1
         loss_diff = abs(loss_init - loss_new)
-        logger.info(f"Objective {loss_new}")
-        logger.info(f"Difference: {loss_diff}")
+        logger.info(f"Objective {loss_new} | Difference: {loss_diff}")
         loss_init = loss_new
 
         yield
@@ -388,15 +315,7 @@ def center_align_gen(
     center_slice.uns["paste_H"] = coeff_matrix
     center_slice.uns["full_rank"] = (
         center_slice.shape[0]
-        * sum(
-            [
-                slice_weights[i]
-                * torch.matmul(pis[i], to_dense_array(slices[i].X).to(pis[i].device))
-                for i in range(len(slices))
-            ]
-        )
-        .cpu()
-        .numpy()
+        * compute_slice_weights(slice_weights, pis, slices, device).cpu().numpy()
     )
     center_slice.uns["obj"] = loss_init
     logger.info("Center slice computed.")
@@ -588,26 +507,26 @@ def center_ot(
             slices[i],
             alpha=alpha,
             exp_dissim_metric=exp_dissim_metric,
-            norm=norm,
-            numItermax=numItermax,
-            return_obj=True,
             pi_init=pi_inits[i],
             b_spots_weight=spot_weights[i],
+            norm=norm,
+            numItermax=numItermax,
             use_gpu=use_gpu,
         )
         pis.append(pi)
-        losses.append(loss)
+        losses.append(loss["loss"][-1].item())
     return pis, np.array(losses)
 
 
 def center_NMF(
     feature_matrix: np.ndarray,
     slices: list[AnnData],
-    pis: list[torch.Tensor],
+    pis: list[torch.Tensor] | None,
     slice_weights: list[float] | None,
     n_components: int,
     random_seed: float,
     exp_dissim_metric: str = "kl",
+    device="cpu",
     fast: bool = False,
 ):
     r"""
@@ -646,39 +565,34 @@ def center_NMF(
             The updated matrix of coefficients resulting from the NMF decomposition.
     """
     logger.info("Solving Center Mapping NMF Problem.")
-    n_features = feature_matrix.shape[0]
-    weighted_features = n_features * sum(
-        [
-            slice_weights[i]
-            * torch.matmul(pis[i], to_dense_array(slices[i].X).to(pis[i].device))
-            for i in range(len(slices))
-        ]
-    )
-    if exp_dissim_metric.lower() == "euclidean" or exp_dissim_metric.lower() == "euc":
-        nmf_model = NMF(
-            n_components=n_components,
-            init="random",
-            random_state=random_seed,
+
+    if pis is not None:
+        pis = [torch.Tensor(pi).double().to(device) for pi in pis]
+        feature_matrix = (
+            feature_matrix.shape[0]
+            * compute_slice_weights(slice_weights, pis, slices, device).cpu().numpy()
         )
-    elif fast:
-        nmf_model = TorchNMF(weighted_features.T.shape, rank=n_components).to(
-            weighted_features.device
-        )
+    feature_matrix = torch.Tensor(feature_matrix).to(device)
+    if fast:
+        nmf_model = TorchNMF(feature_matrix.T.shape, rank=n_components)
     else:
+        exp_dissim_metric = exp_dissim_metric.lower()
         nmf_model = NMF(
             n_components=n_components,
-            solver="mu",
-            beta_loss="kullback-leibler",
             init="random",
             random_state=random_seed,
+            solver="cd" if exp_dissim_metric[:3] == "euc" else "mu",
+            beta_loss="frobenius"
+            if exp_dissim_metric[:3] == "euc"
+            else "kullback-leibler",
         )
 
     if fast:
-        nmf_model.fit(weighted_features.T)
+        nmf_model.to(feature_matrix).fit(feature_matrix.T)
         new_feature_matrix = nmf_model.W.double().detach().cpu().numpy()
         new_coeff_matrix = nmf_model.H.T.detach().cpu().numpy()
     else:
-        new_feature_matrix = nmf_model.fit_transform(weighted_features.cpu().numpy())
+        new_feature_matrix = nmf_model.fit_transform(feature_matrix.cpu())
         new_coeff_matrix = nmf_model.components_
     return new_feature_matrix, new_coeff_matrix
 
@@ -697,11 +611,10 @@ def my_fused_gromov_wasserstein(
     numItermax: int | None = 200,
     tol_rel: float | None = 1e-9,
     tol_abs: float | None = 1e-9,
-    use_gpu: bool | None = True,
     numItermaxEmd: int | None = 100000,
     dummy: int | None = 1,
     **kwargs,
-):
+) -> tuple[np.ndarray, dict]:
     """
     Computes a transport plan to align two weighted spatial distributions based on expression
     dissimilarity matrix and spatial distances, using the Gromov-Wasserstein framework.
@@ -736,8 +649,6 @@ def my_fused_gromov_wasserstein(
         Relative tolerance for convergence, by default 1e-9.
     tol_abs : float, Optional
         Absolute tolerance for convergence, by default 1e-9.
-    use_gpu : bool, Optional
-        Whether to use GPU for computations. If True but no GPU is available, will default to CPU.
     numItermaxEmd : int, Optional
         Maximum iterations for Earth Mover's Distance (EMD) solver.
     dummy : int, Optional
@@ -755,16 +666,6 @@ def my_fused_gromov_wasserstein(
 
     For more info, see: https://pythonot.github.io/gen_modules/ot.gromov.html
     """
-    a_spots_weight, b_spots_weight = ot.utils.list_to_array(
-        a_spots_weight, b_spots_weight
-    )
-    nx = ot.backend.get_backend(
-        a_spots_weight,
-        b_spots_weight,
-        a_spatial_dist,
-        b_spatial_dist,
-        exp_dissim_matrix,
-    )
 
     if overlap_fraction is not None:
         if overlap_fraction < 0:
@@ -795,35 +696,25 @@ def my_fused_gromov_wasserstein(
             ]
         )
 
-    if pi_init is not None:
-        pi_init = (1 / nx.sum(pi_init)) * pi_init
-        if use_gpu:
-            pi_init = pi_init.cuda()
+    def transform_matrix(pi):
+        p, q = torch.sum(pi, axis=1), torch.sum(pi, axis=0)
+        return ot.gromov.init_matrix(
+            a_spatial_dist,
+            b_spatial_dist,
+            p,
+            q,
+            loss_fun,
+        )
 
     def f_loss(pi):
         """Compute the Gromov-Wasserstein loss for a given transport plan."""
-        combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
-            a_spatial_dist,
-            b_spatial_dist,
-            nx.sum(pi, axis=1).reshape(-1, 1).to(a_spatial_dist.dtype),
-            nx.sum(pi, axis=0).reshape(1, -1).to(b_spatial_dist.dtype),
-            loss_fun,
-        )
+        combined_spatial_cost, a_gradient, b_gradient = transform_matrix(pi)
         return ot.gromov.gwloss(combined_spatial_cost, a_gradient, b_gradient, pi)
 
     def f_gradient(pi):
         """Compute the gradient of the Gromov-Wasserstein loss for a given transport plan."""
-        combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
-            a_spatial_dist,
-            b_spatial_dist,
-            nx.sum(pi, axis=1).reshape(-1, 1),
-            nx.sum(pi, axis=0).reshape(1, -1),
-            loss_fun,
-        )
+        combined_spatial_cost, a_gradient, b_gradient = transform_matrix(pi)
         return ot.gromov.gwggrad(combined_spatial_cost, a_gradient, b_gradient, pi)
-
-    if loss_fun == "kl_loss":
-        armijo = True  # there is no closed form line-search with KL
 
     def line_search(f_cost, pi, pi_diff, linearized_matrix, cost_pi, _, **kwargs):
         """Solve the linesearch in the fused wasserstein iterations"""
@@ -834,9 +725,9 @@ def my_fused_gromov_wasserstein(
                 _info["err"].append(torch.norm(pi_diff))
             count += 1
 
-        if armijo:
+        if loss_fun == "kl_loss" or armijo:
             return ot.optim.line_search_armijo(
-                f_cost, pi, pi_diff, linearized_matrix, cost_pi, nx=nx, **kwargs
+                f_cost, pi, pi_diff, linearized_matrix, cost_pi, **kwargs
             )
         if overlap_fraction:
             return line_search_partial(
@@ -846,7 +737,8 @@ def my_fused_gromov_wasserstein(
                 a_spatial_dist,
                 b_spatial_dist,
                 pi_diff,
-                loss_fun=loss_fun,
+                f_cost,
+                f_gradient,
             )
         return ot.gromov.solve_gromov_linesearch(
             G=pi,
@@ -856,7 +748,6 @@ def my_fused_gromov_wasserstein(
             C2=b_spatial_dist,
             M=0.0,
             reg=2 * 1.0,
-            nx=nx,
             **kwargs,
         )
 
@@ -888,7 +779,7 @@ def my_fused_gromov_wasserstein(
             log=True,
         )
 
-    return_val = ot.optim.generic_conditional_gradient(
+    pi, info = ot.optim.generic_conditional_gradient(
         a=a_spots_weight,
         b=b_spots_weight,
         M=(1 - alpha) * exp_dissim_matrix,
@@ -905,15 +796,8 @@ def my_fused_gromov_wasserstein(
         stopThr2=tol_abs,
         **kwargs,
     )
-
-    pi, info = return_val
     if overlap_fraction:
-        info["partial_fgw_cost"] = info["loss"][-1]
         info["err"] = _info["err"]
-    else:
-        info["fgw_dist"] = info["loss"][-1]
-        info["u"] = info["u"]
-        info["v"] = info["v"]
     return pi, info
 
 
@@ -924,7 +808,8 @@ def line_search_partial(
     a_spatial_dist: torch.Tensor,
     b_spatial_dist: torch.Tensor,
     pi_diff: torch.Tensor,
-    loss_fun: str = "square_loss",
+    f_cost: Callable,
+    f_gradient: Callable,
 ):
     """
     Solve the linesearch in the fused wasserstein iterations for partially overlapping slices
@@ -956,31 +841,12 @@ def line_search_partial(
     cost_G : float
         The final cost after the update of the transport plan.
     """
-    combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
-        a_spatial_dist,
-        b_spatial_dist,
-        torch.sum(pi_diff, axis=1).reshape(-1, 1),
-        torch.sum(pi_diff, axis=0).reshape(1, -1),
-        loss_fun,
-    )
 
     dot = torch.matmul(torch.matmul(a_spatial_dist, pi_diff), b_spatial_dist.T)
     a = alpha * torch.sum(dot * pi_diff)
     b = (1 - alpha) * torch.sum(exp_dissim_matrix * pi_diff) + 2 * alpha * torch.sum(
-        ot.gromov.gwggrad(combined_spatial_cost, a_gradient, b_gradient, pi_diff)
-        * 0.5
-        * pi
+        f_gradient(pi_diff) * 0.5 * pi
     )
     minimal_cost = ot.optim.solve_1d_linesearch_quad(a, b)
-    pi = pi + minimal_cost * pi_diff
-    combined_spatial_cost, a_gradient, b_gradient = ot.gromov.init_matrix(
-        a_spatial_dist,
-        b_spatial_dist,
-        torch.sum(pi, axis=1).reshape(-1, 1),
-        torch.sum(pi, axis=0).reshape(1, -1),
-        loss_fun,
-    )
-    cost_G = (1 - alpha) * torch.sum(exp_dissim_matrix * pi) + alpha * ot.gromov.gwloss(
-        combined_spatial_cost, a_gradient, b_gradient, pi
-    )
+    cost_G = f_cost(pi + minimal_cost * pi_diff)
     return minimal_cost, a, cost_G

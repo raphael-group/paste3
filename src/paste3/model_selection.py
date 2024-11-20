@@ -216,7 +216,6 @@ def select_overlap_fraction(sliceA, sliceB, alpha=0.1, show_plot=True, numIterma
             exp_dissim_matrix=M,
             alpha=alpha,
             norm=True,
-            return_obj=True,
             numItermax=numItermax,
             maxIter=numItermax,
         )

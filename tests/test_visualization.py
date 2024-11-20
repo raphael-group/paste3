@@ -27,9 +27,7 @@ def test_stack_slices_pairwise(slices):
         for i in range(1, n_slices)
     ]
 
-    new_slices, thetas, translations = stack_slices_pairwise(
-        slices, pairwise_info, return_params=True
-    )
+    new_slices, thetas, translations = stack_slices_pairwise(slices, pairwise_info)
 
     for i, slice in enumerate(new_slices, start=1):
         assert_frame_equal(
@@ -60,7 +58,7 @@ def test_stack_slices_center(slices):
     ]
 
     new_center, new_slices, thetas, translations = stack_slices_center(
-        center_slice, slices, pairwise_info, output_params=True
+        center_slice, slices, pairwise_info
     )
     assert_frame_equal(
         pd.DataFrame(new_center.obsm["spatial"], columns=["0", "1"]),
@@ -104,7 +102,6 @@ def test_generalized_procrustes_analysis(slices):
             torch.Tensor(center_slice.obsm["spatial"]).double(),
             torch.Tensor(slices[0].obsm["spatial"]).double(),
             pairwise_info,
-            return_params=True,
         )
     )
 
@@ -155,7 +152,7 @@ def test_partial_stack_slices_pairwise(slices):
         for i in range(1, n_slices)
     ]
 
-    new_slices = stack_slices_pairwise(slices, pairwise_info, is_partial=True)
+    new_slices, _, _ = stack_slices_pairwise(slices, pairwise_info, is_partial=True)
 
     for i, slice in enumerate(new_slices, start=1):
         assert_frame_equal(
@@ -170,7 +167,7 @@ def test_partial_procrustes_analysis(slices2):
 
     assert torch.sum(torch.Tensor(data["pi"])) < 0.99999999
 
-    x_aligned, y_aligned = generalized_procrustes_analysis(
+    x_aligned, y_aligned, _, _, _ = generalized_procrustes_analysis(
         torch.Tensor(slices2[0].obsm["spatial"]).double(),
         torch.Tensor(slices2[1].obsm["spatial"]).double(),
         torch.Tensor(data["pi"]).double(),

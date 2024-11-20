@@ -160,15 +160,14 @@ class AlignmentDataset:
         pis = []
         for i in range(len(self) - 1):
             logger.info(f"Finding Pi for slices {i} and {i+1}")
-            pis.append(
-                pairwise_align(
-                    self.slices[i].adata,
-                    self.slices[i + 1].adata,
-                    overlap_fraction=overlap_fraction[i],
-                    numItermax=max_iters,
-                    maxIter=max_iters,
-                )
+            pi, _ = pairwise_align(
+                self.slices[i].adata,
+                self.slices[i + 1].adata,
+                overlap_fraction=overlap_fraction[i],
+                numItermax=max_iters,
+                maxIter=max_iters,
             )
+            pis.append(pi)
         return pis
 
     def pairwise_align(
@@ -180,7 +179,7 @@ class AlignmentDataset:
         if pis is None:
             pis = self.find_pis(overlap_fraction=overlap_fraction, max_iters=max_iters)
         new_slices, rotation_angles, translations = stack_slices_pairwise(
-            self.slices_adata, pis, return_params=True
+            self.slices_adata, pis
         )
         aligned_dataset = AlignmentDataset(
             slices=[Slice(adata=s) for s in new_slices],
@@ -241,7 +240,6 @@ class AlignmentDataset:
             center_slice=center_slice.adata,
             slices=self.slices_adata,
             pis=pis,
-            output_params=True,
         )
         aligned_dataset = AlignmentDataset(
             slices=[Slice(adata=s) for s in new_slices],

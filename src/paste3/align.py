@@ -32,7 +32,6 @@ def align(
     norm=False,
     numItermax=200,
     use_gpu=True,
-    return_obj=False,
     optimizeTheta=True,
     eps=1e-4,
     is_histology=False,
@@ -82,7 +81,7 @@ def align(
         logger.info("Computing Pairwise Alignment ")
         pis = []
         for i in range(n_slices - 1):
-            pi = pairwise_align(
+            pi, _ = pairwise_align(
                 a_slice=slices[i],
                 b_slice=slices[i + 1],
                 overlap_fraction=overlap_fraction,
@@ -95,7 +94,6 @@ def align(
                 norm=norm,
                 numItermax=numItermax,
                 use_gpu=use_gpu,
-                return_obj=return_obj,
                 maxIter=max_iter,
                 optimizeTheta=optimizeTheta,
                 eps=eps,
@@ -245,6 +243,5 @@ def main(args):
         norm=args.norm,
         numItermax=args.max_iter,
         use_gpu=args.gpu,
-        return_obj=args.r_info,
         is_histology=args.hist,
     )

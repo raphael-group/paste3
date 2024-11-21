@@ -21,7 +21,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="paste3.model_selection.calculate_convex_hull_edge_inconsistency" href="paste3.model_selection.calculate_convex_hull_edge_inconsistency.html" />
+    <link rel="next" title="paste3.model_selection.plot_edge_curve" href="paste3.model_selection.plot_edge_curve.html" />
     <link rel="prev" title="paste3.model_selection.generate_graph_from_labels" href="paste3.model_selection.generate_graph_from_labels.html" /> 
 </head>
 
@@ -50,13 +50,11 @@
 <li class="toctree-l2"><a class="reference internal" href="../api.html#paste-alignment">PASTE Alignment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../api.html#visualization">Visualization</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../api.html#model-selection">Model Selection</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="paste3.model_selection.create_graph.html">paste3.model_selection.create_graph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="paste3.model_selection.generate_graph_from_labels.html">paste3.model_selection.generate_graph_from_labels</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">paste3.model_selection.edge_inconsistency_score</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#paste3.model_selection.edge_inconsistency_score"><code class="docutils literal notranslate"><span class="pre">edge_inconsistency_score()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="paste3.model_selection.calculate_convex_hull_edge_inconsistency.html">paste3.model_selection.calculate_convex_hull_edge_inconsistency</a></li>
 <li class="toctree-l3"><a class="reference internal" href="paste3.model_selection.plot_edge_curve.html">paste3.model_selection.plot_edge_curve</a></li>
 </ul>
 </li>
@@ -96,8 +94,31 @@
 <h1>paste3.model_selection.edge_inconsistency_score<a class="headerlink" href="#paste3-model-selection-edge-inconsistency-score" title="Permalink to this heading"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="paste3.model_selection.edge_inconsistency_score">
-<span class="sig-prename descclassname"><span class="pre">paste3.model_selection.</span></span><span class="sig-name descname"><span class="pre">edge_inconsistency_score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/paste3/model_selection.html#edge_inconsistency_score"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#paste3.model_selection.edge_inconsistency_score" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<span class="sig-prename descclassname"><span class="pre">paste3.model_selection.</span></span><span class="sig-name descname"><span class="pre">edge_inconsistency_score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/paste3/model_selection.html#edge_inconsistency_score"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#paste3.model_selection.edge_inconsistency_score" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the edge inconsistency score of a graph based on the provided labels (clusters).</p>
+<p>This function calculates a score that measures how inconsistent the edges in a graph are
+with respect to the cluster assignments of the nodes. The score is defined as the ratio of
+edges that connect nodes from different clusters to the total number of edges, excluding
+edges that connect nodes within the same cluster.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>G</strong> (<em>networkx.Graph</em>) -- A NetworkX graph where each node represents a spot, and each edge represents
+a connection to one of the closest neighbors.</p></li>
+<li><p><strong>labels</strong> (<em>dict</em>) -- A dictionary mapping each node (spot index) to cluster labels. A cluster labeled 'True'
+means that a spot in slice A is aligned with another spot in slice B after computing
+pairwise alignment.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A float value representing the edge inconsistency score. A value close to 0 indicates that most edges
+are within clusters, while a value close to 1 indicates that most edges connect nodes from different clusters.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
 
 </section>
 
@@ -106,7 +127,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="paste3.model_selection.generate_graph_from_labels.html" class="btn btn-neutral float-left" title="paste3.model_selection.generate_graph_from_labels" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="paste3.model_selection.calculate_convex_hull_edge_inconsistency.html" class="btn btn-neutral float-right" title="paste3.model_selection.calculate_convex_hull_edge_inconsistency" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="paste3.model_selection.plot_edge_curve.html" class="btn btn-neutral float-right" title="paste3.model_selection.plot_edge_curve" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

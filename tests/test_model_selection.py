@@ -8,7 +8,6 @@ from paste3.model_selection import (
     convex_hull_edge_inconsistency,
     edge_inconsistency_score,
     generate_graph,
-    generate_graph_from_labels,
     select_overlap_fraction,
 )
 from paste3.paste import pairwise_align
@@ -32,7 +31,7 @@ def test_create_graph(slices, tmp_path):
 def test_generate_graph_from_labels(tmp_path):
     adata = sc.read_h5ad(output_dir / "source_hull_adata.h5ad")
 
-    graph, labels = generate_graph_from_labels(adata, adata.obs["aligned"])
+    graph, labels = generate_graph(adata, adata.obs["aligned"])
 
     np.savetxt(
         tmp_path / "generate_graph_from_labels_edges.csv", graph.edges, delimiter=","
@@ -48,7 +47,7 @@ def test_generate_graph_from_labels(tmp_path):
 def test_edge_inconsistency_score():
     adata = sc.read_h5ad(output_dir / "source_hull_adata.h5ad")
 
-    graph, labels = generate_graph_from_labels(adata, adata.obs["aligned"])
+    graph, labels = generate_graph(adata, adata.obs["aligned"])
     measure_a = edge_inconsistency_score(graph, labels)
     assert measure_a == 0.0
 

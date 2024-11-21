@@ -23,7 +23,7 @@ from paste3.paste import pairwise_align
 logger = logging.getLogger(__name__)
 
 
-def generate_graph(slice, degree=4):
+def generate_graph(slice, aligned_spots=None, degree=4):
     """
     Generates a graph using the networkx library where each node represents a spot
     from the given `slice` object, and edges are formed between each node and its
@@ -34,6 +34,11 @@ def generate_graph(slice, degree=4):
     ----------
     slice : AnnData
         AnnData object containing data for a  slice.
+
+    aligned_spots: dict, optional
+        A dictionary mapping each node (spot index) to cluster labels. A cluster labeled 'True'
+        means that a spot in slice A is aligned with another spot in slice B after computing
+        pairwise alignment.
 
     degree : int, optional, default: 4
         The number of closest edges to connect each node to.
@@ -50,32 +55,22 @@ def generate_graph(slice, degree=4):
         index from the `slice.obs.index`).
 
     """
+    # Every spot will be added to the graph if alignment details is not provided
+    aligned_spots = slice.obs.index if aligned_spots is None else aligned_spots
+
     distance = torch.cdist(
         torch.Tensor(slice.obsm["spatial"]).double(),
         torch.Tensor(slice.obsm["spatial"]).double(),
     )
-    knn_index = np.argsort(distance, 1)[:, 1 : degree + 1]
+    knn_spot_idx = np.argsort(distance, 1)[:, 1 : degree + 1]
 
     G = nx.Graph()
-    for i, r in enumerate(knn_index):
-        for c in r:
-            G.add_edge(i, int(c))
+    for i, spots in enumerate(knn_spot_idx):
+        for spot in spots:
+            if slice.obs.index[int(spot)] in aligned_spots:
+                G.add_edge(i, int(spot))
 
-    node_dict = dict(zip(range(slice.shape[0]), slice.obs.index, strict=False))
-    return G, node_dict
-
-
-def generate_graph_from_labels(slice, labels_dict):
-    G, node_dict = generate_graph(slice)
-
-    # Remove nodes that aren't mapped to a cluster
-    for node, spot in node_dict.items():
-        if spot not in labels_dict:
-            G.remove_node(node)
-
-    labels = {node: labels_dict[node_dict[node]] for node in G.nodes()}
-
-    return G, labels
+    return G, {n: aligned_spots[n] for n in G.nodes}
 
 
 def edge_inconsistency_score(G, labels):
@@ -166,7 +161,7 @@ def convex_hull_edge_inconsistency(slice, pi, axis):
     hull_path = Path(np.array(mapped_points)[hull.vertices])
     hull_adata = slice[slice.obs.index[hull_path.contains_points(spatial_data)]]
 
-    graph, label = generate_graph_from_labels(hull_adata, hull_adata.obs["aligned"])
+    graph, label = generate_graph(hull_adata, hull_adata.obs["aligned"])
     return edge_inconsistency_score(graph, label)
 
 

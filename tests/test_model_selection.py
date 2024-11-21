@@ -1,12 +1,13 @@
 from pathlib import Path
 
 import numpy as np
+import pytest
 import scanpy as sc
 
 from paste3.model_selection import (
-    calculate_convex_hull_edge_inconsistency,
-    create_graph,
+    convex_hull_edge_inconsistency,
     edge_inconsistency_score,
+    generate_graph,
     generate_graph_from_labels,
     select_overlap_fraction,
 )
@@ -19,7 +20,7 @@ output_dir = test_dir / "data/output"
 
 
 def test_create_graph(slices, tmp_path):
-    graph, _ = create_graph(slices[0])
+    graph, _ = generate_graph(slices[0])
 
     np.savetxt(tmp_path / "create_graph_edges.csv", graph.edges, delimiter=",")
     np.savetxt(tmp_path / "create_graph_nodes.csv", graph.nodes, delimiter=",")
@@ -61,9 +62,8 @@ def test_calculate_convex_hull_edge_inconsistency(slices):
         norm=True,
         maxIter=10,
     )
-    measure_a, measure_b = calculate_convex_hull_edge_inconsistency(
-        slices[0], slices[1], pairwise_info
-    )
+    measure_a = convex_hull_edge_inconsistency(slices[0], pairwise_info, axis=1)
+    measure_b = convex_hull_edge_inconsistency(slices[1], pairwise_info, axis=0)
     assert measure_a == 0.18269230769230768
     assert measure_b == 0.20970873786407768
 
@@ -72,4 +72,4 @@ def test_select_overlap_fraction(slices):
     fraction = select_overlap_fraction(
         slices[0], slices[1], show_plot=False, numItermax=10
     )
-    assert fraction == 0.3
+    assert fraction == pytest.approx(0.3)

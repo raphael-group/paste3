@@ -166,6 +166,7 @@ def convex_hull_edge_inconsistency(slice, pi, axis):
 
 
 def plot_edge_curve(overlap_fractions, inconsistency_scores, ax, title):
+    """Plots inconsistency_scores in relation to overlap fractions in a given axis"""
     ax.plot(overlap_fractions, inconsistency_scores)
     ax.set_xlim(1, 0)
     ax.set_xticks([0.99, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1])

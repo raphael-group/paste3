@@ -1,0 +1,543 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="python">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slice and AlignmentDataset objects &mdash; paste3 1.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+
+  
+      <script src="../_static/jquery.js"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+      <script src="../_static/doctools.js"></script>
+      <script src="../_static/sphinx_highlight.js"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            paste3
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorials</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">paste3</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">Slice</span></code> and <code class="docutils literal notranslate"><span class="pre">AlignmentDataset</span></code> objects</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/notebooks/paste3_dataset.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Slice-and-AlignmentDataset-objects">
+<h1><code class="docutils literal notranslate"><span class="pre">Slice</span></code> and <code class="docutils literal notranslate"><span class="pre">AlignmentDataset</span></code> objects<a class="headerlink" href="#Slice-and-AlignmentDataset-objects" title="Permalink to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">paste3.dataset</span></code> module provides an easy-to-use API to access input datasets to the <code class="docutils literal notranslate"><span class="pre">paste3</span></code> alignment algorithms.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">Slice</span></code> class is a thin layer on top of an <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> class, and an <code class="docutils literal notranslate"><span class="pre">AlignmentDataset</span></code> class is a collection of <code class="docutils literal notranslate"><span class="pre">Slice</span></code> objects.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span> <span class="nn">paste3.dataset</span> <span class="kn">import</span> <span class="n">AlignmentDataset</span>
+<span class="kn">from</span> <span class="nn">paste3.napari.data.ondemand</span> <span class="kn">import</span> <span class="n">get_file</span>
+</pre></div>
+</div>
+</div>
+<p>Individual <code class="docutils literal notranslate"><span class="pre">Slice</span></code> objects are created by providing a path to an <code class="docutils literal notranslate"><span class="pre">.h5ad</span></code> file. Each <code class="docutils literal notranslate"><span class="pre">.h5ad</span></code> file is expected to contain an <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> object, and is internally read using a <code class="docutils literal notranslate"><span class="pre">scanpy.read_h5ad</span></code>.</p>
+<p>Here we download and cache a few <code class="docutils literal notranslate"><span class="pre">.h5ad</span></code> files locally using a <code class="docutils literal notranslate"><span class="pre">paste3.napari.data.ondemand.get_file</span></code> call. These are the files available as the Sample Data in the <code class="docutils literal notranslate"><span class="pre">paste3</span></code> napari plugin.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">slice_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">Path</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">get_file</span><span class="p">(</span><span class="s2">&quot;paste3_sample_patient_2_&quot;</span><span class="p">)]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Downloading data from &#39;https://dl.dropboxusercontent.com/scl/fi/zq0dlcgjaxfe9fqbp0hf4/paste3_sample_patient_2_slice_0.h5ad?rlkey=sxj5c843b38vd3iv2n74824hu&amp;st=wcy6oxbt&amp;dl=1&#39; to file &#39;/home/runner/.cache/paste3/paste3_sample_patient_2_slice_0.h5ad&#39;.
+Downloading data from &#39;https://dl.dropboxusercontent.com/scl/fi/a5ufhjylxfnvcn5sw4yp0/paste3_sample_patient_2_slice_1.h5ad?rlkey=p6dp78qhz6qrh0ut49s7b3fvj&amp;st=tyamjq8b&amp;dl=1&#39; to file &#39;/home/runner/.cache/paste3/paste3_sample_patient_2_slice_1.h5ad&#39;.
+Downloading data from &#39;https://dl.dropboxusercontent.com/scl/fi/u7aaq9az8sia26cn4ac4s/paste3_sample_patient_2_slice_2.h5ad?rlkey=3ynobd5ajhlvc7lwdbyg0akj1&amp;st=0l2nw8i2&amp;dl=1&#39; to file &#39;/home/runner/.cache/paste3/paste3_sample_patient_2_slice_2.h5ad&#39;.
+</pre></div></div>
+</div>
+<p>A dataset is created using the paths to the individual slices.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">AlignmentDataset</span><span class="p">(</span><span class="n">file_paths</span><span class="o">=</span><span class="n">slice_files</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Any individual slice can be rendered in a jupyter notebook by simply typing the slice variable name in a cell, which renders the slice using the <code class="docutils literal notranslate"><span class="pre">squidpy</span></code> library. (Note: This is roughly equivalent to doing <code class="docutils literal notranslate"><span class="pre">squidpy.pl.spatial_scatter(&lt;slice&gt;.adata,</span> <span class="pre">..)</span></code>)</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span><span class="o">.</span><span class="n">slices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/dask/dataframe/__init__.py:31: FutureWarning: The legacy Dask DataFrame implementation is deprecated and will be removed in a future version. Set the configuration option `dataframe.query-planning` to `True` or None to enable the new Dask Dataframe implementation and silence this warning.
+  warnings.warn(
+/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/numba/core/decorators.py:246: RuntimeWarning: nopython is set for njit and is ignored
+  warnings.warn(&#39;nopython is set for njit and is ignored&#39;, RuntimeWarning)
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns[&#39;spatial&#39;]`
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/squidpy/pl/_spatial_utils.py:976: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
+  _cax = scatter(
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;paste3.dataset.Slice at 0x7fb211c9b2f0&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_8_4.png" src="../_images/notebooks_paste3_dataset_8_4.png" />
+</div>
+</div>
+<p>An entire dataset can be rendered by typing the dataset variable name in a cell, which renders each slice in order.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns[&#39;spatial&#39;]`
+WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns[&#39;spatial&#39;]`
+WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns[&#39;spatial&#39;]`
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/squidpy/pl/_spatial_utils.py:976: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
+  _cax = scatter(
+/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/squidpy/pl/_spatial_utils.py:976: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
+  _cax = scatter(
+/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/squidpy/pl/_spatial_utils.py:976: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
+  _cax = scatter(
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;paste3.dataset.AlignmentDataset at 0x7fb211d671a0&gt;
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_10_3.png" src="../_images/notebooks_paste3_dataset_10_3.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_10_4.png" src="../_images/notebooks_paste3_dataset_10_4.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_10_5.png" src="../_images/notebooks_paste3_dataset_10_5.png" />
+</div>
+</div>
+<section id="Center-Aligning-a-Dataset">
+<h2>Center Aligning a Dataset<a class="headerlink" href="#Center-Aligning-a-Dataset" title="Permalink to this heading"></a></h2>
+<p>A dataset object can be center aligned in 2 steps:</p>
+<ol class="arabic simple">
+<li><p>Find the &quot;center slice&quot; (or the &quot;consensus slice&quot;) and similarity matrix between spots using the <code class="docutils literal notranslate"><span class="pre">&lt;dataset&gt;.find_center_slice</span></code> method. <strong>This is a time consuming step and benefits from being run on a GPU-enabled environment.</strong></p></li>
+<li><p>Use these values to center align the dataset using the <code class="docutils literal notranslate"><span class="pre">&lt;dataset&gt;.center_align</span></code> method.</p></li>
+</ol>
+<p>The first returned value is the aligned dataset, along with other useful information (rotations/translations). Here we ignore all returned values except the first one.</p>
+<p>Center alignment is explained in detail in the <a class="reference external" href="https://www.nature.com/articles/s41592-022-01459-6">Paste</a> paper.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">center_slice</span><span class="p">,</span> <span class="n">pis</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">find_center_slice</span><span class="p">()</span>
+<span class="n">aligned_dataset</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">center_align</span><span class="p">(</span><span class="n">center_slice</span><span class="o">=</span><span class="n">center_slice</span><span class="p">,</span> <span class="n">pis</span><span class="o">=</span><span class="n">pis</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(INFO) (dataset.py) (22-Nov-24 16:31:17) Finding center slice
+(INFO) (paste.py) (22-Nov-24 16:31:17) GPU is not available, resorting to torch CPU.
+(INFO) (paste.py) (22-Nov-24 16:31:17) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (22-Nov-24 16:31:51) Iteration: 0
+(INFO) (paste.py) (22-Nov-24 16:31:51) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (22-Nov-24 16:31:51) Slice 0
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/sklearn/decomposition/_nmf.py:1759: ConvergenceWarning: Maximum number of iterations 200 reached. Increase it to improve convergence.
+  warnings.warn(
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(INFO) (paste.py) (22-Nov-24 16:31:52) Slice 1
+(INFO) (paste.py) (22-Nov-24 16:31:52) Slice 2
+(INFO) (paste.py) (22-Nov-24 16:31:53) center_ot done
+(INFO) (paste.py) (22-Nov-24 16:31:53) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (22-Nov-24 16:32:05) Objective -142.82678560930833 | Difference: 142.82678560930833
+(INFO) (paste.py) (22-Nov-24 16:32:05) Iteration: 1
+(INFO) (paste.py) (22-Nov-24 16:32:05) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (22-Nov-24 16:32:05) Slice 0
+(INFO) (paste.py) (22-Nov-24 16:32:05) Slice 1
+(INFO) (paste.py) (22-Nov-24 16:32:06) Slice 2
+(INFO) (paste.py) (22-Nov-24 16:32:06) center_ot done
+(INFO) (paste.py) (22-Nov-24 16:32:06) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (22-Nov-24 16:32:17) Objective 0.891283571726251 | Difference: 143.7180691810346
+(INFO) (paste.py) (22-Nov-24 16:32:17) Iteration: 2
+(INFO) (paste.py) (22-Nov-24 16:32:17) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (22-Nov-24 16:32:17) Slice 0
+(INFO) (paste.py) (22-Nov-24 16:32:17) Slice 1
+(INFO) (paste.py) (22-Nov-24 16:32:18) Slice 2
+(INFO) (paste.py) (22-Nov-24 16:32:19) center_ot done
+(INFO) (paste.py) (22-Nov-24 16:32:19) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (22-Nov-24 16:32:28) Objective 0.8983300402780736 | Difference: 0.007046468551822671
+(INFO) (paste.py) (22-Nov-24 16:32:28) Iteration: 3
+(INFO) (paste.py) (22-Nov-24 16:32:28) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (22-Nov-24 16:32:28) Slice 0
+(INFO) (paste.py) (22-Nov-24 16:32:29) Slice 1
+(INFO) (paste.py) (22-Nov-24 16:32:29) Slice 2
+(INFO) (paste.py) (22-Nov-24 16:32:29) center_ot done
+(INFO) (paste.py) (22-Nov-24 16:32:29) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (22-Nov-24 16:32:39) Objective 0.901928669477749 | Difference: 0.0035986291996753517
+(INFO) (paste.py) (22-Nov-24 16:32:39) Iteration: 4
+(INFO) (paste.py) (22-Nov-24 16:32:39) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (22-Nov-24 16:32:39) Slice 0
+(INFO) (paste.py) (22-Nov-24 16:32:40) Slice 1
+(INFO) (paste.py) (22-Nov-24 16:32:40) Slice 2
+(INFO) (paste.py) (22-Nov-24 16:32:40) center_ot done
+(INFO) (paste.py) (22-Nov-24 16:32:40) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (22-Nov-24 16:32:52) Objective 0.9009499292819335 | Difference: 0.000978740195815453
+(INFO) (paste.py) (22-Nov-24 16:32:53) Center slice computed.
+(INFO) (dataset.py) (22-Nov-24 16:32:53) Center aligning
+(INFO) (dataset.py) (22-Nov-24 16:32:53) Stacking slices around center slice
+</pre></div></div>
+</div>
+<p>We can render the center slice and the aligned dataset as usual.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">center_slice</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns[&#39;spatial&#39;]`
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/squidpy/pl/_spatial_utils.py:976: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
+  _cax = scatter(
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;paste3.dataset.Slice at 0x7fb200344ad0&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_14_3.png" src="../_images/notebooks_paste3_dataset_14_3.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">aligned_dataset</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns[&#39;spatial&#39;]`
+WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns[&#39;spatial&#39;]`
+WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns[&#39;spatial&#39;]`
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/squidpy/pl/_spatial_utils.py:976: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
+  _cax = scatter(
+/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/squidpy/pl/_spatial_utils.py:976: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
+  _cax = scatter(
+/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/squidpy/pl/_spatial_utils.py:976: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
+  _cax = scatter(
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;paste3.dataset.AlignmentDataset at 0x7fb2038d6b70&gt;
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_15_3.png" src="../_images/notebooks_paste3_dataset_15_3.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_15_4.png" src="../_images/notebooks_paste3_dataset_15_4.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_15_5.png" src="../_images/notebooks_paste3_dataset_15_5.png" />
+</div>
+</div>
+</section>
+<section id="Pairwise-aligning-a-Dataset">
+<h2>Pairwise aligning a Dataset<a class="headerlink" href="#Pairwise-aligning-a-Dataset" title="Permalink to this heading"></a></h2>
+<p>A dataset can be pairwise aligned using the <code class="docutils literal notranslate"><span class="pre">&lt;dataset&gt;.pairwise_align</span></code> method. An <code class="docutils literal notranslate"><span class="pre">overlap_fraction</span></code> value (between 0 and 1) can be specified.</p>
+<p>A value of <code class="docutils literal notranslate"><span class="pre">None</span></code> results in pairwise alignment that is identical to the approach mentioned in the <a class="reference external" href="https://www.nature.com/articles/s41592-022-01459-6">Paste</a> paper. Any other value between 0 and 1 results in pairwise alignment explained in the <a class="reference external" href="https://pubmed.ncbi.nlm.nih.gov/37553263/">Paste2</a> paper.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pairwise_aligned_dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">pairwise_align</span><span class="p">(</span><span class="n">overlap_fraction</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(INFO) (dataset.py) (22-Nov-24 16:32:54) Finding Pi for slices 0 and 1
+(INFO) (paste.py) (22-Nov-24 16:32:54) GPU is not available, resorting to torch CPU.
+(INFO) (dataset.py) (22-Nov-24 16:32:56) Finding Pi for slices 1 and 2
+(INFO) (paste.py) (22-Nov-24 16:32:56) GPU is not available, resorting to torch CPU.
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pairwise_aligned_dataset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns[&#39;spatial&#39;]`
+WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns[&#39;spatial&#39;]`
+WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns[&#39;spatial&#39;]`
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/squidpy/pl/_spatial_utils.py:976: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
+  _cax = scatter(
+/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/squidpy/pl/_spatial_utils.py:976: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
+  _cax = scatter(
+/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/squidpy/pl/_spatial_utils.py:976: UserWarning: No data for colormapping provided via &#39;c&#39;. Parameters &#39;cmap&#39;, &#39;norm&#39; will be ignored
+  _cax = scatter(
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;paste3.dataset.AlignmentDataset at 0x7fb1fae45220&gt;
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_18_3.png" src="../_images/notebooks_paste3_dataset_18_3.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_18_4.png" src="../_images/notebooks_paste3_dataset_18_4.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_18_5.png" src="../_images/notebooks_paste3_dataset_18_5.png" />
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Raphael Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

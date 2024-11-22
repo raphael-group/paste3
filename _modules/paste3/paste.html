@@ -80,7 +80,7 @@
 
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Callable</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">sleep</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">ot</span>
@@ -95,6 +95,7 @@
     <span class="n">dissimilarity_metric</span><span class="p">,</span>
     <span class="n">get_common_genes</span><span class="p">,</span>
     <span class="n">to_dense_array</span><span class="p">,</span>
+    <span class="n">wait</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -202,7 +203,7 @@
 <span class="sd">    -------</span>
 <span class="sd">    Tuple[np.ndarray, Optional[int]]</span>
 <span class="sd">        - pi : np.ndarray</span>
-<span class="sd">          Optimal transport plan for aligning the two slices.</span>
+<span class="sd">          Optimal transport plan for aligning the two slices.r</span>
 <span class="sd">        - info : Optional[int]</span>
 <span class="sd">          Information on the optimization process (if `return_obj` is True), else None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -212,7 +213,8 @@
 
     <span class="n">device</span> <span class="o">=</span> <span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">use_gpu</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span>
 
-    <span class="p">(</span><span class="n">a_slice</span><span class="p">,</span> <span class="n">b_slice</span><span class="p">),</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_common_genes</span><span class="p">([</span><span class="n">a_slice</span><span class="p">,</span> <span class="n">b_slice</span><span class="p">])</span>
+    <span class="n">slices</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_common_genes</span><span class="p">([</span><span class="n">a_slice</span><span class="p">,</span> <span class="n">b_slice</span><span class="p">])</span>
+    <span class="n">a_slice</span><span class="p">,</span> <span class="n">b_slice</span> <span class="o">=</span> <span class="n">slices</span>
 
     <span class="n">a_dist</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">a_slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
     <span class="n">b_dist</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">b_slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
@@ -269,7 +271,7 @@
     <span class="k">if</span> <span class="n">norm</span><span class="p">:</span>
         <span class="n">a_spatial_dist</span> <span class="o">/=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">a_spatial_dist</span><span class="p">[</span><span class="n">a_spatial_dist</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span>
         <span class="n">b_spatial_dist</span> <span class="o">/=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">b_spatial_dist</span><span class="p">[</span><span class="n">b_spatial_dist</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">overlap_fraction</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">overlap_fraction</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">a_spatial_dist</span> <span class="o">/=</span> <span class="n">a_spatial_dist</span><span class="p">[</span><span class="n">a_spatial_dist</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
             <span class="n">a_spatial_dist</span> <span class="o">*=</span> <span class="n">exp_dissim_matrix</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
             <span class="n">b_spatial_dist</span> <span class="o">/=</span> <span class="n">b_spatial_dist</span><span class="p">[</span><span class="n">b_spatial_dist</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
@@ -293,7 +295,7 @@
     <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="center_align"><a class="viewcode-back" href="../../api/paste3.paste.center_align.html#paste3.paste.center_align">[docs]</a><span class="k">def</span> <span class="nf">center_align</span><span class="p">(</span>
+<span class="k">def</span> <span class="nf">center_align_gen</span><span class="p">(</span>
     <span class="n">initial_slice</span><span class="p">:</span> <span class="n">AnnData</span><span class="p">,</span>
     <span class="n">slices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AnnData</span><span class="p">],</span>
     <span class="n">slice_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -308,81 +310,11 @@
     <span class="n">spots_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">use_gpu</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">fast</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">pbar</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">AnnData</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Infers a &quot;center&quot; slice consisting of a low rank expression matrix :math:`X = WH` and a collection of</span>
-<span class="sd">    :math:`\pi` of mappings from the spots of the center slice to the spots of each input slice.</span>
-
-<span class="sd">    Given slices :math:`(X^{(1)}, D^{(1)}, g^{(1)}), \dots, (X^{(t)}, D^{(t)}, g^{(t)})` containing :math:`n_1, \dots, n_t`</span>
-<span class="sd">    spots, respectively over the same :math:`p` genes, a spot distance matrix :math:`D \in \mathbb{R}^{n \times n}_{+}`,</span>
-<span class="sd">    a distribution :math:`g` over :math:`n` spots, an expression cost function :math:`c`, a distribution</span>
-<span class="sd">    :math:`\lambda \in \mathbb{R}^t_{+}` and parameters :math:`0 \leq \alpha \leq 1`, :math:`m \in \mathbb{N}`,</span>
-<span class="sd">    find an expression matrix :math:`X = WH` where :math:`W \in \mathbb{R}^{p \times m}_{+}` and :math:`H \in \mathbb{R}^{m \times n}_{+}`,</span>
-<span class="sd">    and mappings :math:`\Pi^{(q)} \in \Gamma(g, g^{(q)})` for each slice :math:`q = 1, \dots, t` that minimize the following objective:</span>
-
-<span class="sd">    .. math::</span>
-<span class="sd">        R(W, H, \Pi^{(1)}, \dots, \Pi^{(t)}) = \sum_q \lambda_q F(\Pi^{(q)}; WH, D, X^{(q)}, D^{(q)}, c, \alpha)</span>
-
-<span class="sd">        = \sum_q \lambda_q \left[(1 - \alpha) \sum_{i,j} c(WH_{\cdot,i}, x^{(q)}_j) \pi^{(q)}_{ij} + \alpha \sum_{i,j,k,l} (d_{ik} - d^{(q)}_{jl})^2 \pi^{(q)}_{ij} \pi^{(q)}_{kl} \right].</span>
-
-<span class="sd">    Where:</span>
-
-<span class="sd">        - :math:`X^{q} = [x_{ij}] \in \mathbb{N}^{p \times n_t}` is a :math:`p` genes by :math:`n_t` spots transcript count matrix for :math:`q^{th}` slice,</span>
-<span class="sd">        - :math:`D^{(q)}`, where :math:`d_ij = \parallel z_.i - z_.j \parallel` is the spatial distance between spot :math:`i` and :math:`j`, represents the spot pairwise distance matrix for :math:`q^{th}` slice,</span>
-<span class="sd">        - :math:`c: \mathbb{R}^{p}_{+} \times \mathbb{R}^{p}_{+} \to \mathbb{R}_{+}`, is a function that measures a nonnegative cost between the expression profiles of two spots over all genes</span>
-<span class="sd">        - :math:`\alpha` is a parameter balancing expression and spatial distance preservation,</span>
-<span class="sd">        - :math:`W` and :math:`H` form the low-rank approximation of the center slice&#39;s expression matrix, and</span>
-<span class="sd">        - :math:`\lambda_q` weighs each slice :math:`q` in the objective.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    initial_slice : AnnData</span>
-<span class="sd">        An AnnData object that represent a slice to be used as a reference data for alignment</span>
-<span class="sd">    slices : List[AnnData]</span>
-<span class="sd">        A list of AnnData objects that represent different slices to be aligned with the initial slice.</span>
-<span class="sd">    slice_weights : List[float], optional</span>
-<span class="sd">        Weights for each slice in the alignment process. If None, all slices are treated equally.</span>
-<span class="sd">    alpha : float, default=0.1</span>
-<span class="sd">        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.</span>
-<span class="sd">        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.</span>
-<span class="sd">    n_components : int, default=15</span>
-<span class="sd">        Number of components to use for the NMF.</span>
-<span class="sd">    threshold : float, default=0.001</span>
-<span class="sd">        Convergence threshold for the optimization process. The process stops when the change</span>
-<span class="sd">        in loss is below this threshold.</span>
-<span class="sd">    max_iter : int, default=10</span>
-<span class="sd">        Maximum number of iterations for the optimization process.</span>
-<span class="sd">    exp_dissim_metric : str, default=&quot;kl&quot;</span>
-<span class="sd">        The metric used to compute dissimilarity. Options include &quot;euclidean&quot; or &quot;kl&quot; for</span>
-<span class="sd">        Kullback-Leibler divergence.</span>
-<span class="sd">    norm : bool, default=False</span>
-<span class="sd">        If True, normalizes spatial distances.</span>
-<span class="sd">    random_seed : Optional[int], default=None</span>
-<span class="sd">        Random seed for reproducibility.</span>
-<span class="sd">    pi_inits : Optional[List[np.ndarray]], default=None</span>
-<span class="sd">        Initial transport plans for each slice. If None, it will be computed.</span>
-<span class="sd">    spots_weights : List[float], optional</span>
-<span class="sd">        Weights for individual spots in each slices. If None, uniform distribution is used.</span>
-<span class="sd">    use_gpu : bool, default=True</span>
-<span class="sd">        Whether to use GPU for computations. If True but no GPU is available, will default to CPU.</span>
-<span class="sd">    fast : bool, default=False</span>
-<span class="sd">        Whether to use the fast (untested) torch nmf library</span>
-<span class="sd">    pbar : Any, default=None</span>
-<span class="sd">        Progress bar (tqdm or derived) for tracking the optimization process.</span>
-<span class="sd">        Something that has an `update` method.</span>
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    Tuple[AnnData, List[np.ndarray]]</span>
-<span class="sd">        A tuple containing:</span>
-<span class="sd">        - center_slice : AnnData</span>
-<span class="sd">            The aligned AnnData object representing the center slice after optimization.</span>
-<span class="sd">        - pis : List[np.ndarray]</span>
-<span class="sd">            List of optimal transport distributions for each slice after alignment.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        - Inferred center slice with full and low dimensional representations (feature_matrix, coeff_matrix) of the gene expression matrix.</span>
-<span class="sd">        - List of pairwise alignment mappings of the center slice (rows) to each input slice (columns).</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Analogous to the blocking `center_align` function, but since it can be</span>
+<span class="sd">    time-intensive, implemented as a generator function that yields at each</span>
+<span class="sd">    iteration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">use_gpu</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;GPU is not available, resorting to torch CPU.&quot;</span><span class="p">)</span>
@@ -448,8 +380,8 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Objective </span><span class="si">{</span><span class="n">loss_new</span><span class="si">}</span><span class="s2"> | Difference: </span><span class="si">{</span><span class="n">loss_diff</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">loss_init</span> <span class="o">=</span> <span class="n">loss_new</span>
 
-        <span class="k">if</span> <span class="n">pbar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">yield</span>
+        <span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
 
     <span class="n">center_slice</span> <span class="o">=</span> <span class="n">initial_slice</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="n">center_slice</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">feature_matrix</span><span class="p">,</span> <span class="n">coeff_matrix</span><span class="p">)</span>
@@ -460,7 +392,113 @@
         <span class="o">*</span> <span class="n">compute_slice_weights</span><span class="p">(</span><span class="n">slice_weights</span><span class="p">,</span> <span class="n">pis</span><span class="p">,</span> <span class="n">slices</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
     <span class="p">)</span>
     <span class="n">center_slice</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;obj&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">loss_init</span>
-    <span class="k">return</span> <span class="n">center_slice</span><span class="p">,</span> <span class="n">pis</span></div>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Center slice computed.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">center_slice</span><span class="p">,</span> <span class="n">pis</span>
+
+
+<div class="viewcode-block" id="center_align"><a class="viewcode-back" href="../../api/paste3.paste.center_align.html#paste3.paste.center_align">[docs]</a><span class="k">def</span> <span class="nf">center_align</span><span class="p">(</span>
+    <span class="n">initial_slice</span><span class="p">:</span> <span class="n">AnnData</span><span class="p">,</span>
+    <span class="n">slices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AnnData</span><span class="p">],</span>
+    <span class="n">slice_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">15</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">,</span>
+    <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="n">exp_dissim_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;kl&quot;</span><span class="p">,</span>
+    <span class="n">norm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">pi_inits</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">spots_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">use_gpu</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">fast</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">AnnData</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Infers a &quot;center&quot; slice consisting of a low rank expression matrix :math:`X = WH` and a collection of</span>
+<span class="sd">    :math:`\pi` of mappings from the spots of the center slice to the spots of each input slice.</span>
+
+<span class="sd">    Given slices :math:`(X^{(1)}, D^{(1)}, g^{(1)}), \dots, (X^{(t)}, D^{(t)}, g^{(t)})` containing :math:`n_1, \dots, n_t`</span>
+<span class="sd">    spots, respectively over the same :math:`p` genes, a spot distance matrix :math:`D \in \mathbb{R}^{n \times n}_{+}`,</span>
+<span class="sd">    a distribution :math:`g` over :math:`n` spots, an expression cost function :math:`c`, a distribution</span>
+<span class="sd">    :math:`\lambda \in \mathbb{R}^t_{+}` and parameters :math:`0 \leq \alpha \leq 1`, :math:`m \in \mathbb{N}`,</span>
+<span class="sd">    find an expression matrix :math:`X = WH` where :math:`W \in \mathbb{R}^{p \times m}_{+}` and :math:`H \in \mathbb{R}^{m \times n}_{+}`,</span>
+<span class="sd">    and mappings :math:`\Pi^{(q)} \in \Gamma(g, g^{(q)})` for each slice :math:`q = 1, \dots, t` that minimize the following objective:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        R(W, H, \Pi^{(1)}, \dots, \Pi^{(t)}) = \sum_q \lambda_q F(\Pi^{(q)}; WH, D, X^{(q)}, D^{(q)}, c, \alpha)</span>
+
+<span class="sd">        = \sum_q \lambda_q \left[(1 - \alpha) \sum_{i,j} c(WH_{\cdot,i}, x^{(q)}_j) \pi^{(q)}_{ij} + \alpha \sum_{i,j,k,l} (d_{ik} - d^{(q)}_{jl})^2 \pi^{(q)}_{ij} \pi^{(q)}_{kl} \right].</span>
+
+<span class="sd">    Where:</span>
+
+<span class="sd">        - :math:`X^{q} = [x_{ij}] \in \mathbb{N}^{p \times n_t}` is a :math:`p` genes by :math:`n_t` spots transcript count matrix for :math:`q^{th}` slice,</span>
+<span class="sd">        - :math:`D^{(q)}`, where :math:`d_ij = \parallel z_.i - z_.j \parallel` is the spatial distance between spot :math:`i` and :math:`j`, represents the spot pairwise distance matrix for :math:`q^{th}` slice,</span>
+<span class="sd">        - :math:`c: \mathbb{R}^{p}_{+} \times \mathbb{R}^{p}_{+} \to \mathbb{R}_{+}`, is a function that measures a nonnegative cost between the expression profiles of two spots over all genes</span>
+<span class="sd">        - :math:`\alpha` is a parameter balancing expression and spatial distance preservation,</span>
+<span class="sd">        - :math:`W` and :math:`H` form the low-rank approximation of the center slice&#39;s expression matrix, and</span>
+<span class="sd">        - :math:`\lambda_q` weighs each slice :math:`q` in the objective.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    initial_slice : AnnData</span>
+<span class="sd">        An AnnData object that represent a slice to be used as a reference data for alignment</span>
+<span class="sd">    slices : List[AnnData]</span>
+<span class="sd">        A list of AnnData objects that represent different slices to be aligned with the initial slice.</span>
+<span class="sd">    slice_weights : List[float], optional</span>
+<span class="sd">        Weights for each slice in the alignment process. If None, all slices are treated equally.</span>
+<span class="sd">    alpha : float, default=0.1</span>
+<span class="sd">        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.</span>
+<span class="sd">        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.</span>
+<span class="sd">    n_components : int, default=15</span>
+<span class="sd">        Number of components to use for the NMF.</span>
+<span class="sd">    threshold : float, default=0.001</span>
+<span class="sd">        Convergence threshold for the optimization process. The process stops when the change</span>
+<span class="sd">        in loss is below this threshold.</span>
+<span class="sd">    max_iter : int, default=10</span>
+<span class="sd">        Maximum number of iterations for the optimization process.</span>
+<span class="sd">    exp_dissim_metric : str, default=&quot;kl&quot;</span>
+<span class="sd">        The metric used to compute dissimilarity. Options include &quot;euclidean&quot; or &quot;kl&quot; for</span>
+<span class="sd">        Kullback-Leibler divergence.</span>
+<span class="sd">    norm : bool, default=False</span>
+<span class="sd">        If True, normalizes spatial distances.</span>
+<span class="sd">    random_seed : Optional[int], default=None</span>
+<span class="sd">        Random seed for reproducibility.</span>
+<span class="sd">    pi_inits : Optional[List[np.ndarray]], default=None</span>
+<span class="sd">        Initial transport plans for each slice. If None, it will be computed.</span>
+<span class="sd">    spots_weights : List[float], optional</span>
+<span class="sd">        Weights for individual spots in each slices. If None, uniform distribution is used.</span>
+<span class="sd">    use_gpu : bool, default=True</span>
+<span class="sd">        Whether to use GPU for computations. If True but no GPU is available, will default to CPU.</span>
+<span class="sd">    fast : bool, default=False</span>
+<span class="sd">        Whether to use the fast (untested) torch nmf library</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Tuple[AnnData, List[np.ndarray]]</span>
+<span class="sd">        A tuple containing:</span>
+<span class="sd">        - center_slice : AnnData</span>
+<span class="sd">            The aligned AnnData object representing the center slice after optimization.</span>
+<span class="sd">        - pis : List[np.ndarray]</span>
+<span class="sd">            List of optimal transport distributions for each slice after alignment.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Call our generator function, but wait for its completion</span>
+    <span class="k">return</span> <span class="n">wait</span><span class="p">(</span>
+        <span class="n">center_align_gen</span><span class="p">(</span>
+            <span class="n">initial_slice</span><span class="o">=</span><span class="n">initial_slice</span><span class="p">,</span>
+            <span class="n">slices</span><span class="o">=</span><span class="n">slices</span><span class="p">,</span>
+            <span class="n">slice_weights</span><span class="o">=</span><span class="n">slice_weights</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+            <span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+            <span class="n">max_iter</span><span class="o">=</span><span class="n">max_iter</span><span class="p">,</span>
+            <span class="n">exp_dissim_metric</span><span class="o">=</span><span class="n">exp_dissim_metric</span><span class="p">,</span>
+            <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span>
+            <span class="n">random_seed</span><span class="o">=</span><span class="n">random_seed</span><span class="p">,</span>
+            <span class="n">pi_inits</span><span class="o">=</span><span class="n">pi_inits</span><span class="p">,</span>
+            <span class="n">spots_weights</span><span class="o">=</span><span class="n">spots_weights</span><span class="p">,</span>
+            <span class="n">use_gpu</span><span class="o">=</span><span class="n">use_gpu</span><span class="p">,</span>
+            <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span></div>
 
 
 <span class="c1"># --------------------------- HELPER METHODS -----------------------------------</span>

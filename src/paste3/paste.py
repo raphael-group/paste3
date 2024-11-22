@@ -6,7 +6,7 @@ matrix of the spots
 
 import logging
 from collections.abc import Callable
-from typing import Any
+from time import sleep
 
 import numpy as np
 import ot
@@ -21,6 +21,7 @@ from paste3.helper import (
     dissimilarity_metric,
     get_common_genes,
     to_dense_array,
+    wait,
 )
 
 logger = logging.getLogger(__name__)
@@ -195,7 +196,7 @@ def pairwise_align(
     if norm:
         a_spatial_dist /= torch.min(a_spatial_dist[a_spatial_dist > 0])
         b_spatial_dist /= torch.min(b_spatial_dist[b_spatial_dist > 0])
-        if overlap_fraction:
+        if overlap_fraction is not None:
             a_spatial_dist /= a_spatial_dist[a_spatial_dist > 0].max()
             a_spatial_dist *= exp_dissim_matrix.max()
             b_spatial_dist /= b_spatial_dist[b_spatial_dist > 0].max()
@@ -219,7 +220,7 @@ def pairwise_align(
     )
 
 
-def center_align(
+def center_align_gen(
     initial_slice: AnnData,
     slices: list[AnnData],
     slice_weights=None,
@@ -234,81 +235,11 @@ def center_align(
     spots_weights=None,
     use_gpu: bool = True,
     fast: bool = False,
-    pbar: Any = None,
 ) -> tuple[AnnData, list[np.ndarray]]:
-    r"""
-    Infers a "center" slice consisting of a low rank expression matrix :math:`X = WH` and a collection of
-    :math:`\pi` of mappings from the spots of the center slice to the spots of each input slice.
-
-    Given slices :math:`(X^{(1)}, D^{(1)}, g^{(1)}), \dots, (X^{(t)}, D^{(t)}, g^{(t)})` containing :math:`n_1, \dots, n_t`
-    spots, respectively over the same :math:`p` genes, a spot distance matrix :math:`D \in \mathbb{R}^{n \times n}_{+}`,
-    a distribution :math:`g` over :math:`n` spots, an expression cost function :math:`c`, a distribution
-    :math:`\lambda \in \mathbb{R}^t_{+}` and parameters :math:`0 \leq \alpha \leq 1`, :math:`m \in \mathbb{N}`,
-    find an expression matrix :math:`X = WH` where :math:`W \in \mathbb{R}^{p \times m}_{+}` and :math:`H \in \mathbb{R}^{m \times n}_{+}`,
-    and mappings :math:`\Pi^{(q)} \in \Gamma(g, g^{(q)})` for each slice :math:`q = 1, \dots, t` that minimize the following objective:
-
-    .. math::
-        R(W, H, \Pi^{(1)}, \dots, \Pi^{(t)}) = \sum_q \lambda_q F(\Pi^{(q)}; WH, D, X^{(q)}, D^{(q)}, c, \alpha)
-
-        = \sum_q \lambda_q \left[(1 - \alpha) \sum_{i,j} c(WH_{\cdot,i}, x^{(q)}_j) \pi^{(q)}_{ij} + \alpha \sum_{i,j,k,l} (d_{ik} - d^{(q)}_{jl})^2 \pi^{(q)}_{ij} \pi^{(q)}_{kl} \right].
-
-    Where:
-
-        - :math:`X^{q} = [x_{ij}] \in \mathbb{N}^{p \times n_t}` is a :math:`p` genes by :math:`n_t` spots transcript count matrix for :math:`q^{th}` slice,
-        - :math:`D^{(q)}`, where :math:`d_ij = \parallel z_.i - z_.j \parallel` is the spatial distance between spot :math:`i` and :math:`j`, represents the spot pairwise distance matrix for :math:`q^{th}` slice,
-        - :math:`c: \mathbb{R}^{p}_{+} \times \mathbb{R}^{p}_{+} \to \mathbb{R}_{+}`, is a function that measures a nonnegative cost between the expression profiles of two spots over all genes
-        - :math:`\alpha` is a parameter balancing expression and spatial distance preservation,
-        - :math:`W` and :math:`H` form the low-rank approximation of the center slice's expression matrix, and
-        - :math:`\lambda_q` weighs each slice :math:`q` in the objective.
-
-    Parameters
-    ----------
-    initial_slice : AnnData
-        An AnnData object that represent a slice to be used as a reference data for alignment
-    slices : List[AnnData]
-        A list of AnnData objects that represent different slices to be aligned with the initial slice.
-    slice_weights : List[float], optional
-        Weights for each slice in the alignment process. If None, all slices are treated equally.
-    alpha : float, default=0.1
-        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
-        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.
-    n_components : int, default=15
-        Number of components to use for the NMF.
-    threshold : float, default=0.001
-        Convergence threshold for the optimization process. The process stops when the change
-        in loss is below this threshold.
-    max_iter : int, default=10
-        Maximum number of iterations for the optimization process.
-    exp_dissim_metric : str, default="kl"
-        The metric used to compute dissimilarity. Options include "euclidean" or "kl" for
-        Kullback-Leibler divergence.
-    norm : bool, default=False
-        If True, normalizes spatial distances.
-    random_seed : Optional[int], default=None
-        Random seed for reproducibility.
-    pi_inits : Optional[List[np.ndarray]], default=None
-        Initial transport plans for each slice. If None, it will be computed.
-    spots_weights : List[float], optional
-        Weights for individual spots in each slices. If None, uniform distribution is used.
-    use_gpu : bool, default=True
-        Whether to use GPU for computations. If True but no GPU is available, will default to CPU.
-    fast : bool, default=False
-        Whether to use the fast (untested) torch nmf library
-    pbar : Any, default=None
-        Progress bar (tqdm or derived) for tracking the optimization process.
-        Something that has an `update` method.
-    Returns
-    -------
-    Tuple[AnnData, List[np.ndarray]]
-        A tuple containing:
-        - center_slice : AnnData
-            The aligned AnnData object representing the center slice after optimization.
-        - pis : List[np.ndarray]
-            List of optimal transport distributions for each slice after alignment.
-
-    Returns:
-        - Inferred center slice with full and low dimensional representations (feature_matrix, coeff_matrix) of the gene expression matrix.
-        - List of pairwise alignment mappings of the center slice (rows) to each input slice (columns).
+    """
+    Analogous to the blocking `center_align` function, but since it can be
+    time-intensive, implemented as a generator function that yields at each
+    iteration.
     """
     if use_gpu and not torch.cuda.is_available():
         logger.info("GPU is not available, resorting to torch CPU.")
@@ -374,8 +305,8 @@ def center_align(
         logger.info(f"Objective {loss_new} | Difference: {loss_diff}")
         loss_init = loss_new
 
-        if pbar is not None:
-            pbar.update(1)
+        yield
+        sleep(0.01)
 
     center_slice = initial_slice.copy()
     center_slice.X = np.dot(feature_matrix, coeff_matrix)
@@ -386,7 +317,113 @@ def center_align(
         * compute_slice_weights(slice_weights, pis, slices, device).cpu().numpy()
     )
     center_slice.uns["obj"] = loss_init
+    logger.info("Center slice computed.")
     return center_slice, pis
+
+
+def center_align(
+    initial_slice: AnnData,
+    slices: list[AnnData],
+    slice_weights=None,
+    alpha: float = 0.1,
+    n_components: int = 15,
+    threshold: float = 0.001,
+    max_iter: int = 10,
+    exp_dissim_metric: str = "kl",
+    norm: bool = False,
+    random_seed: int | None = None,
+    pi_inits: list[np.ndarray] | None = None,
+    spots_weights=None,
+    use_gpu: bool = True,
+    fast: bool = False,
+) -> tuple[AnnData, list[np.ndarray]]:
+    r"""
+    Infers a "center" slice consisting of a low rank expression matrix :math:`X = WH` and a collection of
+    :math:`\pi` of mappings from the spots of the center slice to the spots of each input slice.
+
+    Given slices :math:`(X^{(1)}, D^{(1)}, g^{(1)}), \dots, (X^{(t)}, D^{(t)}, g^{(t)})` containing :math:`n_1, \dots, n_t`
+    spots, respectively over the same :math:`p` genes, a spot distance matrix :math:`D \in \mathbb{R}^{n \times n}_{+}`,
+    a distribution :math:`g` over :math:`n` spots, an expression cost function :math:`c`, a distribution
+    :math:`\lambda \in \mathbb{R}^t_{+}` and parameters :math:`0 \leq \alpha \leq 1`, :math:`m \in \mathbb{N}`,
+    find an expression matrix :math:`X = WH` where :math:`W \in \mathbb{R}^{p \times m}_{+}` and :math:`H \in \mathbb{R}^{m \times n}_{+}`,
+    and mappings :math:`\Pi^{(q)} \in \Gamma(g, g^{(q)})` for each slice :math:`q = 1, \dots, t` that minimize the following objective:
+
+    .. math::
+        R(W, H, \Pi^{(1)}, \dots, \Pi^{(t)}) = \sum_q \lambda_q F(\Pi^{(q)}; WH, D, X^{(q)}, D^{(q)}, c, \alpha)
+
+        = \sum_q \lambda_q \left[(1 - \alpha) \sum_{i,j} c(WH_{\cdot,i}, x^{(q)}_j) \pi^{(q)}_{ij} + \alpha \sum_{i,j,k,l} (d_{ik} - d^{(q)}_{jl})^2 \pi^{(q)}_{ij} \pi^{(q)}_{kl} \right].
+
+    Where:
+
+        - :math:`X^{q} = [x_{ij}] \in \mathbb{N}^{p \times n_t}` is a :math:`p` genes by :math:`n_t` spots transcript count matrix for :math:`q^{th}` slice,
+        - :math:`D^{(q)}`, where :math:`d_ij = \parallel z_.i - z_.j \parallel` is the spatial distance between spot :math:`i` and :math:`j`, represents the spot pairwise distance matrix for :math:`q^{th}` slice,
+        - :math:`c: \mathbb{R}^{p}_{+} \times \mathbb{R}^{p}_{+} \to \mathbb{R}_{+}`, is a function that measures a nonnegative cost between the expression profiles of two spots over all genes
+        - :math:`\alpha` is a parameter balancing expression and spatial distance preservation,
+        - :math:`W` and :math:`H` form the low-rank approximation of the center slice's expression matrix, and
+        - :math:`\lambda_q` weighs each slice :math:`q` in the objective.
+
+    Parameters
+    ----------
+    initial_slice : AnnData
+        An AnnData object that represent a slice to be used as a reference data for alignment
+    slices : List[AnnData]
+        A list of AnnData objects that represent different slices to be aligned with the initial slice.
+    slice_weights : List[float], optional
+        Weights for each slice in the alignment process. If None, all slices are treated equally.
+    alpha : float, default=0.1
+        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
+        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.
+    n_components : int, default=15
+        Number of components to use for the NMF.
+    threshold : float, default=0.001
+        Convergence threshold for the optimization process. The process stops when the change
+        in loss is below this threshold.
+    max_iter : int, default=10
+        Maximum number of iterations for the optimization process.
+    exp_dissim_metric : str, default="kl"
+        The metric used to compute dissimilarity. Options include "euclidean" or "kl" for
+        Kullback-Leibler divergence.
+    norm : bool, default=False
+        If True, normalizes spatial distances.
+    random_seed : Optional[int], default=None
+        Random seed for reproducibility.
+    pi_inits : Optional[List[np.ndarray]], default=None
+        Initial transport plans for each slice. If None, it will be computed.
+    spots_weights : List[float], optional
+        Weights for individual spots in each slices. If None, uniform distribution is used.
+    use_gpu : bool, default=True
+        Whether to use GPU for computations. If True but no GPU is available, will default to CPU.
+    fast : bool, default=False
+        Whether to use the fast (untested) torch nmf library
+
+    Returns
+    -------
+    Tuple[AnnData, List[np.ndarray]]
+        A tuple containing:
+        - center_slice : AnnData
+            The aligned AnnData object representing the center slice after optimization.
+        - pis : List[np.ndarray]
+            List of optimal transport distributions for each slice after alignment.
+    """
+    # Call our generator function, but wait for its completion
+    return wait(
+        center_align_gen(
+            initial_slice=initial_slice,
+            slices=slices,
+            slice_weights=slice_weights,
+            alpha=alpha,
+            n_components=n_components,
+            threshold=threshold,
+            max_iter=max_iter,
+            exp_dissim_metric=exp_dissim_metric,
+            norm=norm,
+            random_seed=random_seed,
+            pi_inits=pi_inits,
+            spots_weights=spots_weights,
+            use_gpu=use_gpu,
+            fast=fast,
+        )
+    )
 
 
 # --------------------------- HELPER METHODS -----------------------------------

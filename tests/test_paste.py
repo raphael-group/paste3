@@ -82,6 +82,7 @@ def test_center_alignment(slices):
             for i in range(len(slices))
         ],
     )
+
     assert_frame_equal(
         pd.DataFrame(
             center_slice.uns["paste_W"],

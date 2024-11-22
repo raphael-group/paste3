@@ -1,30 +1,46 @@
 name: paste3
 display_name: Paste3
-# use 'hidden' to remove plugin from napari hub search results
-visibility: hidden
 
 contributions:
   commands:
-    - id: paste3.make_sample_data
-      python_name: paste3.napari._sample_data:make_sample_data
-      title: Load sample data for Paste3
+    - id: paste3.make_sample_data0
+      python_name: paste3.napari._sample_data:make_sample_data0
+      title: sample_data0
+    - id: paste3.make_sample_data1
+      python_name: paste3.napari._sample_data:make_sample_data1
+      title: sample_data1
+    - id: paste3.make_sample_data2
+      python_name: paste3.napari._sample_data:make_sample_data2
+      title: sample_data2
+    - id: paste3.make_sample_data3
+      python_name: paste3.napari._sample_data:make_sample_data3
+      title: sample_data3
     - id: paste3.get_reader
       python_name: paste3.napari._reader:napari_get_reader
       title: Open data with Paste3
     - id: paste3.center_align_widget
-      python_name: paste3.napari:CenterAlignContainer
+      python_name: paste3.napari._widget:CenterAlignContainer
       title: Center Align
     - id: paste3.pairwise_align_widget
-      python_name: paste3.napari:PairwiseAlignContainer
+      python_name: paste3.napari._widget:PairwiseAlignContainer
       title: Pairwise Align
   readers:
     - command: paste3.get_reader
       accepts_directories: false
       filename_patterns: [ '*.h5ad' ]
   sample_data:
-    - command: paste3.make_sample_data
-      display_name: Paste3 Sample Data
-      key: data.napari.paste3.raphael-group.github.com
+    - command: paste3.make_sample_data0
+      display_name: SCC Patient 2
+      key: data0.napari.paste3.raphael-group.github.com
+    - command: paste3.make_sample_data1
+      display_name: SCC Patient 5
+      key: data1.napari.paste3.raphael-group.github.com
+    - command: paste3.make_sample_data2
+      display_name: SCC Patient 9
+      key: data2.napari.paste3.raphael-group.github.com
+    - command: paste3.make_sample_data3
+      display_name: SCC Patient 10
+      key: data3.napari.paste3.raphael-group.github.com
   widgets:
     - command: paste3.center_align_widget
       display_name: Center Align

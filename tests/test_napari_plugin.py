@@ -1,10 +1,8 @@
 from paste3.dataset import AlignmentDataset
-from paste3.napari import (
-    CenterAlignContainer,
-    PairwiseAlignContainer,
-    make_sample_data,
-    napari_get_reader,
-)
+from paste3.helper import wait
+from paste3.napari._reader import napari_get_reader
+from paste3.napari._sample_data import make_sample_data
+from paste3.napari._widget import CenterAlignContainer, PairwiseAlignContainer
 
 
 def test_reader(sample_data_files, make_napari_viewer_proxy):
@@ -28,7 +26,7 @@ def test_reader(sample_data_files, make_napari_viewer_proxy):
 
 
 def test_sample_data():
-    layer_data = make_sample_data()
+    layer_data = make_sample_data("paste3_sample_patient_2")
     # We should have 4 Point layers, one for each slice
     # and one for the volume
     assert len(layer_data) == 4
@@ -45,7 +43,8 @@ def test_center_align_widget(sample_data_files, make_napari_viewer_proxy):
     widget._reference_slice_dropdown.value = "paste3_sample_patient_2_slice_0"
     widget._max_iterations_textbox.value = "1"
 
-    widget._run()
+    center_slice_and_pis = wait(widget._find_center_slice())  # wait for completion
+    widget._found_center_slice(center_slice_and_pis)
 
     layers = viewer.layers
 
@@ -74,7 +73,7 @@ def test_pairwise_align_widget(sample_data_files, make_napari_viewer_proxy):
     # emulate UI interaction
     widget._max_iterations_textbox.value = "1"
 
-    widget._run()
+    widget.run()
 
     layers = viewer.layers
 

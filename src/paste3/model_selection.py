@@ -31,12 +31,13 @@ def generate_graph(slice, aligned_spots=None, degree=4):
     Parameters
     ----------
     slice : AnnData
-        AnnData object containing data for a  slice.
+        AnnData object containing data for a slice.
 
-    aligned_spots: dict, optional
-        A dictionary mapping each node (spot index) to cluster labels. A cluster labeled 'True'
-        means that a spot in slice A is aligned with another spot in slice B after computing
-        pairwise alignment.
+    aligned_spots: pd.Series, optional
+        A boolean pandas Series mapping each node (spot index) to cluster
+        labels. A cluster labeled `True` means that a spot in slice A is
+        aligned with another spot in slice B after computing pairwise
+        alignment.
 
     degree : int, optional, default: 4
         The number of closest edges to connect each node to.
@@ -53,13 +54,14 @@ def generate_graph(slice, aligned_spots=None, degree=4):
         index from the `slice.obs.index`).
 
     """
-    # Every spot will be added to the graph if alignment details is not provided
+    # Every "close-enough" spot will be added to the graph if aligned_spots is
+    # not provided, otherwise we only consider spots with a value `True`
+    # (aligned)
     aligned_spots = slice.obs.index if aligned_spots is None else aligned_spots
 
-    distance = torch.cdist(
-        torch.Tensor(slice.obsm["spatial"]).double(),
-        torch.Tensor(slice.obsm["spatial"]).double(),
-    )
+    xys = torch.Tensor(slice.obsm["spatial"]).double()
+    distance = torch.cdist(xys, xys)
+    # Note: start column index from 1 to avoid self loops
     knn_spot_idx = torch.argsort(distance, 1)[:, 1 : degree + 1]
 
     G = nx.Graph()
@@ -100,7 +102,7 @@ def convex_hull_edge_inconsistency(slice, pi, axis):
         The axis along which the probability mass (`pi`) is summed to determine the
         alignment status of each spot. Axis = 1 determines mass distribution for spots in
         the first slice, while axis = 0 determines mass distribution for spots in the second
-        slices.
+        slice.
 
     Returns
     -------

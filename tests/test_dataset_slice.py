@@ -19,7 +19,14 @@ def test_slice_adata(slices):
     assert np.all(slice.adata.obs_names == slices[0].obs_names)
 
 
-def test_slice_adata_str(slices):
+def test_slice_adata_name_str(slices):
+    # We can give names to slices
+    slice = Slice(adata=slices[0], name="my_slice")
+    assert str(slice) == "my_slice"
+
+
+def test_slice_adata_noname_str(slices):
+    # If we don't give names to slices, we have a sensible default
     slice = Slice(adata=slices[0])
     assert (
         str(slice)
@@ -28,6 +35,7 @@ def test_slice_adata_str(slices):
 
 
 def test_slice_filepath_str(sample_data_files):
+    # If we don't give names to slices, we have a sensible default
     slice = Slice(filepath=sample_data_files[0])
     assert str(slice) == "paste3_sample_patient_2_slice_0"
 

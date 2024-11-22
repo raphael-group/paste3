@@ -75,12 +75,7 @@ def slices2():
 
 @pytest.fixture(scope="session")
 def sample_data_files():
-    files = [
-        "paste3_sample_patient_2_slice_0.h5ad",
-        "paste3_sample_patient_2_slice_1.h5ad",
-        "paste3_sample_patient_2_slice_2.h5ad",
-    ]
-    return [Path(get_file(f)) for f in files]
+    return [Path(f) for f in get_file("paste3_sample_patient_2_")]
 
 
 @pytest.fixture(autouse=True)

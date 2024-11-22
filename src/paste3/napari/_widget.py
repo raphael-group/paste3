@@ -1,10 +1,10 @@
 import napari
 import seaborn as sns
 from magicgui.widgets import Container, create_widget
+from napari.qt.threading import create_worker
 from napari.utils.notifications import show_error
-from napari.utils.progress import progress
 
-from paste3.dataset import AlignmentDataset
+from paste3.dataset import AlignmentDataset, Slice
 
 face_color_cycle = sns.color_palette("Paired", 20)
 
@@ -76,14 +76,16 @@ class CenterAlignContainer(AlignContainer):
             options={"choices": [str(slice) for slice in self.dataset]},
         )
 
-        keys = list(self.dataset.slices[0].adata.obs.keys())
         spot_color_key = None
-        for key in keys:
-            if "cluster" in key:
-                spot_color_key = key
-                break
-        if spot_color_key is None and len(keys) > 0:
-            spot_color_key = keys[0]
+        keys = []
+        if len(self.dataset) > 0:
+            keys = list(self.dataset.slices[0].adata.obs.keys())
+            for key in keys:
+                if "cluster" in key:
+                    spot_color_key = key
+                    break
+            if spot_color_key is None and len(keys) > 0:
+                spot_color_key = keys[0]
 
         self._spot_color_key_dropdown = create_widget(
             label="Spot Color Key",
@@ -109,7 +111,7 @@ class CenterAlignContainer(AlignContainer):
         )
 
         self._threshold_textbox = create_widget(
-            label="Threshold", annotation=float, value=0.001
+            label="Threshold", annotation=float, value=0.001, options={"step": 0.00001}
         )
 
         self._max_iterations_textbox = create_widget(
@@ -136,7 +138,7 @@ class CenterAlignContainer(AlignContainer):
             label="Run", annotation=None, widget_type="PushButton"
         )
 
-        self._run_button.changed.connect(self._run)
+        self._run_button.changed.connect(self.run)
 
         self.extend(
             [
@@ -154,12 +156,23 @@ class CenterAlignContainer(AlignContainer):
             ]
         )
 
-    def _run(self):
-        cluster_indices = set()
-        for slice in self.dataset:
-            clusters = set(slice.get_obs_values(self._spot_color_key_dropdown.value))
-            cluster_indices |= clusters
-        n_clusters = len(cluster_indices)
+    def _find_center_slice(self):
+        """
+        Start center alignment.
+        Since center alignment is typically a long running process,
+        we'll run it in a separate thread and yield for progress updates.
+
+        Returns
+        -------
+        Tuple[Slice, List[np.ndarray]]
+            A tuple containing:
+            - center_slice : Slice
+                The aligned Slice object representing the center slice after optimization.
+            - pis : List[np.ndarray]
+                List of optimal transport distributions for each slice after alignment.
+        """
+        if self.dataset is None or len(self.dataset) < 2:
+            return show_error("Please select a dataset with at least 2 slices.")
 
         reference_slice = self._viewer.layers[
             self._reference_slice_dropdown.value
@@ -172,20 +185,33 @@ class CenterAlignContainer(AlignContainer):
         except ValueError:
             slice_weights = None
 
-        with progress(total=self._max_iterations_textbox.value) as pbar:
-            center_slice, pis = self.dataset.find_center_slice(
-                initial_slice=reference_slice,
-                slice_weights=slice_weights,
-                alpha=self._alpha_slider.value,
-                n_components=self._n_components_textbox.value,
-                threshold=self._threshold_textbox.value,
-                max_iter=self._max_iterations_textbox.value,
-                exp_dissim_metric=self._exp_dis_metric_dropdown.value,
-                norm=self._norm_checkbox.value,
-                random_seed=self._random_seed_textbox.value,
-                pbar=pbar,
+        gen = self.dataset.find_center_slice(
+            initial_slice=reference_slice,
+            slice_weights=slice_weights,
+            alpha=self._alpha_slider.value,
+            n_components=self._n_components_textbox.value,
+            threshold=self._threshold_textbox.value,
+            max_iter=self._max_iterations_textbox.value,
+            exp_dissim_metric=self._exp_dis_metric_dropdown.value,
+            norm=self._norm_checkbox.value,
+            random_seed=self._random_seed_textbox.value,
+            block=False,
+        )
+
+        try:
+            while True:
+                # Be a good citizen and yield for progress updates
+                yield next(gen)
+        except StopIteration as e:
+            center_slice, pis = e.value
+            center_slice = Slice(
+                adata=center_slice, name=self.dataset.name + "_center_slice"
             )
 
+        return center_slice, pis
+
+    def _found_center_slice(self, center_slice_and_pis):
+        center_slice, pis = center_slice_and_pis
         aligned_dataset, _, translations = self.dataset.center_align(
             center_slice=center_slice, pis=pis
         )
@@ -201,9 +227,19 @@ class CenterAlignContainer(AlignContainer):
             first_layer_translation=first_layer_translation,
         )
 
-        # Show center slice
+        # Find the number of clusters in the original dataset
+        cluster_indices = set()
+        for slice in self.dataset:
+            clusters = set(slice.get_obs_values(self._spot_color_key_dropdown.value))
+            cluster_indices |= clusters
+        n_clusters = len(cluster_indices)
+
+        # Show center slice with the same no. of clusters as the original
+        # dataset
         center_slice_points = center_slice.adata.obsm["spatial"]
-        center_slice_clusters = center_slice.cluster(n_clusters)
+        center_slice_clusters = center_slice.cluster(
+            n_clusters=n_clusters, uns_key="paste_W"
+        )
         self._viewer.add_points(
             center_slice_points,
             ndim=2,
@@ -213,6 +249,13 @@ class CenterAlignContainer(AlignContainer):
             face_color_cycle=face_color_cycle,
             name="paste3_center_slice",
         )
+
+    def run(self):
+        worker = create_worker(
+            self._find_center_slice, _start_thread=False, _progress=True
+        )
+        worker.returned.connect(self._found_center_slice)
+        worker.start()
 
 
 class PairwiseAlignContainer(AlignContainer):
@@ -261,7 +304,7 @@ class PairwiseAlignContainer(AlignContainer):
             label="Run", annotation=None, widget_type="PushButton"
         )
 
-        self._run_button.changed.connect(self._run)
+        self._run_button.changed.connect(self.run)
 
         self.extend(
             [
@@ -272,14 +315,20 @@ class PairwiseAlignContainer(AlignContainer):
             ]
         )
 
-    def _run(self):
-        overlap = [float(w) for w in self._overlap_textbox.value.split(",")]
-        if len(overlap) == 1:  # scalar provided
-            overlap = [overlap[0]] * (len(self.dataset) - 1)
-        if len(overlap) != len(self.dataset) - 1:
-            return show_error(
-                "Overlap fraction must be a scalar or a list of length n-1, where n is the number of slices"
-            )
+    def run(self):
+        if self.dataset is None or len(self.dataset) < 2:
+            return show_error("Please select a dataset with at least 2 slices.")
+
+        if self._overlap_textbox.value.strip() == "":
+            overlap = None
+        else:
+            overlap = [float(w) for w in self._overlap_textbox.value.split(",")]
+            if len(overlap) == 1:  # scalar provided
+                overlap = [overlap[0]] * (len(self.dataset) - 1)
+            if len(overlap) != len(self.dataset) - 1:
+                return show_error(
+                    "Overlap fraction must be a scalar or a list of length n-1, where n is the number of slices"
+                )
 
         aligned_dataset, _, translations = self.dataset.pairwise_align(
             overlap_fraction=overlap,

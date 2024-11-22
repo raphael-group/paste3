@@ -129,7 +129,7 @@ def pairwise_align(
     -------
     Tuple[np.ndarray, Optional[int]]
         - pi : np.ndarray
-          Optimal transport plan for aligning the two slices.r
+          Optimal transport plan for aligning the two slices.
         - info : Optional[int]
           Information on the optimization process (if `return_obj` is True), else None.
     """
@@ -139,8 +139,7 @@ def pairwise_align(
 
     device = "cuda" if use_gpu else "cpu"
 
-    slices, _ = get_common_genes([a_slice, b_slice])
-    a_slice, b_slice = slices
+    (a_slice, b_slice), _ = get_common_genes([a_slice, b_slice])
 
     a_dist = torch.Tensor(a_slice.obsm["spatial"]).double()
     b_dist = torch.Tensor(b_slice.obsm["spatial"]).double()

@@ -105,12 +105,13 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    slice : AnnData</span>
-<span class="sd">        AnnData object containing data for a  slice.</span>
+<span class="sd">        AnnData object containing data for a slice.</span>
 
-<span class="sd">    aligned_spots: dict, optional</span>
-<span class="sd">        A dictionary mapping each node (spot index) to cluster labels. A cluster labeled &#39;True&#39;</span>
-<span class="sd">        means that a spot in slice A is aligned with another spot in slice B after computing</span>
-<span class="sd">        pairwise alignment.</span>
+<span class="sd">    aligned_spots: pd.Series, optional</span>
+<span class="sd">        A boolean pandas Series mapping each node (spot index) to cluster</span>
+<span class="sd">        labels. A cluster labeled `True` means that a spot in slice A is</span>
+<span class="sd">        aligned with another spot in slice B after computing pairwise</span>
+<span class="sd">        alignment.</span>
 
 <span class="sd">    degree : int, optional, default: 4</span>
 <span class="sd">        The number of closest edges to connect each node to.</span>
@@ -127,13 +128,14 @@
 <span class="sd">        index from the `slice.obs.index`).</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Every spot will be added to the graph if alignment details is not provided</span>
+    <span class="c1"># Every &quot;close-enough&quot; spot will be added to the graph if aligned_spots is</span>
+    <span class="c1"># not provided, otherwise we only consider spots with a value `True`</span>
+    <span class="c1"># (aligned)</span>
     <span class="n">aligned_spots</span> <span class="o">=</span> <span class="nb">slice</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span> <span class="k">if</span> <span class="n">aligned_spots</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">aligned_spots</span>
 
-    <span class="n">distance</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span>
-        <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="nb">slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">double</span><span class="p">(),</span>
-        <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="nb">slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">double</span><span class="p">(),</span>
-    <span class="p">)</span>
+    <span class="n">xys</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="nb">slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
+    <span class="n">distance</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cdist</span><span class="p">(</span><span class="n">xys</span><span class="p">,</span> <span class="n">xys</span><span class="p">)</span>
+    <span class="c1"># Note: start column index from 1 to avoid self loops</span>
     <span class="n">knn_spot_idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">distance</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[:,</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">degree</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
 
     <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
@@ -174,7 +176,7 @@
 <span class="sd">        The axis along which the probability mass (`pi`) is summed to determine the</span>
 <span class="sd">        alignment status of each spot. Axis = 1 determines mass distribution for spots in</span>
 <span class="sd">        the first slice, while axis = 0 determines mass distribution for spots in the second</span>
-<span class="sd">        slices.</span>
+<span class="sd">        slice.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>

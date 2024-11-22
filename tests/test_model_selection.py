@@ -6,7 +6,6 @@ import scanpy as sc
 
 from paste3.model_selection import (
     convex_hull_edge_inconsistency,
-    edge_inconsistency_score,
     generate_graph,
     select_overlap_fraction,
 )
@@ -42,17 +41,6 @@ def test_generate_graph_from_labels(tmp_path):
 
     assert_checksum_equals(tmp_path, "generate_graph_from_labels_edges.csv")
     assert_checksum_equals(tmp_path, "generate_graph_from_labels_nodes.csv")
-
-
-def test_edge_inconsistency_score():
-    adata = sc.read_h5ad(output_dir / "source_hull_adata.h5ad")
-    # adata.obs['aligned'] used in be in str formatted boolean values
-    # The code is now compatible with boolean dtypes
-    # TODO: Update test data
-    adata.obs["aligned"] = [bool(i) for i in adata.obs["aligned"]]
-    graph, labels = generate_graph(adata, adata.obs["aligned"])
-    measure_a = edge_inconsistency_score(graph, labels)
-    assert measure_a == 0.0
 
 
 def test_calculate_convex_hull_edge_inconsistency(slices):

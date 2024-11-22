@@ -71,41 +71,6 @@ def generate_graph(slice, aligned_spots=None, degree=4):
     return G, {n: aligned_spots[n] for n in G.nodes}
 
 
-def edge_inconsistency_score(G, labels):
-    """
-
-    Compute the edge inconsistency score of a graph based on the provided labels (clusters).
-
-    This function calculates a score that measures how inconsistent the edges in a graph are
-    with respect to the cluster assignments of the nodes. The score is defined as the ratio of
-    edges that connect nodes from different clusters to the total number of edges, excluding
-    edges that connect nodes within the same cluster.
-
-    Parameters
-    ----------
-    G : networkx.Graph
-        A NetworkX graph where each node represents a spot, and each edge represents
-        a connection to one of the closest neighbors.
-
-    labels : dict
-        A dictionary mapping each node (spot index) to cluster labels. A cluster labeled 'True'
-        means that a spot in slice A is aligned with another spot in slice B after computing
-        pairwise alignment.
-
-    Returns
-    -------
-    float
-        A float value representing the edge inconsistency score. A value close to 0 indicates that most edges
-        are within clusters, while a value close to 1 indicates that most edges connect nodes from different clusters.
-    """
-    # Construct contiguity matrix that counts pairs of cluster edges
-    C = torch.zeros(2, 2)
-    for edge in G.edges():
-        C[labels[edge[0]]][labels[edge[1]]] += 1
-
-    return float(torch.sum(C) - torch.trace(C)) / torch.sum(C)
-
-
 def convex_hull_edge_inconsistency(slice, pi, axis):
     """
     Computes the edge inconsistency score for a convex hull formed by the aligned spots
@@ -119,7 +84,7 @@ def convex_hull_edge_inconsistency(slice, pi, axis):
     score is defined as :math:`H (G, L) = H(G, L) = \frac{|E'|}{|E|}`, which is the percentage
     of edges that are in the cut.
 
-    A high inconsistency score means most of the edges are in the cut, indicating hte labeling
+    A high inconsistency score means most of the edges are in the cut, indicating the labeling
     of the nodes has low spatial coherence, while a low inconsistency score means that the two
     classes are nodes are mostly contiguous in graph.
 
@@ -156,7 +121,13 @@ def convex_hull_edge_inconsistency(slice, pi, axis):
     hull_adata = slice[slice.obs.index[hull_path.contains_points(spatial_data)]]
 
     graph, label = generate_graph(hull_adata, hull_adata.obs["aligned"])
-    return edge_inconsistency_score(graph, label)
+
+    # Construct contiguity matrix that counts pairs of cluster edges
+    C = torch.zeros(2, 2)
+    for edge in graph.edges():
+        C[label[edge[0]]][label[edge[1]]] += 1
+
+    return float(torch.sum(C) - torch.trace(C)) / torch.sum(C)
 
 
 def plot_edge_curve(overlap_fractions, inconsistency_scores, ax, title):

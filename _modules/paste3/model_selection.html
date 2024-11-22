@@ -145,41 +145,6 @@
     <span class="k">return</span> <span class="n">G</span><span class="p">,</span> <span class="p">{</span><span class="n">n</span><span class="p">:</span> <span class="n">aligned_spots</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">}</span>
 
 
-<div class="viewcode-block" id="edge_inconsistency_score"><a class="viewcode-back" href="../../api/paste3.model_selection.edge_inconsistency_score.html#paste3.model_selection.edge_inconsistency_score">[docs]</a><span class="k">def</span> <span class="nf">edge_inconsistency_score</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-
-<span class="sd">    Compute the edge inconsistency score of a graph based on the provided labels (clusters).</span>
-
-<span class="sd">    This function calculates a score that measures how inconsistent the edges in a graph are</span>
-<span class="sd">    with respect to the cluster assignments of the nodes. The score is defined as the ratio of</span>
-<span class="sd">    edges that connect nodes from different clusters to the total number of edges, excluding</span>
-<span class="sd">    edges that connect nodes within the same cluster.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    G : networkx.Graph</span>
-<span class="sd">        A NetworkX graph where each node represents a spot, and each edge represents</span>
-<span class="sd">        a connection to one of the closest neighbors.</span>
-
-<span class="sd">    labels : dict</span>
-<span class="sd">        A dictionary mapping each node (spot index) to cluster labels. A cluster labeled &#39;True&#39;</span>
-<span class="sd">        means that a spot in slice A is aligned with another spot in slice B after computing</span>
-<span class="sd">        pairwise alignment.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    float</span>
-<span class="sd">        A float value representing the edge inconsistency score. A value close to 0 indicates that most edges</span>
-<span class="sd">        are within clusters, while a value close to 1 indicates that most edges connect nodes from different clusters.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Construct contiguity matrix that counts pairs of cluster edges</span>
-    <span class="n">C</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">():</span>
-        <span class="n">C</span><span class="p">[</span><span class="n">labels</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]]][</span><span class="n">labels</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]]]</span> <span class="o">+=</span> <span class="mi">1</span>
-
-    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">C</span><span class="p">)</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">C</span><span class="p">))</span> <span class="o">/</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">C</span><span class="p">)</span></div>
-
-
 <span class="k">def</span> <span class="nf">convex_hull_edge_inconsistency</span><span class="p">(</span><span class="nb">slice</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">axis</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the edge inconsistency score for a convex hull formed by the aligned spots</span>
@@ -193,7 +158,7 @@
 <span class="sd">    score is defined as :math:`H (G, L) = H(G, L) = \frac{|E&#39;|}{|E|}`, which is the percentage</span>
 <span class="sd">    of edges that are in the cut.</span>
 
-<span class="sd">    A high inconsistency score means most of the edges are in the cut, indicating hte labeling</span>
+<span class="sd">    A high inconsistency score means most of the edges are in the cut, indicating the labeling</span>
 <span class="sd">    of the nodes has low spatial coherence, while a low inconsistency score means that the two</span>
 <span class="sd">    classes are nodes are mostly contiguous in graph.</span>
 
@@ -230,7 +195,13 @@
     <span class="n">hull_adata</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">[</span><span class="nb">slice</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">hull_path</span><span class="o">.</span><span class="n">contains_points</span><span class="p">(</span><span class="n">spatial_data</span><span class="p">)]]</span>
 
     <span class="n">graph</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">generate_graph</span><span class="p">(</span><span class="n">hull_adata</span><span class="p">,</span> <span class="n">hull_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;aligned&quot;</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">edge_inconsistency_score</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+
+    <span class="c1"># Construct contiguity matrix that counts pairs of cluster edges</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">():</span>
+        <span class="n">C</span><span class="p">[</span><span class="n">label</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]]][</span><span class="n">label</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]]]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">C</span><span class="p">)</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">C</span><span class="p">))</span> <span class="o">/</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="plot_edge_curve"><a class="viewcode-back" href="../../api/paste3.model_selection.plot_edge_curve.html#paste3.model_selection.plot_edge_curve">[docs]</a><span class="k">def</span> <span class="nf">plot_edge_curve</span><span class="p">(</span><span class="n">overlap_fractions</span><span class="p">,</span> <span class="n">inconsistency_scores</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>

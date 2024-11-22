@@ -46,7 +46,10 @@ def test_generate_graph_from_labels(tmp_path):
 
 def test_edge_inconsistency_score():
     adata = sc.read_h5ad(output_dir / "source_hull_adata.h5ad")
-
+    # adata.obs['aligned'] used in be in str formatted boolean values
+    # The code is now compatible with boolean dtypes
+    # TODO: Update test data
+    adata.obs["aligned"] = [bool(i) for i in adata.obs["aligned"]]
     graph, labels = generate_graph(adata, adata.obs["aligned"])
     measure_a = edge_inconsistency_score(graph, labels)
     assert measure_a == 0.0

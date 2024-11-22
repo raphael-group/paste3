@@ -7,8 +7,6 @@ import logging
 
 import matplotlib.pyplot as plt
 import networkx as nx
-import numpy as np
-import pandas as pd
 import torch
 from matplotlib.path import Path
 from scipy.spatial import ConvexHull
@@ -62,7 +60,7 @@ def generate_graph(slice, aligned_spots=None, degree=4):
         torch.Tensor(slice.obsm["spatial"]).double(),
         torch.Tensor(slice.obsm["spatial"]).double(),
     )
-    knn_spot_idx = np.argsort(distance, 1)[:, 1 : degree + 1]
+    knn_spot_idx = torch.argsort(distance, 1)[:, 1 : degree + 1]
 
     G = nx.Graph()
     for i, spots in enumerate(knn_spot_idx):
@@ -101,15 +99,11 @@ def edge_inconsistency_score(G, labels):
         are within clusters, while a value close to 1 indicates that most edges connect nodes from different clusters.
     """
     # Construct contiguity matrix that counts pairs of cluster edges
-    C = pd.DataFrame(
-        0, index=list(set(labels.values())), columns=list(set(labels.values()))
-    )
-
+    C = torch.zeros(2, 2)
     for edge in G.edges():
         C[labels[edge[0]]][labels[edge[1]]] += 1
 
-    c_sum = C.values.sum()
-    return float(c_sum - np.trace(C)) / c_sum
+    return float(torch.sum(C) - torch.trace(C)) / torch.sum(C)
 
 
 def convex_hull_edge_inconsistency(slice, pi, axis):
@@ -154,11 +148,11 @@ def convex_hull_edge_inconsistency(slice, pi, axis):
     slice_mass = torch.sum(pi, axis=axis)
     spatial_data = slice.obsm["spatial"]
 
-    slice.obs["aligned"] = [str(float(mass) > 0) for mass in slice_mass]
+    slice.obs["aligned"] = [(float(mass) > 0) for mass in slice_mass]
     mapped_points = [spatial_data[i] for i, mass in enumerate(slice_mass) if mass > 0]
 
     hull = ConvexHull(mapped_points)
-    hull_path = Path(np.array(mapped_points)[hull.vertices])
+    hull_path = Path(torch.asarray(mapped_points)[hull.vertices])
     hull_adata = slice[slice.obs.index[hull_path.contains_points(spatial_data)]]
 
     graph, label = generate_graph(hull_adata, hull_adata.obs["aligned"])
@@ -214,7 +208,7 @@ def select_overlap_fraction(
         0 and 1, with 1 indicating a perfect overlap.
 
     """
-    overlap_frac = np.concatenate((np.arange(0.05, 0.99, 0.05), [0.99]))
+    overlap_frac = torch.cat([torch.arange(0.05, 0.99, 0.05), torch.Tensor([0.99])])
 
     (a_slice, b_slice), _ = get_common_genes([a_slice, b_slice])
     a_exp_dissim = to_dense_array(a_slice.X).double()
@@ -244,8 +238,8 @@ def select_overlap_fraction(
         plot_edge_curve(overlap_frac, edge_b, ax=ax2, title="Target Slice")
         plt.show()
 
-    half_estimate_a = overlap_frac[np.argmax(edge_a)]
-    half_estimate_b = overlap_frac[np.argmax(edge_b)]
+    half_estimate_a = overlap_frac[torch.argmax(torch.Tensor(edge_a))]
+    half_estimate_b = overlap_frac[torch.argmax(torch.Tensor(edge_b))]
 
     estimated_overlap_fraction = min(2 * min(half_estimate_a, half_estimate_b), 1)
     logger.info(f"Estimation of overlap percentage is {estimated_overlap_fraction}.")

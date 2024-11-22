@@ -43,7 +43,9 @@ def test_center_align_widget(sample_data_files, make_napari_viewer_proxy):
     widget._reference_slice_dropdown.value = "paste3_sample_patient_2_slice_0"
     widget._max_iterations_textbox.value = "1"
 
-    wait(widget._run())  # wait for completion
+    center_slice_and_pis = wait(widget._find_center_slice())  # wait for completion
+    widget._found_center_slice(center_slice_and_pis)
+
     layers = viewer.layers
 
     # We should have 6 Point layers

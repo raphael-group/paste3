@@ -405,10 +405,6 @@ def center_align(
             The aligned AnnData object representing the center slice after optimization.
         - pis : List[np.ndarray]
             List of optimal transport distributions for each slice after alignment.
-
-    Returns:
-        - Inferred center slice with full and low dimensional representations (feature_matrix, coeff_matrix) of the gene expression matrix.
-        - List of pairwise alignment mappings of the center slice (rows) to each input slice (columns).
     """
     # Call our generator function, but wait for its completion
     return wait(

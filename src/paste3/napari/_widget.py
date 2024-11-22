@@ -156,21 +156,23 @@ class CenterAlignContainer(AlignContainer):
             ]
         )
 
-    # @thread_worker(progress=True)
-    def _run(self):
+    def _find_center_slice(self):
         """
         Start center alignment.
         Since center alignment is typically a long running process,
         we'll run it in a separate thread and yield for progress updates.
+
+        Returns
+        -------
+        Tuple[Slice, List[np.ndarray]]
+            A tuple containing:
+            - center_slice : Slice
+                The aligned Slice object representing the center slice after optimization.
+            - pis : List[np.ndarray]
+                List of optimal transport distributions for each slice after alignment.
         """
         if self.dataset is None or len(self.dataset) < 2:
             return show_error("Please select a dataset with at least 2 slices.")
-
-        cluster_indices = set()
-        for slice in self.dataset:
-            clusters = set(slice.get_obs_values(self._spot_color_key_dropdown.value))
-            cluster_indices |= clusters
-        n_clusters = len(cluster_indices)
 
         reference_slice = self._viewer.layers[
             self._reference_slice_dropdown.value
@@ -206,6 +208,10 @@ class CenterAlignContainer(AlignContainer):
                 adata=center_slice, name=self.dataset.name + "_center_slice"
             )
 
+        return center_slice, pis
+
+    def _found_center_slice(self, center_slice_and_pis):
+        center_slice, pis = center_slice_and_pis
         aligned_dataset, _, translations = self.dataset.center_align(
             center_slice=center_slice, pis=pis
         )
@@ -221,7 +227,15 @@ class CenterAlignContainer(AlignContainer):
             first_layer_translation=first_layer_translation,
         )
 
-        # Show center slice
+        # Find the number of clusters in the original dataset
+        cluster_indices = set()
+        for slice in self.dataset:
+            clusters = set(slice.get_obs_values(self._spot_color_key_dropdown.value))
+            cluster_indices |= clusters
+        n_clusters = len(cluster_indices)
+
+        # Show center slice with the same no. of clusters as the original
+        # dataset
         center_slice_points = center_slice.adata.obsm["spatial"]
         center_slice_clusters = center_slice.cluster(
             n_clusters=n_clusters, uns_key="paste_W"
@@ -237,7 +251,10 @@ class CenterAlignContainer(AlignContainer):
         )
 
     def run(self):
-        worker = create_worker(self._run, _start_thread=False, _progress=True)
+        worker = create_worker(
+            self._find_center_slice, _start_thread=False, _progress=True
+        )
+        worker.returned.connect(self._found_center_slice)
         worker.start()
 
 

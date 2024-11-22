@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 import anndata as ad
+import numpy as np
 import pandas as pd
 import scanpy as sc
 from pandas.testing import assert_frame_equal
@@ -15,9 +16,9 @@ from paste3.io import get_shape, process_files
 logger = logging.getLogger(__name__)
 
 
-test_dir = Path(__file__).parent
-input_dir = test_dir / "data/input"
-output_dir = test_dir / "data/output"
+test_dir = Path(__file__).parent / "data"
+input_dir = test_dir / "input"
+output_dir = test_dir / "output"
 
 
 def test_cmd_line_center(tmp_path):
@@ -42,33 +43,18 @@ def test_cmd_line_center(tmp_path):
     )
 
     assert result is None
-    result = sc.read(tmp_path / "center_slice.h5ad")
 
-    assert_frame_equal(
-        pd.DataFrame(
-            result.uns["paste_W"],
-            index=result.obs.index,
-            columns=[str(i) for i in range(15)],
-        ),
-        pd.read_csv(output_dir / "W_center", index_col=0),
-        check_names=False,
-        check_index_type=False,
-        rtol=1e-05,
-        atol=1e-08,
-    )
-    assert_frame_equal(
-        pd.DataFrame(result.uns["paste_H"], columns=result.var.index),
-        pd.read_csv(output_dir / "H_center", index_col=0),
-        rtol=1e-05,
-        atol=1e-08,
-    )
+    result = sc.read(tmp_path / "center_slice.h5ad")
+    expected_result = np.load(test_dir / "cmd_line_center.npz", allow_pickle=True)
+
+    assert np.allclose(result.uns["paste_W"], expected_result["paste_W"])
+    assert np.allclose(result.uns["paste_H"], expected_result["paste_H"])
 
     for i in (0, 1):
         assert_frame_equal(
-            pd.read_csv(tmp_path / f"slice_{i}_{i+1}_pairwise.csv"),
-            pd.read_csv(
-                output_dir / f"slice_center_slice{i + 1}_pairwise.csv",
-            ),
+            pd.read_csv(tmp_path / f"slice_{i}_{i+1}_pairwise.csv", header=None),
+            pd.DataFrame(expected_result[f"slice_{i}_{i+1}_pairwise"]),
+            check_column_type=False,
         )
 
 

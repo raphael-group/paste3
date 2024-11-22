@@ -203,7 +203,7 @@
 <span class="sd">    -------</span>
 <span class="sd">    Tuple[np.ndarray, Optional[int]]</span>
 <span class="sd">        - pi : np.ndarray</span>
-<span class="sd">          Optimal transport plan for aligning the two slices.r</span>
+<span class="sd">          Optimal transport plan for aligning the two slices.</span>
 <span class="sd">        - info : Optional[int]</span>
 <span class="sd">          Information on the optimization process (if `return_obj` is True), else None.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -213,8 +213,7 @@
 
     <span class="n">device</span> <span class="o">=</span> <span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">use_gpu</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span>
 
-    <span class="n">slices</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_common_genes</span><span class="p">([</span><span class="n">a_slice</span><span class="p">,</span> <span class="n">b_slice</span><span class="p">])</span>
-    <span class="n">a_slice</span><span class="p">,</span> <span class="n">b_slice</span> <span class="o">=</span> <span class="n">slices</span>
+    <span class="p">(</span><span class="n">a_slice</span><span class="p">,</span> <span class="n">b_slice</span><span class="p">),</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_common_genes</span><span class="p">([</span><span class="n">a_slice</span><span class="p">,</span> <span class="n">b_slice</span><span class="p">])</span>
 
     <span class="n">a_dist</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">a_slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
     <span class="n">b_dist</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">b_slice</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>

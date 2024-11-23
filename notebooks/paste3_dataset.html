@@ -162,7 +162,7 @@ WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;paste3.dataset.Slice at 0x7fbf6c83e2a0&gt;
+&lt;paste3.dataset.Slice at 0x7fb9ad507da0&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -210,7 +210,7 @@ WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;paste3.dataset.AlignmentDataset at 0x7fbf6c753e00&gt;
+&lt;paste3.dataset.AlignmentDataset at 0x7fb9ad6605f0&gt;
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -257,92 +257,84 @@ WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(INFO) (dataset.py) (22-Nov-24 23:35:52) Finding center slice
-(INFO) (paste.py) (22-Nov-24 23:35:52) GPU is not available, resorting to torch CPU.
-(INFO) (paste.py) (22-Nov-24 23:35:52) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (22-Nov-24 23:36:19) Iteration: 0
-(INFO) (paste.py) (22-Nov-24 23:36:19) Solving Pairwise Slice Alignment Problem.
-(INFO) (paste.py) (22-Nov-24 23:36:19) Slice 0
-(INFO) (paste.py) (22-Nov-24 23:36:20) Slice 1
-(INFO) (paste.py) (22-Nov-24 23:36:21) Slice 2
-(INFO) (paste.py) (22-Nov-24 23:36:21) center_ot done
-(INFO) (paste.py) (22-Nov-24 23:36:21) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (22-Nov-24 23:36:32) Objective -142.82551312401904 | Difference: 142.82551312401904
-(INFO) (paste.py) (22-Nov-24 23:36:32) Iteration: 1
-(INFO) (paste.py) (22-Nov-24 23:36:32) Solving Pairwise Slice Alignment Problem.
-(INFO) (paste.py) (22-Nov-24 23:36:32) Slice 0
-(INFO) (paste.py) (22-Nov-24 23:36:32) Slice 1
-(INFO) (paste.py) (22-Nov-24 23:36:33) Slice 2
-(INFO) (paste.py) (22-Nov-24 23:36:33) center_ot done
-(INFO) (paste.py) (22-Nov-24 23:36:33) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (22-Nov-24 23:36:45) Objective 0.8929499011353006 | Difference: 143.71846302515434
-(INFO) (paste.py) (22-Nov-24 23:36:45) Iteration: 2
-(INFO) (paste.py) (22-Nov-24 23:36:45) Solving Pairwise Slice Alignment Problem.
-(INFO) (paste.py) (22-Nov-24 23:36:45) Slice 0
-(INFO) (paste.py) (22-Nov-24 23:36:45) Slice 1
-(INFO) (paste.py) (22-Nov-24 23:36:46) Slice 2
-(INFO) (paste.py) (22-Nov-24 23:36:46) center_ot done
-(INFO) (paste.py) (22-Nov-24 23:36:46) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (22-Nov-24 23:36:56) Objective 0.9046948938365269 | Difference: 0.011744992701226309
-(INFO) (paste.py) (22-Nov-24 23:36:56) Iteration: 3
-(INFO) (paste.py) (22-Nov-24 23:36:56) Solving Pairwise Slice Alignment Problem.
-(INFO) (paste.py) (22-Nov-24 23:36:56) Slice 0
-(INFO) (paste.py) (22-Nov-24 23:36:57) Slice 1
-(INFO) (paste.py) (22-Nov-24 23:36:57) Slice 2
-(INFO) (paste.py) (22-Nov-24 23:36:58) center_ot done
-(INFO) (paste.py) (22-Nov-24 23:36:58) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (22-Nov-24 23:37:07) Objective 0.8987576825648873 | Difference: 0.0059372112716395975
-(INFO) (paste.py) (22-Nov-24 23:37:07) Iteration: 4
-(INFO) (paste.py) (22-Nov-24 23:37:07) Solving Pairwise Slice Alignment Problem.
-(INFO) (paste.py) (22-Nov-24 23:37:07) Slice 0
-(INFO) (paste.py) (22-Nov-24 23:37:07) Slice 1
-(INFO) (paste.py) (22-Nov-24 23:37:08) Slice 2
-(INFO) (paste.py) (22-Nov-24 23:37:08) center_ot done
-(INFO) (paste.py) (22-Nov-24 23:37:08) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (22-Nov-24 23:37:18) Objective 0.9031373250624972 | Difference: 0.004379642497609915
-(INFO) (paste.py) (22-Nov-24 23:37:18) Iteration: 5
-(INFO) (paste.py) (22-Nov-24 23:37:18) Solving Pairwise Slice Alignment Problem.
-(INFO) (paste.py) (22-Nov-24 23:37:18) Slice 0
-(INFO) (paste.py) (22-Nov-24 23:37:19) Slice 1
-(INFO) (paste.py) (22-Nov-24 23:37:19) Slice 2
-(INFO) (paste.py) (22-Nov-24 23:37:20) center_ot done
-(INFO) (paste.py) (22-Nov-24 23:37:20) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (22-Nov-24 23:37:29) Objective 0.8991881928194951 | Difference: 0.003949132243002085
-(INFO) (paste.py) (22-Nov-24 23:37:29) Iteration: 6
-(INFO) (paste.py) (22-Nov-24 23:37:29) Solving Pairwise Slice Alignment Problem.
-(INFO) (paste.py) (22-Nov-24 23:37:29) Slice 0
-(INFO) (paste.py) (22-Nov-24 23:37:30) Slice 1
-(INFO) (paste.py) (22-Nov-24 23:37:30) Slice 2
-(INFO) (paste.py) (22-Nov-24 23:37:30) center_ot done
-(INFO) (paste.py) (22-Nov-24 23:37:30) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (22-Nov-24 23:37:39) Objective 0.900309545298158 | Difference: 0.0011213524786628515
-(INFO) (paste.py) (22-Nov-24 23:37:39) Iteration: 7
-(INFO) (paste.py) (22-Nov-24 23:37:40) Solving Pairwise Slice Alignment Problem.
-(INFO) (paste.py) (22-Nov-24 23:37:40) Slice 0
-(INFO) (paste.py) (22-Nov-24 23:37:40) Slice 1
-(INFO) (paste.py) (22-Nov-24 23:37:40) Slice 2
-(INFO) (paste.py) (22-Nov-24 23:37:41) center_ot done
-(INFO) (paste.py) (22-Nov-24 23:37:41) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (22-Nov-24 23:37:50) Objective 0.9043067225053335 | Difference: 0.003997177207175517
-(INFO) (paste.py) (22-Nov-24 23:37:50) Iteration: 8
-(INFO) (paste.py) (22-Nov-24 23:37:50) Solving Pairwise Slice Alignment Problem.
-(INFO) (paste.py) (22-Nov-24 23:37:50) Slice 0
-(INFO) (paste.py) (22-Nov-24 23:37:51) Slice 1
-(INFO) (paste.py) (22-Nov-24 23:37:51) Slice 2
-(INFO) (paste.py) (22-Nov-24 23:37:52) center_ot done
-(INFO) (paste.py) (22-Nov-24 23:37:52) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (22-Nov-24 23:38:02) Objective 0.9022400221241572 | Difference: 0.0020667003811762896
-(INFO) (paste.py) (22-Nov-24 23:38:02) Iteration: 9
-(INFO) (paste.py) (22-Nov-24 23:38:02) Solving Pairwise Slice Alignment Problem.
-(INFO) (paste.py) (22-Nov-24 23:38:02) Slice 0
-(INFO) (paste.py) (22-Nov-24 23:38:02) Slice 1
-(INFO) (paste.py) (22-Nov-24 23:38:02) Slice 2
-(INFO) (paste.py) (22-Nov-24 23:38:03) center_ot done
-(INFO) (paste.py) (22-Nov-24 23:38:03) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (22-Nov-24 23:38:13) Objective 0.9001356280171507 | Difference: 0.0021043941070064687
-(INFO) (paste.py) (22-Nov-24 23:38:14) Center slice computed.
-(INFO) (dataset.py) (22-Nov-24 23:38:14) Center aligning
-(INFO) (dataset.py) (22-Nov-24 23:38:14) Stacking slices around center slice
+(INFO) (dataset.py) (22-Nov-24 23:59:09) Finding center slice
+(INFO) (paste.py) (22-Nov-24 23:59:09) GPU is not available, resorting to torch CPU.
+(INFO) (paste.py) (22-Nov-24 23:59:09) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (22-Nov-24 23:59:33) Iteration: 0
+(INFO) (paste.py) (22-Nov-24 23:59:33) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (22-Nov-24 23:59:33) Slice 0
+(INFO) (paste.py) (22-Nov-24 23:59:33) Slice 1
+(INFO) (paste.py) (22-Nov-24 23:59:34) Slice 2
+(INFO) (paste.py) (22-Nov-24 23:59:35) center_ot done
+(INFO) (paste.py) (22-Nov-24 23:59:35) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (22-Nov-24 23:59:44) Objective -142.8231384076428 | Difference: 142.8231384076428
+(INFO) (paste.py) (22-Nov-24 23:59:44) Iteration: 1
+(INFO) (paste.py) (22-Nov-24 23:59:44) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (22-Nov-24 23:59:44) Slice 0
+(INFO) (paste.py) (22-Nov-24 23:59:45) Slice 1
+(INFO) (paste.py) (22-Nov-24 23:59:45) Slice 2
+(INFO) (paste.py) (22-Nov-24 23:59:46) center_ot done
+(INFO) (paste.py) (22-Nov-24 23:59:46) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (22-Nov-24 23:59:56) Objective 0.8944897016955866 | Difference: 143.7176281093384
+(INFO) (paste.py) (22-Nov-24 23:59:56) Iteration: 2
+(INFO) (paste.py) (22-Nov-24 23:59:56) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (22-Nov-24 23:59:56) Slice 0
+(INFO) (paste.py) (22-Nov-24 23:59:56) Slice 1
+(INFO) (paste.py) (22-Nov-24 23:59:57) Slice 2
+(INFO) (paste.py) (22-Nov-24 23:59:57) center_ot done
+(INFO) (paste.py) (22-Nov-24 23:59:57) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (23-Nov-24 00:00:09) Objective 0.8997285577383731 | Difference: 0.0052388560427865105
+(INFO) (paste.py) (23-Nov-24 00:00:09) Iteration: 3
+(INFO) (paste.py) (23-Nov-24 00:00:09) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (23-Nov-24 00:00:09) Slice 0
+(INFO) (paste.py) (23-Nov-24 00:00:09) Slice 1
+(INFO) (paste.py) (23-Nov-24 00:00:10) Slice 2
+(INFO) (paste.py) (23-Nov-24 00:00:10) center_ot done
+(INFO) (paste.py) (23-Nov-24 00:00:10) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (23-Nov-24 00:00:20) Objective 0.9010212900574018 | Difference: 0.001292732319028711
+(INFO) (paste.py) (23-Nov-24 00:00:21) Iteration: 4
+(INFO) (paste.py) (23-Nov-24 00:00:21) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (23-Nov-24 00:00:21) Slice 0
+(INFO) (paste.py) (23-Nov-24 00:00:21) Slice 1
+(INFO) (paste.py) (23-Nov-24 00:00:21) Slice 2
+(INFO) (paste.py) (23-Nov-24 00:00:22) center_ot done
+(INFO) (paste.py) (23-Nov-24 00:00:22) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (23-Nov-24 00:00:33) Objective 0.9048068221646359 | Difference: 0.003785532107234091
+(INFO) (paste.py) (23-Nov-24 00:00:33) Iteration: 5
+(INFO) (paste.py) (23-Nov-24 00:00:33) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (23-Nov-24 00:00:33) Slice 0
+(INFO) (paste.py) (23-Nov-24 00:00:34) Slice 1
+(INFO) (paste.py) (23-Nov-24 00:00:34) Slice 2
+(INFO) (paste.py) (23-Nov-24 00:00:34) center_ot done
+(INFO) (paste.py) (23-Nov-24 00:00:34) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (23-Nov-24 00:00:44) Objective 0.9028661998159005 | Difference: 0.0019406223487353769
+(INFO) (paste.py) (23-Nov-24 00:00:44) Iteration: 6
+(INFO) (paste.py) (23-Nov-24 00:00:44) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (23-Nov-24 00:00:44) Slice 0
+(INFO) (paste.py) (23-Nov-24 00:00:45) Slice 1
+(INFO) (paste.py) (23-Nov-24 00:00:45) Slice 2
+(INFO) (paste.py) (23-Nov-24 00:00:45) center_ot done
+(INFO) (paste.py) (23-Nov-24 00:00:45) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (23-Nov-24 00:00:56) Objective 0.8994651314253215 | Difference: 0.003401068390579076
+(INFO) (paste.py) (23-Nov-24 00:00:56) Iteration: 7
+(INFO) (paste.py) (23-Nov-24 00:00:56) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (23-Nov-24 00:00:56) Slice 0
+(INFO) (paste.py) (23-Nov-24 00:00:56) Slice 1
+(INFO) (paste.py) (23-Nov-24 00:00:57) Slice 2
+(INFO) (paste.py) (23-Nov-24 00:00:57) center_ot done
+(INFO) (paste.py) (23-Nov-24 00:00:57) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (23-Nov-24 00:01:07) Objective 0.9035763613635162 | Difference: 0.004111229938194683
+(INFO) (paste.py) (23-Nov-24 00:01:07) Iteration: 8
+(INFO) (paste.py) (23-Nov-24 00:01:07) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (23-Nov-24 00:01:07) Slice 0
+(INFO) (paste.py) (23-Nov-24 00:01:07) Slice 1
+(INFO) (paste.py) (23-Nov-24 00:01:08) Slice 2
+(INFO) (paste.py) (23-Nov-24 00:01:08) center_ot done
+(INFO) (paste.py) (23-Nov-24 00:01:08) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (23-Nov-24 00:01:18) Objective 0.9043500573252083 | Difference: 0.000773695961692189
+(INFO) (paste.py) (23-Nov-24 00:01:18) Center slice computed.
+(INFO) (dataset.py) (23-Nov-24 00:01:18) Center aligning
+(INFO) (dataset.py) (23-Nov-24 00:01:18) Stacking slices around center slice
 </pre></div></div>
 </div>
 <p>We can render the center slice and the aligned dataset as usual.</p>
@@ -377,7 +369,7 @@ WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;paste3.dataset.Slice at 0x7fbf55578a40&gt;
+&lt;paste3.dataset.Slice at 0x7fb99f173590&gt;
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -424,7 +416,7 @@ WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;paste3.dataset.AlignmentDataset at 0x7fbf5e0ff530&gt;
+&lt;paste3.dataset.AlignmentDataset at 0x7fb99ea29880&gt;
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -466,10 +458,10 @@ WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(INFO) (dataset.py) (22-Nov-24 23:38:15) Finding Pi for slices 0 and 1
-(INFO) (paste.py) (22-Nov-24 23:38:15) GPU is not available, resorting to torch CPU.
-(INFO) (dataset.py) (22-Nov-24 23:38:17) Finding Pi for slices 1 and 2
-(INFO) (paste.py) (22-Nov-24 23:38:17) GPU is not available, resorting to torch CPU.
+(INFO) (dataset.py) (23-Nov-24 00:01:20) Finding Pi for slices 0 and 1
+(INFO) (paste.py) (23-Nov-24 00:01:20) GPU is not available, resorting to torch CPU.
+(INFO) (dataset.py) (23-Nov-24 00:01:21) Finding Pi for slices 1 and 2
+(INFO) (paste.py) (23-Nov-24 00:01:21) GPU is not available, resorting to torch CPU.
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -509,7 +501,7 @@ WARNING: Please specify a valid `library_id` or set it permanently in `adata.uns
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;paste3.dataset.AlignmentDataset at 0x7fbf5556d910&gt;
+&lt;paste3.dataset.AlignmentDataset at 0x7fb9963a5100&gt;
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">

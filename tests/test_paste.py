@@ -1,5 +1,4 @@
 import hashlib
-import tempfile
 from pathlib import Path
 
 import numpy as np
@@ -18,9 +17,8 @@ from paste3.paste import (
     pairwise_align,
 )
 
-test_dir = Path(__file__).parent
-input_dir = test_dir / "data/input"
-output_dir = test_dir / "data/output"
+test_dir = Path(__file__).parent / "data"
+output_dir = test_dir / "output"
 
 
 def assert_checksum_equals(temp_dir, filename, loose=False):
@@ -53,13 +51,8 @@ def test_pairwise_alignment(slices):
         b_spots_weight=slices[1].obsm["weights"].astype(slices[1].X.dtype),
         use_gpu=True,
     )
-    probability_mapping = pd.DataFrame(
-        outcome.cpu().numpy(), index=slices[0].obs.index, columns=slices[1].obs.index
-    )
-    true_probability_mapping = pd.read_csv(
-        output_dir / "slices_1_2_pairwise.csv", index_col=0
-    )
-    assert_frame_equal(probability_mapping, true_probability_mapping, check_dtype=False)
+    expected_result = np.load(test_dir / "pairwise_alignment.npz", allow_pickle=True)
+    assert np.allclose(expected_result["outcome"], outcome.cpu().numpy())
 
 
 def test_center_alignment(slices):
@@ -82,51 +75,22 @@ def test_center_alignment(slices):
             for i in range(len(slices))
         ],
     )
-
-    assert_frame_equal(
-        pd.DataFrame(
-            center_slice.uns["paste_W"],
-            index=center_slice.obs.index,
-            columns=[str(i) for i in range(15)],
-        ),
-        pd.read_csv(output_dir / "W_center.csv", index_col=0),
-        check_names=False,
-        rtol=1e-05,
-        atol=1e-04,
-        check_dtype=False,
-    )
-    assert_frame_equal(
-        pd.DataFrame(center_slice.uns["paste_H"], columns=center_slice.var.index),
-        pd.read_csv(output_dir / "H_center.csv", index_col=0),
-        rtol=1e-05,
-        atol=1e-04,
-        check_dtype=False,
-    )
+    expected_result = np.load(test_dir / "center_alignment.npz", allow_pickle=True)
+    assert np.allclose(expected_result["paste_W"], center_slice.uns["paste_W"])
+    assert np.allclose(expected_result["paste_H"], center_slice.uns["paste_H"])
 
     for i, pi in enumerate(pairwise_info):
-        pairwise_mapping = pd.DataFrame(
-            pi.cpu().numpy(), index=center_slice.obs.index, columns=slices[i].obs.index
-        )
-        true_pairwise_mapping = pd.read_csv(
-            output_dir / f"center_slice{i + 1}_pairwise.csv", index_col=0
-        )
-        assert_frame_equal(pairwise_mapping, true_pairwise_mapping, check_dtype=False)
+        np.allclose(pi, expected_result[f"pi_{i}"])
 
 
 def test_center_ot(slices):
-    temp_dir = Path(tempfile.mkdtemp())
-
-    common_genes = slices[0].var.index
-    for slice in slices[1:]:
-        common_genes = common_genes.intersection(slice.var.index)
-
-    intersecting_slice = slices[0][:, common_genes]
+    data = np.load(test_dir / "center_ot.npz", allow_pickle=True)
     pairwise_info, r = center_ot(
-        feature_matrix=np.genfromtxt(input_dir / "W_intermediate.csv", delimiter=","),
-        coeff_matrix=np.genfromtxt(input_dir / "H_intermediate.csv", delimiter=","),
+        feature_matrix=data["feature_matrix"],
+        coeff_matrix=data["coeff_matrix"],
         slices=slices,
-        center_coordinates=intersecting_slice.obsm["spatial"],
-        common_genes=common_genes,
+        center_coordinates=data["center_coordinates"],
+        common_genes=data["common_genes"],
         use_gpu=True,
         alpha=0.1,
         exp_dissim_metric="kl",
@@ -144,81 +108,48 @@ def test_center_ot(slices):
     assert np.allclose(expected_r, r)
 
     for i, pi in enumerate(pairwise_info):
-        pd.DataFrame(
-            pi.cpu().numpy(),
-            index=intersecting_slice.obs.index,
-            columns=slices[i].obs.index,
-        ).to_csv(temp_dir / f"center_ot{i + 1}_pairwise.csv")
-        assert_checksum_equals(temp_dir, f"center_ot{i + 1}_pairwise.csv", loose=True)
+        np.allclose(pi, data[f"pi_{i}"])
 
 
 def test_center_NMF(intersecting_slices):
     n_slices = len(intersecting_slices)
 
-    pairwise_info = [
-        torch.Tensor(
-            np.genfromtxt(input_dir / f"center_ot{i+1}_pairwise.csv", delimiter=",")
-        ).double()
-        for i in range(n_slices)
-    ]
+    data = np.load(test_dir / "center_NMF.npz")
+    pairwise_info = [torch.Tensor(data[f"pi_{i}"]).double() for i in range(n_slices)]
 
     _W, _H = center_NMF(
-        feature_matrix=np.genfromtxt(input_dir / "W_intermediate.csv", delimiter=","),
+        feature_matrix=data["feature_matrix"],
         slices=intersecting_slices,
         pis=pairwise_info,
         slice_weights=n_slices * [1.0 / n_slices],
         n_components=15,
         random_seed=0,
     )
-
-    assert_frame_equal(
-        pd.DataFrame(
-            _W,
-            index=intersecting_slices[0].obs.index,
-            columns=[str(i) for i in range(15)],
-        ),
-        pd.read_csv(output_dir / "W_center_NMF.csv", index_col=0),
-        rtol=1e-05,
-        atol=1e-08,
-    )
-    assert_frame_equal(
-        pd.DataFrame(_H, columns=intersecting_slices[0].var.index),
-        pd.read_csv(output_dir / "H_center_NMF.csv"),
-        rtol=1e-05,
-        atol=1e-08,
-    )
+    assert np.allclose(data["W"], _W)
+    assert np.allclose(data["H"], _H)
 
 
 def test_fused_gromov_wasserstein(spot_distance_matrix):
-    temp_dir = Path(tempfile.mkdtemp())
-
-    nx = ot.backend.TorchBackend()
-
-    M = torch.Tensor(
-        np.genfromtxt(input_dir / "gene_distance.csv", delimiter=",")
-    ).double()
+    data = np.load(test_dir / "fused_gromov_wasserstein.npz")
+    M = torch.Tensor(data["exp_dissim_matrix"]).double()
     pairwise_info, log = my_fused_gromov_wasserstein(
         M,
         spot_distance_matrix[0],
         spot_distance_matrix[1],
-        a_spots_weight=nx.ones((254,)).double() / 254,
-        b_spots_weight=nx.ones((251,)).double() / 251,
+        a_spots_weight=torch.ones((254,)).double() / 254,
+        b_spots_weight=torch.ones((251,)).double() / 251,
         alpha=0.1,
         pi_init=None,
         loss_fun="square_loss",
         numItermax=10,
     )
-    pd.DataFrame(pairwise_info).to_csv(
-        temp_dir / "fused_gromov_wasserstein.csv", index=False
-    )
-    assert_checksum_equals(temp_dir, "fused_gromov_wasserstein.csv")
+    np.allclose(data["pairwise_info"], pairwise_info)
 
 
 def test_gromov_linesearch(spot_distance_matrix):
-    G = 1.509115054931788e-05 * torch.ones((251, 264)).double()
-    deltaG = torch.Tensor(
-        np.genfromtxt(input_dir / "deltaG.csv", delimiter=",")
-    ).double()
+    data = np.load(test_dir / "gromov_linesearch.npz")
+    G = torch.Tensor(data["G"]).double()
+    deltaG = torch.Tensor(data["deltaG"]).double()
     costG = 6.0935270338235075
 
     alpha, fc, cost_G = ot.gromov.solve_gromov_linesearch(
@@ -237,13 +168,13 @@ def test_gromov_linesearch(spot_distance_matrix):
 
 def test_line_search_partial(spot_distance_matrix):
     d1, d2 = spot_distance_matrix[1], spot_distance_matrix[2]
-    G = 1.509115054931788e-05 * torch.ones((251, 264)).double()
-    deltaG = torch.Tensor(
-        np.genfromtxt(input_dir / "deltaG.csv", delimiter=",")
-    ).double()
-    M = torch.Tensor(
-        np.genfromtxt(input_dir / "euc_dissimilarity.csv", delimiter=",")
-    ).double()
+
+    data = np.load(test_dir / "line_search_partial.npz")
+
+    G = torch.Tensor(data["G"]).double()
+    deltaG = torch.Tensor(data["deltaG"]).double()
+    M = torch.Tensor(data["exp_dissim_matrix"]).double()
+
     alpha = 0.1
 
     def f_cost(pi):

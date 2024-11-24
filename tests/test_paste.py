@@ -108,7 +108,7 @@ def test_center_ot(slices):
     assert np.allclose(expected_r, r)
 
     for i, pi in enumerate(pairwise_info):
-        np.allclose(pi, data[f"pi_{i}"])
+        assert np.allclose(pi, data[f"pi_{i}"])
 
 
 def test_center_NMF(intersecting_slices):
@@ -143,7 +143,7 @@ def test_fused_gromov_wasserstein(spot_distance_matrix):
         loss_fun="square_loss",
         numItermax=10,
     )
-    np.allclose(data["pairwise_info"], pairwise_info)
+    assert np.allclose(data["pairwise_info"], pairwise_info)
 
 
 def test_gromov_linesearch(spot_distance_matrix):

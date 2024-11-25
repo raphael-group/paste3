@@ -14,8 +14,7 @@ from paste3.paste import pairwise_align
 test_dir = Path(__file__).parent / "data"
 
 
-
-def test_create_graph(slices, tmp_path):
+def test_create_graph(slices):
     graph, _ = generate_graph(slices[0])
     expected_result = np.load(test_dir / "create_graph.npz")
 

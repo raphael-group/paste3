@@ -10,6 +10,7 @@ from paste3.napari.data.ondemand import get_file
 
 test_dir = Path(__file__).parent / "data"
 
+
 @pytest.fixture(scope="session")
 def slices():
     slices = []

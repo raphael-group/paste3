@@ -13,8 +13,6 @@ from paste3.model_selection import (
 from paste3.paste import pairwise_align
 
 test_dir = Path(__file__).parent / "data"
-input_dir = test_dir / "input"
-output_dir = test_dir / "output"
 
 
 def test_create_graph(slices):
@@ -27,7 +25,7 @@ def test_create_graph(slices):
 
 
 def test_generate_graph_from_labels():
-    adata = sc.read_h5ad(output_dir / "source_hull_adata.h5ad")
+    adata = sc.read_h5ad(test_dir / "source_hull_adata.h5ad")
 
     graph, labels = generate_graph_from_labels(adata, adata.obs["aligned"])
 
@@ -38,7 +36,7 @@ def test_generate_graph_from_labels():
 
 
 def test_edge_inconsistency_score():
-    adata = sc.read_h5ad(output_dir / "source_hull_adata.h5ad")
+    adata = sc.read_h5ad(test_dir / "source_hull_adata.h5ad")
 
     graph, labels = generate_graph_from_labels(adata, adata.obs["aligned"])
     measure_a = edge_inconsistency_score(graph, labels)

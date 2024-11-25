@@ -12,19 +12,16 @@ from paste3.glmpca import (
     remove_intercept,
 )
 
-test_dir = Path(__file__).parent
-input_dir = test_dir / "data/input"
-output_dir = test_dir / "data/output"
+test_dir = Path(__file__).parent / "data"
 
 
 def test_ortho():
-    data = np.load(input_dir / "test_ortho.npz")
+    data = np.load(test_dir / "test_ortho.npz")
     outcome = ortho(data["U"], data["V"], data["A"], X=1, G=None, Z=data["Z"])
 
-    saved_output = np.load(output_dir / "test_ortho.npz")
-    assert np.allclose(outcome["factors"], saved_output["factors"])
-    assert np.allclose(outcome["loadings"], saved_output["loadings"])
-    assert np.allclose(outcome["coefX"], saved_output["coefX"])
+    assert np.allclose(outcome["factors"], data["factors"])
+    assert np.allclose(outcome["loadings"], data["loadings"])
+    assert np.allclose(outcome["coefX"], data["coefX"])
     assert outcome["coefZ"] is None
 
 
@@ -48,14 +45,10 @@ def test_remove_intercept():
 
 @pytest.mark.parametrize("fam", ["poi", "nb", "mult", "bern"])
 def test_glmpca_init(fam):
-    Y = np.genfromtxt(input_dir / "Y.csv", delimiter=",", skip_header=2)
+    data = np.load(test_dir / "glmpca_intercepts.npz")
 
-    glmpca_obj = glmpca_init(Y, fam, None, 100)
-
-    assert np.allclose(
-        glmpca_obj["intercepts"],
-        np.load(output_dir / "glmpca_intercepts.npz")[fam],
-    )
+    glmpca_obj = glmpca_init(data["input"], fam, None, 100)
+    assert np.allclose(glmpca_obj["intercepts"], data[fam])
 
 
 def test_est_nb_theta():
@@ -71,31 +64,34 @@ def test_est_nb_theta():
 
 @pytest.mark.parametrize("fam", ["poi", "nb", "mult", "bern"])
 def test_glmpca(fam):
-    joint_matrix_T = np.genfromtxt(input_dir / "joint_matrix.csv", delimiter=",")
+    data = np.load(test_dir / "glmpca_result.npz")
+    input = data["input"]
     if fam == "bern":
-        joint_matrix_T /= np.linalg.norm(joint_matrix_T, axis=1, keepdims=True)
+        input /= np.linalg.norm(input, axis=1, keepdims=True)
     res = glmpca(
-        joint_matrix_T,
+        input,
         L=50,
         penalty=1,
         fam=fam,
         ctl={"maxIter": 10, "eps": 1e-4, "optimizeTheta": True},
     )
 
-    saved_result = np.load(output_dir / "glmpca_result.npz")
-    assert np.allclose(res["coefX"], saved_result[f"coefX_{fam}"])
-    assert np.allclose(res["loadings"], saved_result[f"loadings_{fam}"])
-    assert np.allclose(res["factors"], saved_result[f"factors_{fam}"])
-    assert np.allclose(res["dev"], saved_result[f"dev_{fam}"])
+    assert np.allclose(res["coefX"], data[f"coefX_{fam}"])
+    assert np.allclose(res["loadings"], data[f"loadings_{fam}"])
+    assert np.allclose(res["factors"], data[f"factors_{fam}"])
+    assert np.allclose(res["dev"], data[f"dev_{fam}"])
     assert res["coefZ"] is None
 
 
 def test_glmpca_covariates():
+    data = np.load(test_dir / "covariates.npz")
+
     X = np.array(range(505))
     Z = np.array(range(2001))
-    joint_matrix_T = np.genfromtxt(input_dir / "joint_matrix.csv", delimiter=",")
+
+    input = data["input"]
     res = glmpca(
-        joint_matrix_T,
+        input,
         L=50,
         penalty=1,
         fam="poi",
@@ -104,28 +100,25 @@ def test_glmpca_covariates():
         ctl={"maxIter": 10, "eps": 1e-4, "optimizeTheta": True},
     )
 
-    saved_result = np.load(output_dir / "covariates.npz")
-    assert np.allclose(res["coefX"], saved_result["coefX"])
-    assert np.allclose(res["loadings"], saved_result["loadings"])
-    assert np.allclose(res["factors"], saved_result["factors"])
-    assert np.allclose(res["dev"], saved_result["dev"])
-    assert np.allclose(res["coefZ"], saved_result["coefZ"])
+    assert np.allclose(res["coefX"], data["coefX"])
+    assert np.allclose(res["loadings"], data["loadings"])
+    assert np.allclose(res["factors"], data["factors"])
+    assert np.allclose(res["dev"], data["dev"])
+    assert np.allclose(res["coefZ"], data["coefZ"])
 
 
 def test_glmpca_with_init():
-    joint_matrix_T = np.genfromtxt(input_dir / "joint_matrix.csv", delimiter=",")
-    data = np.load(output_dir / "covariates.npz")
+    data = np.load(test_dir / "glmpca_init.npz")
     res = glmpca(
-        joint_matrix_T,
+        data["input"],
         L=50,
         penalty=1,
         fam="poi",
-        init={"factors": data["factors"], "loadings": data["loadings"]},
+        init={"factors": data["i_factors"], "loadings": data["i_loadings"]},
         ctl={"maxIter": 10, "eps": 1e-4, "optimizeTheta": True},
     )
-    saved_result = np.load(output_dir / "glmpca_init.npz")
-    assert np.allclose(res["coefX"], saved_result["coefX"])
-    assert np.allclose(res["loadings"], saved_result["loadings"])
-    assert np.allclose(res["factors"], saved_result["factors"])
-    assert np.allclose(res["dev"], saved_result["dev"])
+    assert np.allclose(res["coefX"], data["coefX"])
+    assert np.allclose(res["loadings"], data["o_loadings"])
+    assert np.allclose(res["factors"], data["o_factors"])
+    assert np.allclose(res["dev"], data["dev"])
     assert res["coefZ"] is None

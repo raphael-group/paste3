@@ -18,12 +18,11 @@ from paste3.paste import (
 )
 
 test_dir = Path(__file__).parent / "data"
-output_dir = test_dir / "output"
 
 
 def assert_checksum_equals(temp_dir, filename, loose=False):
     generated_file = temp_dir / filename
-    oracle = output_dir / filename
+    oracle = test_dir / "output" / filename
 
     if loose:
         assert_frame_equal(pd.read_csv(generated_file), pd.read_csv(oracle))

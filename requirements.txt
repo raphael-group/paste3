@@ -1,7 +1,7 @@
 anndata==0.10.9
 array_api_compat==1.9.1
 asttokens==2.4.1
-build==1.2.2.post1
+build==1.2.2
 certifi==2024.8.30
 cfgv==3.4.0
 charset-normalizer==3.4.0

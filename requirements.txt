@@ -38,7 +38,7 @@ networkx==3.4.2
 nodeenv==1.9.1
 numba==0.60.0
 numpy==2.0.2
-packaging==24.2
+packaging==24.1
 pandas==2.2.3
 parso==0.8.4
 patsy==1.0.1
@@ -70,7 +70,7 @@ scikit-learn==1.5.2
 scipy==1.14.1
 seaborn==0.13.2
 session_info==1.0.0
-setuptools==75.6.0
+setuptools==75.1.0
 six==1.16.0
 stack-data==0.6.3
 statsmodels==0.14.4

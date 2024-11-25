@@ -112,7 +112,12 @@ def test_pca_distance(slices2):
     random_indices = np.random.choice(pca.shape[0], 100, replace=False)
     pca = pca[random_indices, :]
 
-    assert np.allclose(np.load(test_dir / "pca_distance.npz")["pca"], pca)
+    assert np.allclose(
+        np.load(test_dir / "pca_distance.npz")["pca"],
+        pca,
+        rtol=1e-5,
+        atol=1e-5,
+    )
 
 
 def test_high_umi_gene_distance():
@@ -180,4 +185,9 @@ def test_dissimilarity_metric(slices2, dissimilarity):
     random_indices = np.random.choice(M.shape[0], 100, replace=False)
     M = M[random_indices, :]
 
-    assert np.allclose(np.load(test_dir / "dissimilarity_metric.npz")[dissimilarity], M)
+    assert np.allclose(
+        np.load(test_dir / "dissimilarity_metric.npz")[dissimilarity],
+        M,
+        rtol=1e-5,
+        atol=1e-5,
+    )

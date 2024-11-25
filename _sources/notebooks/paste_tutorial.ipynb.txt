@@ -54,7 +54,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "data_dir = \"../../../tests/data/input/\"\n",
+    "data_dir = \"../../../tests/data/\"\n",
     "\n",
     "\n",
     "# Assume that the coordinates of slices are named slice_name + \"_coor.csv\"\n",
@@ -609,7 +609,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "data_dir = \"../../../tests/data/input/\"\n",
+    "data_dir = \"../../../tests/data/\"\n",
     "\n",
     "\n",
     "# Assume that the coordinates of slices are named slice_name + \"_coor.csv\"\n",

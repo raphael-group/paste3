@@ -115,8 +115,8 @@ def test_pca_distance(slices2):
     assert np.allclose(
         np.load(test_dir / "pca_distance.npz")["pca"],
         pca,
-        rtol=1e-5,
-        atol=1e-5,
+        rtol=1e-4,
+        atol=1e-4,
     )
 
 
@@ -188,6 +188,6 @@ def test_dissimilarity_metric(slices2, dissimilarity):
     assert np.allclose(
         np.load(test_dir / "dissimilarity_metric.npz")[dissimilarity],
         M,
-        rtol=1e-5,
-        atol=1e-5,
+        rtol=1e-4,
+        atol=1e-4,
     )

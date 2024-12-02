@@ -1,21 +1,21 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="python">
+<html class="writer-html5" lang="python" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>paste3.helper &mdash; paste3 1.2.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
 
   
-      <script src="../../_static/jquery.js"></script>
-      <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-      <script src="../../_static/doctools.js"></script>
-      <script src="../../_static/sphinx_highlight.js"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=60341314"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -331,7 +331,9 @@
     <span class="p">)</span>
 
 
-<div class="viewcode-block" id="match_spots_using_spatial_heuristic"><a class="viewcode-back" href="../../api/paste3.helper.match_spots_using_spatial_heuristic.html#paste3.helper.match_spots_using_spatial_heuristic">[docs]</a><span class="k">def</span> <span class="nf">match_spots_using_spatial_heuristic</span><span class="p">(</span>
+<div class="viewcode-block" id="match_spots_using_spatial_heuristic">
+<a class="viewcode-back" href="../../api/paste3.helper.match_spots_using_spatial_heuristic.html#paste3.helper.match_spots_using_spatial_heuristic">[docs]</a>
+<span class="k">def</span> <span class="nf">match_spots_using_spatial_heuristic</span><span class="p">(</span>
     <span class="n">a_spatial_dist</span><span class="p">,</span> <span class="n">b_spatial_dist</span><span class="p">,</span> <span class="n">use_ot</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -381,6 +383,7 @@
         <span class="k">elif</span> <span class="n">len_b</span> <span class="o">&lt;</span> <span class="n">len_a</span><span class="p">:</span>
             <span class="n">pi</span><span class="p">[[(</span><span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">row_ind</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">len_a</span><span class="p">)],</span> <span class="p">:]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">len_a</span> <span class="o">*</span> <span class="n">len_b</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">pi</span></div>
+
 
 
 <span class="k">def</span> <span class="nf">dissimilarity_metric</span><span class="p">(</span><span class="n">which</span><span class="p">,</span> <span class="n">a_slice</span><span class="p">,</span> <span class="n">b_slice</span><span class="p">,</span> <span class="n">a_exp_dissim</span><span class="p">,</span> <span class="n">b_exp_dissim</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>

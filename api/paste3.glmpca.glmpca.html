@@ -1,22 +1,22 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="python">
+<html class="writer-html5" lang="python" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>paste3.glmpca.glmpca &mdash; paste3 1.2.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
 
   
-      <script src="../_static/jquery.js"></script>
-      <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-      <script src="../_static/doctools.js"></script>
-      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=60341314"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -93,10 +93,10 @@
            <div itemprop="articleBody">
              
   <section id="paste3-glmpca-glmpca">
-<h1>paste3.glmpca.glmpca<a class="headerlink" href="#paste3-glmpca-glmpca" title="Permalink to this heading"></a></h1>
+<h1>paste3.glmpca.glmpca<a class="headerlink" href="#paste3-glmpca-glmpca" title="Link to this heading"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="paste3.glmpca.glmpca">
-<span class="sig-prename descclassname"><span class="pre">paste3.glmpca.</span></span><span class="sig-name descname"><span class="pre">glmpca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'poi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penalty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_theta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/paste3/glmpca.html#glmpca"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#paste3.glmpca.glmpca" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">paste3.glmpca.</span></span><span class="sig-name descname"><span class="pre">glmpca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'poi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penalty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_theta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/paste3/glmpca.html#glmpca"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#paste3.glmpca.glmpca" title="Link to this definition"></a></dt>
 <dd><p>GLM-PCA
 This function implements the GLM-PCA dimensionality reduction method for high-dimensional count data.
 The basic model is R = AX'+ZG'+VU', where E[Y]=M=linkinv(R). Regression coefficients are A and G, latent factors are U, and loadings are V. The objective function being optimized is the deviance between Y and M, plus an L2 (ridge) penalty on U and V. Note that glmpca uses a random initialization, so for fully reproducible results one should set the random seed.
@@ -117,7 +117,7 @@ The basic model is R = AX'+ZG'+VU', where E[Y]=M=linkinv(R). Regression coeffici
 :type - mult: binomial approximation to multinomial
 :param - bern:
 :type - bern: Bernoulli
-:type ctl: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]
+:type ctl: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>
 :param ctl:
 :type ctl: a dictionary of control parameters for optimization. Valid keys:
 :param - maxIter:
@@ -129,7 +129,7 @@ The basic model is R = AX'+ZG'+VU', where E[Y]=M=linkinv(R). Regression coeffici
 :type penalty: 
 :param penalty: Regression coefficients are not penalized.
 :type penalty: the L2 penalty for the latent factors (default = 1).
-:type init: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]
+:type init: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>
 :param init: loadings (V) matrices.
 :type init: a dictionary containing initial estimates for the factors (U) and
 :type nb_theta: 
@@ -143,8 +143,8 @@ If ctl[&quot;optimizeTheta&quot;] is True, this is used as initial value for opt
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<em>array_like</em><em> of </em><em>column</em><em> (</em><em>observations</em><em>) </em><em>covariates. Any column with all</em>) -- same values (eg. 1 for intercept) will be removed. This is because we force
 the intercept and want to avoid collinearity.</p></li>
-<li><p><strong>Z</strong> (<em>array_like</em><em> of </em><em>row</em><em> (</em><em>feature</em><em>) </em><em>covariates</em><em>, </em><em>usually not needed.</em>) -- </p></li>
-<li><p><strong>sz</strong> (<em>numeric vector</em><em> of </em><em>size factors to use in place</em><em> of </em><em>total counts.</em>) -- </p></li>
+<li><p><strong>Z</strong> (<em>array_like</em><em> of </em><em>row</em><em> (</em><em>feature</em><em>) </em><em>covariates</em><em>, </em><em>usually not needed.</em>)</p></li>
+<li><p><strong>sz</strong> (<em>numeric vector</em><em> of </em><em>size factors to use in place</em><em> of </em><em>total counts.</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -174,11 +174,11 @@ the intercept and want to avoid collinearity.</p></li>
 # &gt;&gt;&gt; scatter(factors[:,0],factors[:,1],c=clust)</p>
 <p class="rubric">References</p>
 <aside class="footnote-list brackets">
-<aside class="footnote brackets" id="id3" role="note">
+<aside class="footnote brackets" id="id3" role="doc-footnote">
 <span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
 <p>Townes FW, Hicks SC, Aryee MJ, and Irizarry RA. &quot;Feature selection and dimension reduction for single-cell RNA-seq based on a multinomial model&quot;, biorXiv, 2019. <a class="reference external" href="https://www.biorxiv.org/content/10.1101/574574v1">https://www.biorxiv.org/content/10.1101/574574v1</a></p>
 </aside>
-<aside class="footnote brackets" id="id4" role="note">
+<aside class="footnote brackets" id="id4" role="doc-footnote">
 <span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
 <p>Townes FW. &quot;Generalized principal component analysis&quot;, arXiv, 2019. <a class="reference external" href="https://arxiv.org/abs/1907.02647">https://arxiv.org/abs/1907.02647</a></p>
 </aside>

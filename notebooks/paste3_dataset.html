@@ -1,23 +1,23 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="python">
+<html class="writer-html5" lang="python" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Slice and AlignmentDataset objects &mdash; paste3 1.2.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
 
   
-      <script src="../_static/jquery.js"></script>
-      <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-      <script src="../_static/doctools.js"></script>
-      <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=60341314"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
       <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
       <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -76,7 +76,7 @@
            <div itemprop="articleBody">
              
   <section id="Slice-and-AlignmentDataset-objects">
-<h1><code class="docutils literal notranslate"><span class="pre">Slice</span></code> and <code class="docutils literal notranslate"><span class="pre">AlignmentDataset</span></code> objects<a class="headerlink" href="#Slice-and-AlignmentDataset-objects" title="Permalink to this heading"></a></h1>
+<h1><code class="docutils literal notranslate"><span class="pre">Slice</span></code> and <code class="docutils literal notranslate"><span class="pre">AlignmentDataset</span></code> objects<a class="headerlink" href="#Slice-and-AlignmentDataset-objects" title="Link to this heading"></a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">paste3.dataset</span></code> module provides an easy-to-use API to access input datasets to the <code class="docutils literal notranslate"><span class="pre">paste3</span></code> alignment algorithms.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">Slice</span></code> class is a thin layer on top of an <code class="docutils literal notranslate"><span class="pre">AnnData</span></code> class, and an <code class="docutils literal notranslate"><span class="pre">AlignmentDataset</span></code> class is a collection of <code class="docutils literal notranslate"><span class="pre">Slice</span></code> objects.</p>
 <div class="nbinput nblast docutils container">
@@ -141,7 +141,7 @@ Downloading data from &#39;https://dl.dropboxusercontent.com/scl/fi/u7aaq9az8sia
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;paste3.dataset.Slice at 0x7f979deb1d30&gt;
+&lt;paste3.dataset.Slice at 0x7f4b70ba21b0&gt;
 </pre></div></div>
 </div>
 <p>An entire dataset can be rendered by typing the dataset variable name in a cell, which renders each slice in order.</p>
@@ -180,11 +180,11 @@ Downloading data from &#39;https://dl.dropboxusercontent.com/scl/fi/u7aaq9az8sia
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;paste3.dataset.AlignmentDataset at 0x7f979d9a0ce0&gt;
+&lt;paste3.dataset.AlignmentDataset at 0x7f4b6f2c2e40&gt;
 </pre></div></div>
 </div>
 <section id="Center-Aligning-a-Dataset">
-<h2>Center Aligning a Dataset<a class="headerlink" href="#Center-Aligning-a-Dataset" title="Permalink to this heading"></a></h2>
+<h2>Center Aligning a Dataset<a class="headerlink" href="#Center-Aligning-a-Dataset" title="Link to this heading"></a></h2>
 <p>A dataset object can be center aligned in 2 steps:</p>
 <ol class="arabic simple">
 <li><p>Find the &quot;center slice&quot; (or the &quot;consensus slice&quot;) and similarity matrix between spots using the <code class="docutils literal notranslate"><span class="pre">&lt;dataset&gt;.find_center_slice</span></code> method. <strong>This is a time consuming step and benefits from being run on a GPU-enabled environment.</strong></p></li>
@@ -206,52 +206,44 @@ Downloading data from &#39;https://dl.dropboxusercontent.com/scl/fi/u7aaq9az8sia
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(INFO) (dataset.py) (02-Dec-24 21:32:38) Finding center slice
-(INFO) (paste.py) (02-Dec-24 21:32:38) GPU is not available, resorting to torch CPU.
-(INFO) (paste.py) (02-Dec-24 21:32:38) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (02-Dec-24 21:33:04) Iteration: 0
-(INFO) (paste.py) (02-Dec-24 21:33:04) Solving Pairwise Slice Alignment Problem.
-(INFO) (paste.py) (02-Dec-24 21:33:04) Slice 0
-(INFO) (paste.py) (02-Dec-24 21:33:04) Slice 1
-(INFO) (paste.py) (02-Dec-24 21:33:05) Slice 2
-(INFO) (paste.py) (02-Dec-24 21:33:06) center_ot done
-(INFO) (paste.py) (02-Dec-24 21:33:06) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (02-Dec-24 21:33:16) Objective -142.82559882451451 | Difference: 142.82559882451451
-(INFO) (paste.py) (02-Dec-24 21:33:16) Iteration: 1
-(INFO) (paste.py) (02-Dec-24 21:33:16) Solving Pairwise Slice Alignment Problem.
-(INFO) (paste.py) (02-Dec-24 21:33:16) Slice 0
-(INFO) (paste.py) (02-Dec-24 21:33:17) Slice 1
-(INFO) (paste.py) (02-Dec-24 21:33:18) Slice 2
-(INFO) (paste.py) (02-Dec-24 21:33:18) center_ot done
-(INFO) (paste.py) (02-Dec-24 21:33:18) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (02-Dec-24 21:33:29) Objective 0.8910310088675847 | Difference: 143.7166298333821
-(INFO) (paste.py) (02-Dec-24 21:33:29) Iteration: 2
-(INFO) (paste.py) (02-Dec-24 21:33:29) Solving Pairwise Slice Alignment Problem.
-(INFO) (paste.py) (02-Dec-24 21:33:29) Slice 0
-(INFO) (paste.py) (02-Dec-24 21:33:29) Slice 1
-(INFO) (paste.py) (02-Dec-24 21:33:30) Slice 2
-(INFO) (paste.py) (02-Dec-24 21:33:30) center_ot done
-(INFO) (paste.py) (02-Dec-24 21:33:30) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (02-Dec-24 21:33:40) Objective 0.899905671039561 | Difference: 0.0088746621719763
-(INFO) (paste.py) (02-Dec-24 21:33:40) Iteration: 3
-(INFO) (paste.py) (02-Dec-24 21:33:40) Solving Pairwise Slice Alignment Problem.
-(INFO) (paste.py) (02-Dec-24 21:33:40) Slice 0
-(INFO) (paste.py) (02-Dec-24 21:33:40) Slice 1
-(INFO) (paste.py) (02-Dec-24 21:33:41) Slice 2
-(INFO) (paste.py) (02-Dec-24 21:33:41) center_ot done
-(INFO) (paste.py) (02-Dec-24 21:33:41) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (02-Dec-24 21:33:51) Objective 0.9053447509981924 | Difference: 0.005439079958631465
-(INFO) (paste.py) (02-Dec-24 21:33:51) Iteration: 4
-(INFO) (paste.py) (02-Dec-24 21:33:51) Solving Pairwise Slice Alignment Problem.
-(INFO) (paste.py) (02-Dec-24 21:33:51) Slice 0
-(INFO) (paste.py) (02-Dec-24 21:33:51) Slice 1
-(INFO) (paste.py) (02-Dec-24 21:33:52) Slice 2
-(INFO) (paste.py) (02-Dec-24 21:33:52) center_ot done
-(INFO) (paste.py) (02-Dec-24 21:33:52) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (02-Dec-24 21:34:03) Objective 0.9055918768997402 | Difference: 0.00024712590154774006
-(INFO) (paste.py) (02-Dec-24 21:34:03) Center slice computed.
-(INFO) (dataset.py) (02-Dec-24 21:34:03) Center aligning
-(INFO) (dataset.py) (02-Dec-24 21:34:03) Stacking slices around center slice
+(INFO) (dataset.py) (02-Dec-24 21:33:34) Finding center slice
+(INFO) (paste.py) (02-Dec-24 21:33:34) GPU is not available, resorting to torch CPU.
+(INFO) (paste.py) (02-Dec-24 21:33:34) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (02-Dec-24 21:34:02) Iteration: 0
+(INFO) (paste.py) (02-Dec-24 21:34:02) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (02-Dec-24 21:34:02) Slice 0
+(INFO) (paste.py) (02-Dec-24 21:34:03) Slice 1
+(INFO) (paste.py) (02-Dec-24 21:34:04) Slice 2
+(INFO) (paste.py) (02-Dec-24 21:34:05) center_ot done
+(INFO) (paste.py) (02-Dec-24 21:34:05) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (02-Dec-24 21:34:15) Objective -142.82677066802012 | Difference: 142.82677066802012
+(INFO) (paste.py) (02-Dec-24 21:34:15) Iteration: 1
+(INFO) (paste.py) (02-Dec-24 21:34:15) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (02-Dec-24 21:34:15) Slice 0
+(INFO) (paste.py) (02-Dec-24 21:34:16) Slice 1
+(INFO) (paste.py) (02-Dec-24 21:34:16) Slice 2
+(INFO) (paste.py) (02-Dec-24 21:34:17) center_ot done
+(INFO) (paste.py) (02-Dec-24 21:34:17) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (02-Dec-24 21:34:28) Objective 0.8930011305678802 | Difference: 143.719771798588
+(INFO) (paste.py) (02-Dec-24 21:34:28) Iteration: 2
+(INFO) (paste.py) (02-Dec-24 21:34:28) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (02-Dec-24 21:34:28) Slice 0
+(INFO) (paste.py) (02-Dec-24 21:34:29) Slice 1
+(INFO) (paste.py) (02-Dec-24 21:34:29) Slice 2
+(INFO) (paste.py) (02-Dec-24 21:34:30) center_ot done
+(INFO) (paste.py) (02-Dec-24 21:34:30) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (02-Dec-24 21:34:41) Objective 0.8990912087070938 | Difference: 0.006090078139213584
+(INFO) (paste.py) (02-Dec-24 21:34:41) Iteration: 3
+(INFO) (paste.py) (02-Dec-24 21:34:41) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (02-Dec-24 21:34:41) Slice 0
+(INFO) (paste.py) (02-Dec-24 21:34:41) Slice 1
+(INFO) (paste.py) (02-Dec-24 21:34:42) Slice 2
+(INFO) (paste.py) (02-Dec-24 21:34:42) center_ot done
+(INFO) (paste.py) (02-Dec-24 21:34:42) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (02-Dec-24 21:34:53) Objective 0.8993735641216518 | Difference: 0.00028235541455801094
+(INFO) (paste.py) (02-Dec-24 21:34:53) Center slice computed.
+(INFO) (dataset.py) (02-Dec-24 21:34:53) Center aligning
+(INFO) (dataset.py) (02-Dec-24 21:34:53) Stacking slices around center slice
 </pre></div></div>
 </div>
 <p>We can render the center slice and the aligned dataset as usual.</p>
@@ -276,7 +268,7 @@ Downloading data from &#39;https://dl.dropboxusercontent.com/scl/fi/u7aaq9az8sia
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;paste3.dataset.Slice at 0x7f978d975370&gt;
+&lt;paste3.dataset.Slice at 0x7f4b64805ca0&gt;
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -314,12 +306,12 @@ Downloading data from &#39;https://dl.dropboxusercontent.com/scl/fi/u7aaq9az8sia
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;paste3.dataset.AlignmentDataset at 0x7f978d9753d0&gt;
+&lt;paste3.dataset.AlignmentDataset at 0x7f4b6ec93440&gt;
 </pre></div></div>
 </div>
 </section>
 <section id="Pairwise-aligning-a-Dataset">
-<h2>Pairwise aligning a Dataset<a class="headerlink" href="#Pairwise-aligning-a-Dataset" title="Permalink to this heading"></a></h2>
+<h2>Pairwise aligning a Dataset<a class="headerlink" href="#Pairwise-aligning-a-Dataset" title="Link to this heading"></a></h2>
 <p>A dataset can be pairwise aligned using the <code class="docutils literal notranslate"><span class="pre">&lt;dataset&gt;.pairwise_align</span></code> method. An <code class="docutils literal notranslate"><span class="pre">overlap_fraction</span></code> value (between 0 and 1) can be specified.</p>
 <p>A value of <code class="docutils literal notranslate"><span class="pre">None</span></code> results in pairwise alignment that is identical to the approach mentioned in the <a class="reference external" href="https://www.nature.com/articles/s41592-022-01459-6">Paste</a> paper. Any other value between 0 and 1 results in pairwise alignment explained in the <a class="reference external" href="https://pubmed.ncbi.nlm.nih.gov/37553263/">Paste2</a> paper.</p>
 <div class="nbinput docutils container">
@@ -335,10 +327,10 @@ Downloading data from &#39;https://dl.dropboxusercontent.com/scl/fi/u7aaq9az8sia
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(INFO) (dataset.py) (02-Dec-24 21:34:04) Finding Pi for slices 0 and 1
-(INFO) (paste.py) (02-Dec-24 21:34:04) GPU is not available, resorting to torch CPU.
-(INFO) (dataset.py) (02-Dec-24 21:34:06) Finding Pi for slices 1 and 2
-(INFO) (paste.py) (02-Dec-24 21:34:06) GPU is not available, resorting to torch CPU.
+(INFO) (dataset.py) (02-Dec-24 21:34:54) Finding Pi for slices 0 and 1
+(INFO) (paste.py) (02-Dec-24 21:34:54) GPU is not available, resorting to torch CPU.
+(INFO) (dataset.py) (02-Dec-24 21:34:56) Finding Pi for slices 1 and 2
+(INFO) (paste.py) (02-Dec-24 21:34:56) GPU is not available, resorting to torch CPU.
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -376,7 +368,7 @@ Downloading data from &#39;https://dl.dropboxusercontent.com/scl/fi/u7aaq9az8sia
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;paste3.dataset.AlignmentDataset at 0x7f978d135820&gt;
+&lt;paste3.dataset.AlignmentDataset at 0x7f4b5e341400&gt;
 </pre></div></div>
 </div>
 </section>

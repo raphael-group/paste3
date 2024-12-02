@@ -29,6 +29,9 @@ jobs:
         run: |
          pip install .[docs]
 
+      - name: List dependencies
+        run: pip freeze
+
       - name: Setup Envvars
         run: |
             if [[ $GITHUB_REF = "refs/tags/"* ]] ; then echo "PASTE3_VERSION=${GITHUB_REF/refs\/tags\//}" ; else echo "PASTE3_VERSION=" ; fi >> $GITHUB_ENV

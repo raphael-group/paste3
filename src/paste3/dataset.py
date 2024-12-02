@@ -66,21 +66,16 @@ class Slice:
         return self.name
 
     def _repr_mimebundle_(self, include=None, exclude=None):  # noqa: ARG002
-        try:
-            import squidpy
-        except ImportError:
-            return {}
-        else:
-            squidpy.pl.spatial_scatter(
-                self.adata,
-                frameon=False,
-                shape=None,
-                color="original_clusters",
-                title=str(self),
-            )
+        sc.pl.spatial(
+            self.adata,
+            frameon=False,
+            color="original_clusters",
+            title=str(self),
+            spot_size=1,
+        )
 
-            # squidpy takes care of the rendering so we return an empty dict
-            return {}
+        # scanpy takes care of the rendering so we return an empty dict
+        return {}
 
     @cached_property
     def adata(self):

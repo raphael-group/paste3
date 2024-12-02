@@ -122,7 +122,7 @@
    "id": "d1711fae",
    "metadata": {},
    "source": [
-    "We can visualize the slices using [squidpy](https://squidpy.readthedocs.io/en/stable/index.html). In this case, the .obs[\"layer_guess_reordered\"] field stores the layer annotation of each slice, so we use this field to color each spot."
+    "We can visualize the slices using [scanpy](https://scanpy.readthedocs.io/en/stable/). In this case, the .obs[\"layer_guess_reordered\"] field stores the layer annotation of each slice, so we use this field to color each spot."
    ]
   },
   {
@@ -132,10 +132,10 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "sc.pl.spatial(sliceA, color=\"layer_guess_reordered\", spot_size=100, frameon=False)\n",
-    "sc.pl.spatial(sliceB, color=\"layer_guess_reordered\", spot_size=100, frameon=False)\n",
-    "sc.pl.spatial(sliceC, color=\"layer_guess_reordered\", spot_size=100, frameon=False)\n",
-    "sc.pl.spatial(sliceD, color=\"layer_guess_reordered\", spot_size=100, frameon=False)"
+    "sc.pl.spatial(sliceA, color=\"layer_guess_reordered\", spot_size=125, frameon=False)\n",
+    "sc.pl.spatial(sliceB, color=\"layer_guess_reordered\", spot_size=125, frameon=False)\n",
+    "sc.pl.spatial(sliceC, color=\"layer_guess_reordered\", spot_size=125, frameon=False)\n",
+    "sc.pl.spatial(sliceD, color=\"layer_guess_reordered\", spot_size=125, frameon=False)"
    ]
   },
   {

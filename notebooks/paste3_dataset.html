@@ -119,7 +119,7 @@ Downloading data from &#39;https://dl.dropboxusercontent.com/scl/fi/u7aaq9az8sia
 </pre></div>
 </div>
 </div>
-<p>Any individual slice can be rendered in a jupyter notebook by simply typing the slice variable name in a cell, which renders the slice using the <code class="docutils literal notranslate"><span class="pre">squidpy</span></code> library. (Note: This is roughly equivalent to doing <code class="docutils literal notranslate"><span class="pre">squidpy.pl.spatial_scatter(&lt;slice&gt;.adata,</span> <span class="pre">..)</span></code>)</p>
+<p>Any individual slice can be rendered in a jupyter notebook by simply typing the slice variable name in a cell, which renders the slice using the <code class="docutils literal notranslate"><span class="pre">scanpy</span></code> library. (Note: This is roughly equivalent to doing <code class="docutils literal notranslate"><span class="pre">scanpy.pl.spatial(&lt;slice&gt;.adata,</span> <span class="pre">..)</span></code>)</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
@@ -128,13 +128,20 @@ Downloading data from &#39;https://dl.dropboxusercontent.com/scl/fi/u7aaq9az8sia
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_8_0.png" src="../_images/notebooks_paste3_dataset_8_0.png" />
+</div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;paste3.dataset.Slice at 0x7f57a7964980&gt;
+&lt;paste3.dataset.Slice at 0x7fc037fe2de0&gt;
 </pre></div></div>
 </div>
 <p>An entire dataset can be rendered by typing the dataset variable name in a cell, which renders each slice in order.</p>
@@ -146,13 +153,34 @@ Downloading data from &#39;https://dl.dropboxusercontent.com/scl/fi/u7aaq9az8sia
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_10_0.png" src="../_images/notebooks_paste3_dataset_10_0.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_10_1.png" src="../_images/notebooks_paste3_dataset_10_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_10_2.png" src="../_images/notebooks_paste3_dataset_10_2.png" />
+</div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;paste3.dataset.AlignmentDataset at 0x7f57a9b5a9f0&gt;
+&lt;paste3.dataset.AlignmentDataset at 0x7fc036e88140&gt;
 </pre></div></div>
 </div>
 <section id="Center-Aligning-a-Dataset">
@@ -178,44 +206,92 @@ Downloading data from &#39;https://dl.dropboxusercontent.com/scl/fi/u7aaq9az8sia
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(INFO) (dataset.py) (02-Dec-24 02:02:01) Finding center slice
-(INFO) (paste.py) (02-Dec-24 02:02:01) GPU is not available, resorting to torch CPU.
-(INFO) (paste.py) (02-Dec-24 02:02:01) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (02-Dec-24 02:02:29) Iteration: 0
-(INFO) (paste.py) (02-Dec-24 02:02:29) Solving Pairwise Slice Alignment Problem.
-(INFO) (paste.py) (02-Dec-24 02:02:29) Slice 0
-(INFO) (paste.py) (02-Dec-24 02:02:30) Slice 1
-(INFO) (paste.py) (02-Dec-24 02:02:30) Slice 2
-(INFO) (paste.py) (02-Dec-24 02:02:31) center_ot done
-(INFO) (paste.py) (02-Dec-24 02:02:31) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (02-Dec-24 02:02:41) Objective -142.82126763927155 | Difference: 142.82126763927155
-(INFO) (paste.py) (02-Dec-24 02:02:41) Iteration: 1
-(INFO) (paste.py) (02-Dec-24 02:02:41) Solving Pairwise Slice Alignment Problem.
-(INFO) (paste.py) (02-Dec-24 02:02:41) Slice 0
-(INFO) (paste.py) (02-Dec-24 02:02:42) Slice 1
-(INFO) (paste.py) (02-Dec-24 02:02:42) Slice 2
-(INFO) (paste.py) (02-Dec-24 02:02:43) center_ot done
-(INFO) (paste.py) (02-Dec-24 02:02:43) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (02-Dec-24 02:02:54) Objective 0.8957108721697589 | Difference: 143.7169785114413
-(INFO) (paste.py) (02-Dec-24 02:02:54) Iteration: 2
-(INFO) (paste.py) (02-Dec-24 02:02:54) Solving Pairwise Slice Alignment Problem.
-(INFO) (paste.py) (02-Dec-24 02:02:54) Slice 0
-(INFO) (paste.py) (02-Dec-24 02:02:54) Slice 1
-(INFO) (paste.py) (02-Dec-24 02:02:55) Slice 2
-(INFO) (paste.py) (02-Dec-24 02:02:55) center_ot done
-(INFO) (paste.py) (02-Dec-24 02:02:55) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (02-Dec-24 02:03:05) Objective 0.8997590007205334 | Difference: 0.004048128550774521
-(INFO) (paste.py) (02-Dec-24 02:03:05) Iteration: 3
-(INFO) (paste.py) (02-Dec-24 02:03:05) Solving Pairwise Slice Alignment Problem.
-(INFO) (paste.py) (02-Dec-24 02:03:05) Slice 0
-(INFO) (paste.py) (02-Dec-24 02:03:06) Slice 1
-(INFO) (paste.py) (02-Dec-24 02:03:06) Slice 2
-(INFO) (paste.py) (02-Dec-24 02:03:06) center_ot done
-(INFO) (paste.py) (02-Dec-24 02:03:06) Solving Center Mapping NMF Problem.
-(INFO) (paste.py) (02-Dec-24 02:03:17) Objective 0.8993643361342765 | Difference: 0.0003946645862569209
-(INFO) (paste.py) (02-Dec-24 02:03:18) Center slice computed.
-(INFO) (dataset.py) (02-Dec-24 02:03:18) Center aligning
-(INFO) (dataset.py) (02-Dec-24 02:03:18) Stacking slices around center slice
+(INFO) (dataset.py) (02-Dec-24 16:41:38) Finding center slice
+(INFO) (paste.py) (02-Dec-24 16:41:38) GPU is not available, resorting to torch CPU.
+(INFO) (paste.py) (02-Dec-24 16:41:38) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (02-Dec-24 16:42:07) Iteration: 0
+(INFO) (paste.py) (02-Dec-24 16:42:07) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (02-Dec-24 16:42:07) Slice 0
+(INFO) (paste.py) (02-Dec-24 16:42:08) Slice 1
+(INFO) (paste.py) (02-Dec-24 16:42:08) Slice 2
+(INFO) (paste.py) (02-Dec-24 16:42:09) center_ot done
+(INFO) (paste.py) (02-Dec-24 16:42:09) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (02-Dec-24 16:42:20) Objective -142.8287672095732 | Difference: 142.8287672095732
+(INFO) (paste.py) (02-Dec-24 16:42:20) Iteration: 1
+(INFO) (paste.py) (02-Dec-24 16:42:20) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (02-Dec-24 16:42:20) Slice 0
+(INFO) (paste.py) (02-Dec-24 16:42:21) Slice 1
+(INFO) (paste.py) (02-Dec-24 16:42:21) Slice 2
+(INFO) (paste.py) (02-Dec-24 16:42:22) center_ot done
+(INFO) (paste.py) (02-Dec-24 16:42:22) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (02-Dec-24 16:42:33) Objective 0.8955001010788792 | Difference: 143.72426731065207
+(INFO) (paste.py) (02-Dec-24 16:42:33) Iteration: 2
+(INFO) (paste.py) (02-Dec-24 16:42:33) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (02-Dec-24 16:42:33) Slice 0
+(INFO) (paste.py) (02-Dec-24 16:42:34) Slice 1
+(INFO) (paste.py) (02-Dec-24 16:42:34) Slice 2
+(INFO) (paste.py) (02-Dec-24 16:42:35) center_ot done
+(INFO) (paste.py) (02-Dec-24 16:42:35) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (02-Dec-24 16:42:46) Objective 0.9024531169389495 | Difference: 0.006953015860070244
+(INFO) (paste.py) (02-Dec-24 16:42:46) Iteration: 3
+(INFO) (paste.py) (02-Dec-24 16:42:46) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (02-Dec-24 16:42:46) Slice 0
+(INFO) (paste.py) (02-Dec-24 16:42:47) Slice 1
+(INFO) (paste.py) (02-Dec-24 16:42:48) Slice 2
+(INFO) (paste.py) (02-Dec-24 16:42:48) center_ot done
+(INFO) (paste.py) (02-Dec-24 16:42:48) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (02-Dec-24 16:43:00) Objective 0.905137929278293 | Difference: 0.0026848123393434786
+(INFO) (paste.py) (02-Dec-24 16:43:00) Iteration: 4
+(INFO) (paste.py) (02-Dec-24 16:43:00) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (02-Dec-24 16:43:00) Slice 0
+(INFO) (paste.py) (02-Dec-24 16:43:01) Slice 1
+(INFO) (paste.py) (02-Dec-24 16:43:01) Slice 2
+(INFO) (paste.py) (02-Dec-24 16:43:02) center_ot done
+(INFO) (paste.py) (02-Dec-24 16:43:02) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (02-Dec-24 16:43:12) Objective 0.9062123324417504 | Difference: 0.0010744031634574158
+(INFO) (paste.py) (02-Dec-24 16:43:12) Iteration: 5
+(INFO) (paste.py) (02-Dec-24 16:43:12) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (02-Dec-24 16:43:12) Slice 0
+(INFO) (paste.py) (02-Dec-24 16:43:12) Slice 1
+(INFO) (paste.py) (02-Dec-24 16:43:13) Slice 2
+(INFO) (paste.py) (02-Dec-24 16:43:13) center_ot done
+(INFO) (paste.py) (02-Dec-24 16:43:13) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (02-Dec-24 16:43:24) Objective 0.9011799762275122 | Difference: 0.005032356214238143
+(INFO) (paste.py) (02-Dec-24 16:43:24) Iteration: 6
+(INFO) (paste.py) (02-Dec-24 16:43:24) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (02-Dec-24 16:43:24) Slice 0
+(INFO) (paste.py) (02-Dec-24 16:43:25) Slice 1
+(INFO) (paste.py) (02-Dec-24 16:43:25) Slice 2
+(INFO) (paste.py) (02-Dec-24 16:43:26) center_ot done
+(INFO) (paste.py) (02-Dec-24 16:43:26) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (02-Dec-24 16:43:39) Objective 0.9053711984663473 | Difference: 0.004191222238835057
+(INFO) (paste.py) (02-Dec-24 16:43:39) Iteration: 7
+(INFO) (paste.py) (02-Dec-24 16:43:39) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (02-Dec-24 16:43:39) Slice 0
+(INFO) (paste.py) (02-Dec-24 16:43:39) Slice 1
+(INFO) (paste.py) (02-Dec-24 16:43:39) Slice 2
+(INFO) (paste.py) (02-Dec-24 16:43:40) center_ot done
+(INFO) (paste.py) (02-Dec-24 16:43:40) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (02-Dec-24 16:43:51) Objective 0.8996388811370117 | Difference: 0.005732317329335546
+(INFO) (paste.py) (02-Dec-24 16:43:51) Iteration: 8
+(INFO) (paste.py) (02-Dec-24 16:43:51) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (02-Dec-24 16:43:51) Slice 0
+(INFO) (paste.py) (02-Dec-24 16:43:52) Slice 1
+(INFO) (paste.py) (02-Dec-24 16:43:52) Slice 2
+(INFO) (paste.py) (02-Dec-24 16:43:53) center_ot done
+(INFO) (paste.py) (02-Dec-24 16:43:53) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (02-Dec-24 16:44:05) Objective 0.904934123367694 | Difference: 0.005295242230682229
+(INFO) (paste.py) (02-Dec-24 16:44:05) Iteration: 9
+(INFO) (paste.py) (02-Dec-24 16:44:05) Solving Pairwise Slice Alignment Problem.
+(INFO) (paste.py) (02-Dec-24 16:44:05) Slice 0
+(INFO) (paste.py) (02-Dec-24 16:44:06) Slice 1
+(INFO) (paste.py) (02-Dec-24 16:44:06) Slice 2
+(INFO) (paste.py) (02-Dec-24 16:44:06) center_ot done
+(INFO) (paste.py) (02-Dec-24 16:44:06) Solving Center Mapping NMF Problem.
+(INFO) (paste.py) (02-Dec-24 16:44:18) Objective 0.898750796402122 | Difference: 0.006183326965572
+(INFO) (paste.py) (02-Dec-24 16:44:19) Center slice computed.
+(INFO) (dataset.py) (02-Dec-24 16:44:19) Center aligning
+(INFO) (dataset.py) (02-Dec-24 16:44:19) Stacking slices around center slice
 </pre></div></div>
 </div>
 <p>We can render the center slice and the aligned dataset as usual.</p>
@@ -227,13 +303,20 @@ Downloading data from &#39;https://dl.dropboxusercontent.com/scl/fi/u7aaq9az8sia
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_14_0.png" src="../_images/notebooks_paste3_dataset_14_0.png" />
+</div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;paste3.dataset.Slice at 0x7f57a085da90&gt;
+&lt;paste3.dataset.Slice at 0x7fc0256f52b0&gt;
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -244,13 +327,34 @@ Downloading data from &#39;https://dl.dropboxusercontent.com/scl/fi/u7aaq9az8sia
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_15_0.png" src="../_images/notebooks_paste3_dataset_15_0.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_15_1.png" src="../_images/notebooks_paste3_dataset_15_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_15_2.png" src="../_images/notebooks_paste3_dataset_15_2.png" />
+</div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;paste3.dataset.AlignmentDataset at 0x7f57a0b9a6c0&gt;
+&lt;paste3.dataset.AlignmentDataset at 0x7fc02ca0adb0&gt;
 </pre></div></div>
 </div>
 </section>
@@ -271,10 +375,10 @@ Downloading data from &#39;https://dl.dropboxusercontent.com/scl/fi/u7aaq9az8sia
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(INFO) (dataset.py) (02-Dec-24 02:03:18) Finding Pi for slices 0 and 1
-(INFO) (paste.py) (02-Dec-24 02:03:18) GPU is not available, resorting to torch CPU.
-(INFO) (dataset.py) (02-Dec-24 02:03:20) Finding Pi for slices 1 and 2
-(INFO) (paste.py) (02-Dec-24 02:03:20) GPU is not available, resorting to torch CPU.
+(INFO) (dataset.py) (02-Dec-24 16:44:20) Finding Pi for slices 0 and 1
+(INFO) (paste.py) (02-Dec-24 16:44:20) GPU is not available, resorting to torch CPU.
+(INFO) (dataset.py) (02-Dec-24 16:44:22) Finding Pi for slices 1 and 2
+(INFO) (paste.py) (02-Dec-24 16:44:22) GPU is not available, resorting to torch CPU.
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -285,13 +389,34 @@ Downloading data from &#39;https://dl.dropboxusercontent.com/scl/fi/u7aaq9az8sia
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_18_0.png" src="../_images/notebooks_paste3_dataset_18_0.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_18_1.png" src="../_images/notebooks_paste3_dataset_18_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_paste3_dataset_18_2.png" src="../_images/notebooks_paste3_dataset_18_2.png" />
+</div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;paste3.dataset.AlignmentDataset at 0x7f57a0bc4ad0&gt;
+&lt;paste3.dataset.AlignmentDataset at 0x7fc02353ae70&gt;
 </pre></div></div>
 </div>
 </section>

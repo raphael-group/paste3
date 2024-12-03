@@ -1,10 +1,8 @@
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 import pytest
 import torch
-from pandas.testing import assert_frame_equal
 
 from paste3.helper import (
     dissimilarity_metric,
@@ -18,19 +16,14 @@ from paste3.helper import (
     to_dense_array,
 )
 
-test_dir = Path(__file__).parent
-input_dir = test_dir / "data/input"
-output_dir = test_dir / "data/output"
+test_dir = Path(__file__).parent / "data"
 
 
 def test_intersect(slices):
     common_genes = slices[1].var.index.intersection(slices[2].var.index)
-    assert np.all(
-        np.equal(
-            common_genes,
-            list(np.genfromtxt(output_dir / "common_genes_s1_s2.csv", dtype=str)),
-        )
-    )
+    data = np.load(test_dir / "common_genes_s1_s2.npz", allow_pickle=True)
+
+    assert np.all(np.equal(data["common_genes"], common_genes))
 
 
 def test_kl_divergence_backend():
@@ -45,12 +38,9 @@ def test_kl_divergence_backend():
             [0.05534049, 0.00193493, 0.02355472],
         ]
     )
-    assert np.all(
-        np.isclose(
-            kl_divergence_matrix,
-            expected_kl_divergence_matrix,
-            rtol=1e-04,
-        )
+    assert np.allclose(
+        kl_divergence_matrix,
+        expected_kl_divergence_matrix,
     )
 
 
@@ -75,9 +65,9 @@ def test_kl_divergence():
 def test_filter_for_common_genes(slices):
     slices, _ = get_common_genes(slices)
 
-    common_genes = list(np.genfromtxt(output_dir / "common_genes.csv", dtype=str))
+    data = np.load(test_dir / "common_genes.npz", allow_pickle=True)
     for slice in slices:
-        assert np.all(np.equal(common_genes, slice.var.index))
+        assert np.all(np.equal(data["common_genes"], slice.var.index))
 
 
 def test_generalized_kl_divergence():
@@ -99,24 +89,16 @@ def test_generalized_kl_divergence():
 
 
 def test_glmpca_distance():
-    sliceA_X = torch.Tensor(
-        np.genfromtxt(input_dir / "sliceA_X.csv", delimiter=",", skip_header=1)
-    ).double()[10:, :1000]
-    sliceB_X = torch.Tensor(
-        np.genfromtxt(input_dir / "sliceB_X.csv", delimiter=",", skip_header=1)
-    ).double()[10:, :1000]
+    data = np.load(test_dir / "glmpca_distance.npz")
 
     glmpca_distance_matrix = glmpca_distance(
-        sliceA_X, sliceB_X, latent_dim=10, filter=True, maxIter=10
+        torch.Tensor(data["a_exp_dissim"]).double(),
+        torch.Tensor(data["b_exp_dissim"]).double(),
+        latent_dim=10,
+        filter=True,
+        maxIter=10,
     )
-
-    assert_frame_equal(
-        pd.DataFrame(glmpca_distance_matrix, columns=[str(i) for i in range(254)]),
-        pd.read_csv(output_dir / "glmpca_distance_matrix.csv"),
-        check_names=False,
-        check_dtype=False,
-        rtol=1e-04,
-    )
+    assert np.allclose(glmpca_distance_matrix, data["glmpca_distance_matrix"])
 
 
 def test_pca_distance(slices2):
@@ -124,80 +106,57 @@ def test_pca_distance(slices2):
     sliceA = slices2[1][:, common_genes]
     sliceB = slices2[2][:, common_genes]
 
-    _ = pca_distance(sliceA, sliceB, 2000, 20)
-    # TODO: need to add file for this
-    # TODO: its too large need to introduce compression
-    # assert_frame_equal(
-    #     pd.DataFrame(pca_distance_matrix, columns=[str(i) for i in range(2873)]),
-    #     pd.read_csv(output_dir / "pca_distance_matrix.csv"),
-    #     check_names=False,
-    #     check_dtype=False,
-    #     rtol=1e-04,
-    # )
+    pca = pca_distance(sliceA, sliceB, 2000, 20)
+    # Saving test data for the entire matrix takes too much space,
+    # so we only save a sample of 100 randomly-selected rows to compare
+    random_indices = np.random.choice(pca.shape[0], 100, replace=False)
+    pca = pca[random_indices, :]
+
+    assert np.allclose(
+        np.load(test_dir / "pca_distance.npz")["pca"],
+        pca,
+        rtol=1e-4,
+        atol=1e-4,
+    )
 
 
-def test_high_umi_gene_distance(slices):
-    common_genes = slices[1].var.index.intersection(slices[2].var.index)
-    sliceA = slices[1][:, common_genes]
-    sliceB = slices[2][:, common_genes]
+def test_high_umi_gene_distance():
+    data = np.load(test_dir / "high_umi_gene_distance.npz")
 
-    sliceA_X, sliceB_X = to_dense_array(sliceA.X), to_dense_array(sliceB.X)
+    high_umi_gene_distance_matrix = high_umi_gene_distance(
+        torch.Tensor(data["a_exp_dissim"]).double(),
+        torch.Tensor(data["b_exp_dissim"]).double(),
+        n=2000,
+    )
 
-    high_umi_gene_distance_matrix = high_umi_gene_distance(sliceA_X, sliceB_X, n=2000)
-    assert_frame_equal(
-        pd.DataFrame(
-            high_umi_gene_distance_matrix, columns=[str(i) for i in range(264)]
-        ),
-        pd.read_csv(output_dir / "high_umi_gene_distance_matrix.csv"),
-        check_names=False,
-        check_dtype=False,
-        rtol=1e-03,
+    assert np.allclose(
+        high_umi_gene_distance_matrix, data["high_umi_gene_distance_matrix"]
     )
 
 
 @pytest.mark.parametrize(
     ("_use_ot", "filename"),
-    [(True, "spots_mapping_true.csv"), (False, "spots_mapping_false.csv")],
+    [(True, "spots_mapping_true"), (False, "spots_mapping_false")],
 )
 def test_match_spots_using_spatial_heuristic(slices, _use_ot, filename):  # noqa: PT019
     slices, _ = get_common_genes(slices)
 
+    data = np.load(test_dir / "match_spots_using_spatial_heuristic.npz")
+
     spots_mapping = match_spots_using_spatial_heuristic(
-        slices[0].X, slices[1].X, use_ot=bool(_use_ot)
+        data["a_spatial_data"], data["b_spatial_data"], use_ot=bool(_use_ot)
     )
-    assert_frame_equal(
-        pd.DataFrame(spots_mapping, columns=[str(i) for i in range(251)]),
-        pd.read_csv(output_dir / filename),
-        check_names=False,
-        check_dtype=False,
-        rtol=1e-04,
-    )
+    np.allclose(data[filename], spots_mapping)
 
 
-def test_norm_and_center_coordinates(slices):
-    common_genes = slices[1].var.index.intersection(slices[2].var.index)
-    sliceA = slices[1][:, common_genes]
-    sliceB = slices[2][:, common_genes]
+def test_norm_and_center_coordinates():
+    data = np.load(test_dir / "norm_and_center_coordinates.npz")
 
-    sliceA_X, sliceB_X = to_dense_array(sliceA.X), to_dense_array(sliceB.X)
+    X = norm_and_center_coordinates(data["a_exp_dissim"])
+    Y = norm_and_center_coordinates(data["b_exp_dissim"])
 
-    X = norm_and_center_coordinates(sliceA_X)
-    Y = norm_and_center_coordinates(sliceB_X)
-
-    assert_frame_equal(
-        pd.DataFrame(X, columns=[str(i) for i in range(6886)]),
-        pd.read_csv(output_dir / "normalized_X.csv"),
-        check_names=False,
-        check_dtype=False,
-        rtol=1e-04,
-    )
-    assert_frame_equal(
-        pd.DataFrame(Y, columns=[str(i) for i in range(6886)]),
-        pd.read_csv(output_dir / "normalized_Y.csv"),
-        check_names=False,
-        check_dtype=False,
-        rtol=1e-04,
-    )
+    assert np.allclose(X, data["normalized_X"])
+    assert np.allclose(Y, data["normalized_Y"])
 
 
 @pytest.mark.parametrize(
@@ -213,8 +172,13 @@ def test_dissimilarity_metric(slices2, dissimilarity):
     sliceB = sliceB[:, common_genes]
 
     A_X, B_X = to_dense_array(sliceA.X), to_dense_array(sliceB.X)
-
-    M = dissimilarity_metric(dissimilarity, sliceA, sliceB, A_X, B_X)
+    M = dissimilarity_metric(
+        dissimilarity,
+        sliceA,
+        sliceB,
+        A_X,
+        B_X,
+    )
 
     # Saving test data for the entire matrix takes too much space,
     # so we only save a sample of 100 randomly-selected rows to compare
@@ -222,7 +186,7 @@ def test_dissimilarity_metric(slices2, dissimilarity):
     M = M[random_indices, :]
 
     assert np.allclose(
-        np.load(output_dir / "dissimilarity_metric.npz")[dissimilarity],
+        np.load(test_dir / "dissimilarity_metric.npz")[dissimilarity],
         M,
         rtol=1e-4,
         atol=1e-4,

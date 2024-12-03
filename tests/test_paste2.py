@@ -2,24 +2,19 @@ from pathlib import Path
 from unittest.mock import patch
 
 import numpy as np
-import pandas as pd
 import pytest
 import torch
-from pandas.testing import assert_frame_equal
-from scipy.spatial import distance
 
 from paste3.paste import my_fused_gromov_wasserstein, pairwise_align
 
-test_dir = Path(__file__).parent
-input_dir = test_dir / "data/input"
-output_dir = test_dir / "data/output"
+test_dir = Path(__file__).parent / "data"
 
 
 @patch("paste3.paste.dissimilarity_metric")
 def test_partial_pairwise_align_glmpca(fn, slices2):
     # Load pre-computed dissimilarity metrics,
     # since it is time-consuming to compute.
-    data = np.load(output_dir / "test_partial_pairwise_align.npz")
+    data = np.load(test_dir / "test_partial_pairwise_align.npz")
     fn.return_value = torch.Tensor(data["glmpca"]).double()
 
     pi_BC, _ = pairwise_align(
@@ -35,15 +30,11 @@ def test_partial_pairwise_align_glmpca(fn, slices2):
 
 
 def test_partial_pairwise_align_given_cost_matrix(slices):
-    common_genes = slices[1].var.index.intersection(slices[2].var.index)
-    sliceA = slices[1][:, common_genes]
-    sliceB = slices[2][:, common_genes]
+    data = np.load(test_dir / "alignment_given_cost_matrix.npz", allow_pickle=True)
+    sliceA = slices[1][:, data["common_genes"]]
+    sliceB = slices[2][:, data["common_genes"]]
 
-    glmpca_distance_matrix = torch.Tensor(
-        np.genfromtxt(
-            input_dir / "glmpca_distance_matrix.csv", delimiter=",", skip_header=1
-        )
-    ).double()
+    glmpca_distance_matrix = torch.Tensor(data["exp_dissim_matrix"]).double()
 
     pairwise_info, log = pairwise_align(
         sliceA,
@@ -55,16 +46,12 @@ def test_partial_pairwise_align_given_cost_matrix(slices):
         numItermax=10,
         maxIter=10,
     )
-
-    assert_frame_equal(
-        pd.DataFrame(pairwise_info.cpu().numpy(), columns=[str(i) for i in range(264)]),
-        pd.read_csv(output_dir / "align_given_cost_matrix_pairwise_info.csv"),
-        rtol=1e-04,
-    )
+    assert np.allclose(data["expected_pairwise_info"], pairwise_info)
     assert log["loss"][-1].cpu().numpy() == pytest.approx(40.86494022326222)
 
 
 def test_partial_pairwise_align_histology(slices2):
+    data = np.load(test_dir / "partial_pairwise_align_histology.npz")
     pairwise_info, log = pairwise_align(
         slices2[0],
         slices2[1],
@@ -77,11 +64,7 @@ def test_partial_pairwise_align_histology(slices2):
         do_histology=True,
     )
     assert log["loss"][-1].cpu().numpy() == pytest.approx(88.06713721008786)
-    assert np.allclose(
-        pairwise_info.cpu().numpy(),
-        pd.read_csv(output_dir / "partial_pairwise_align_histology.csv").to_numpy(),
-        atol=1e-7,
-    )
+    assert np.allclose(pairwise_info.cpu().numpy(), data["expected_pi"])
 
 
 @pytest.mark.parametrize(
@@ -106,7 +89,7 @@ def test_partial_pairwise_align_histology(slices2):
                 ],
                 "partial_fgw_cost": 30.762727812006336,
             },
-            "partial_fused_gromov_wasserstein.csv",
+            "partial_fused_gromov_wasserstein",
         ),
         (
             True,
@@ -128,36 +111,19 @@ def test_partial_pairwise_align_histology(slices2):
                 ],
                 "partial_fgw_cost": 30.76272781211168,
             },
-            "partial_fused_gromov_wasserstein_true.csv",
+            "partial_fused_gromov_wasserstein_true",
         ),
     ],
 )
-def test_partial_fused_gromov_wasserstein(slices, armijo, expected_log, filename):
-    common_genes = slices[1].var.index.intersection(slices[2].var.index)
-    sliceA = slices[1][:, common_genes]
-    sliceB = slices[2][:, common_genes]
-
-    distance_a = distance.cdist(sliceA.obsm["spatial"], sliceA.obsm["spatial"])
-    distance_b = distance.cdist(sliceB.obsm["spatial"], sliceB.obsm["spatial"])
-
-    distance_a /= distance_a[distance_a > 0].min().min()
-    distance_b /= distance_b[distance_b > 0].min().min()
-
-    glmpca_distance_matrix = np.genfromtxt(
-        input_dir / "glmpca_distance_matrix.csv", delimiter=",", skip_header=1
-    )
-
-    distance_a /= distance_a[distance_a > 0].max()
-    distance_a *= glmpca_distance_matrix.max()
-    distance_b /= distance_b[distance_b > 0].max()
-    distance_b *= glmpca_distance_matrix.max()
+def test_partial_fused_gromov_wasserstein(armijo, expected_log, filename):
+    data = np.load(test_dir / "partial_fused_gromov_wasserstein.npz")
 
     pairwise_info, log = my_fused_gromov_wasserstein(
-        torch.Tensor(glmpca_distance_matrix).double(),
-        torch.Tensor(distance_a).double(),
-        torch.Tensor(distance_b).double(),
-        torch.ones((sliceA.shape[0],)).double() / sliceA.shape[0],
-        torch.ones((sliceB.shape[0],)).double() / sliceB.shape[0],
+        torch.Tensor(data["exp_dissim_matrix"]).double(),
+        torch.Tensor(data["distance_a"]).double(),
+        torch.Tensor(data["distance_b"]).double(),
+        torch.Tensor(data["a_weight"]).double(),
+        torch.Tensor(data["b_weight"]).double(),
         alpha=0.1,
         overlap_fraction=0.7,
         pi_init=None,
@@ -165,9 +131,7 @@ def test_partial_fused_gromov_wasserstein(slices, armijo, expected_log, filename
         armijo=armijo,
     )
 
-    assert np.allclose(
-        pd.read_csv(output_dir / filename).to_numpy(), pairwise_info, atol=1e-7
-    )
+    assert np.allclose(pairwise_info, data[filename], atol=1e-7)
 
     for k, v in expected_log.items():
         if k == "partial_fgw_cost":

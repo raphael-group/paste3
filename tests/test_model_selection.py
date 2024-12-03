@@ -10,37 +10,27 @@ from paste3.model_selection import (
     select_overlap_fraction,
 )
 from paste3.paste import pairwise_align
-from tests.test_paste import assert_checksum_equals
 
-test_dir = Path(__file__).parent
-input_dir = test_dir / "data/input"
-output_dir = test_dir / "data/output"
+test_dir = Path(__file__).parent / "data"
 
 
-def test_create_graph(slices, tmp_path):
+def test_create_graph(slices):
     graph, _ = generate_graph(slices[0])
+    expected_result = np.load(test_dir / "create_graph.npz")
 
-    np.savetxt(tmp_path / "create_graph_edges.csv", graph.edges, delimiter=",")
-    np.savetxt(tmp_path / "create_graph_nodes.csv", graph.nodes, delimiter=",")
-
-    assert_checksum_equals(tmp_path, "create_graph_edges.csv")
-    assert_checksum_equals(tmp_path, "create_graph_nodes.csv")
+    assert np.allclose(expected_result["edges"], graph.edges)
+    assert np.allclose(expected_result["nodes"], graph.nodes)
 
 
-def test_generate_graph_from_labels(tmp_path):
-    adata = sc.read_h5ad(output_dir / "source_hull_adata.h5ad")
+def test_generate_graph_from_labels():
+    adata = sc.read_h5ad(test_dir / "source_hull_adata.h5ad")
 
     graph, labels = generate_graph(adata, adata.obs["aligned"])
 
-    np.savetxt(
-        tmp_path / "generate_graph_from_labels_edges.csv", graph.edges, delimiter=","
-    )
-    np.savetxt(
-        tmp_path / "generate_graph_from_labels_nodes.csv", graph.nodes, delimiter=","
-    )
+    expected_result = np.load(test_dir / "generate_graph_from_labels.npz")
 
-    assert_checksum_equals(tmp_path, "generate_graph_from_labels_edges.csv")
-    assert_checksum_equals(tmp_path, "generate_graph_from_labels_nodes.csv")
+    assert np.allclose(expected_result["edges"], graph.edges)
+    assert np.allclose(expected_result["nodes"], graph.nodes)
 
 
 def test_calculate_convex_hull_edge_inconsistency(slices):

@@ -1,12 +1,7 @@
-from pathlib import Path
-
 import numpy as np
 import torch
 
 from paste3.dataset import AlignmentDataset, Slice
-
-test_dir = Path(__file__).parent
-input_dir = test_dir / "data/input"
 
 
 def test_dataset(sample_data_files):

@@ -8,8 +8,7 @@ import torch
 
 from paste3.napari.data.ondemand import get_file
 
-test_dir = Path(__file__).parent
-input_dir = test_dir / "data/input"
+test_dir = Path(__file__).parent / "data"
 
 
 @pytest.fixture(scope="session")
@@ -17,8 +16,8 @@ def slices():
     slices = []
     for i in range(1, 5):
         # File path of slices and respective coordinates
-        s_fpath = Path(f"{input_dir}/slice{i}.csv")
-        c_fpath = Path(f"{input_dir}/slice{i}_coor.csv")
+        s_fpath = Path(f"{test_dir}/slice{i}.csv")
+        c_fpath = Path(f"{test_dir}/slice{i}_coor.csv")
 
         # Create ann data object of each slice and add other properties
         _slice = sc.read_csv(s_fpath, dtype="float64")
@@ -65,7 +64,7 @@ def intersecting_slices(slices):
 def slices2():
     slices = []
     for i in range(3, 7):
-        fpath = Path(f"{input_dir}/15167{i}.h5ad")
+        fpath = Path(f"{test_dir}/15167{i}.h5ad")
 
         _slice = sc.read_h5ad(fpath)
         slices.append(_slice)

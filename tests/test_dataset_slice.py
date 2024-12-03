@@ -1,12 +1,7 @@
-from pathlib import Path
-
 import anndata
 import numpy as np
 
 from paste3.dataset import Slice
-
-test_dir = Path(__file__).parent
-input_dir = test_dir / "data/input"
 
 
 def test_slice_adata(slices):

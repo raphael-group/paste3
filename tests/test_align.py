@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 import anndata as ad
+import numpy as np
 import pandas as pd
 import scanpy as sc
 from pandas.testing import assert_frame_equal
@@ -15,17 +16,15 @@ from paste3.io import get_shape, process_files
 logger = logging.getLogger(__name__)
 
 
-test_dir = Path(__file__).parent
-input_dir = test_dir / "data/input"
-output_dir = test_dir / "data/output"
+test_dir = Path(__file__).parent / "data"
 
 
 def test_cmd_line_center(tmp_path):
     logger.info(f"Running command in {tmp_path}")
     result = align(
         "center",
-        [f"{input_dir}/slice{i}.csv" for i in range(1, 4)],
-        [f"{input_dir}/slice{i}_coor.csv" for i in range(1, 4)],
+        [f"{test_dir}/slice{i}.csv" for i in range(1, 4)],
+        [f"{test_dir}/slice{i}_coor.csv" for i in range(1, 4)],
         f"{tmp_path}",
         0.1,
         "kl",
@@ -42,33 +41,18 @@ def test_cmd_line_center(tmp_path):
     )
 
     assert result is None
-    result = sc.read(tmp_path / "center_slice.h5ad")
 
-    assert_frame_equal(
-        pd.DataFrame(
-            result.uns["paste_W"],
-            index=result.obs.index,
-            columns=[str(i) for i in range(15)],
-        ),
-        pd.read_csv(output_dir / "W_center", index_col=0),
-        check_names=False,
-        check_index_type=False,
-        rtol=1e-05,
-        atol=1e-08,
-    )
-    assert_frame_equal(
-        pd.DataFrame(result.uns["paste_H"], columns=result.var.index),
-        pd.read_csv(output_dir / "H_center", index_col=0),
-        rtol=1e-05,
-        atol=1e-08,
-    )
+    result = sc.read(tmp_path / "center_slice.h5ad")
+    expected_result = np.load(test_dir / "cmd_line_center.npz", allow_pickle=True)
+
+    assert np.allclose(result.uns["paste_W"], expected_result["paste_W"])
+    assert np.allclose(result.uns["paste_H"], expected_result["paste_H"])
 
     for i in (0, 1):
         assert_frame_equal(
-            pd.read_csv(tmp_path / f"slice_{i}_{i+1}_pairwise.csv"),
-            pd.read_csv(
-                output_dir / f"slice_center_slice{i + 1}_pairwise.csv",
-            ),
+            pd.read_csv(tmp_path / f"slice_{i}_{i+1}_pairwise.csv", header=None),
+            pd.DataFrame(expected_result[f"slice_{i}_{i+1}_pairwise"]),
+            check_column_type=False,
         )
 
 
@@ -77,14 +61,14 @@ def test_cmd_line_pairwise_csv(tmp_path):
     result = align(
         "pairwise",
         [
-            f"{input_dir}/slice1.csv",
-            f"{input_dir}/slice2.csv",
-            f"{input_dir}/slice3.csv",
+            f"{test_dir}/slice1.csv",
+            f"{test_dir}/slice2.csv",
+            f"{test_dir}/slice3.csv",
         ],
         [
-            f"{input_dir}/slice1_coor.csv",
-            f"{input_dir}/slice2_coor.csv",
-            f"{input_dir}/slice3_coor.csv",
+            f"{test_dir}/slice1_coor.csv",
+            f"{test_dir}/slice2_coor.csv",
+            f"{test_dir}/slice3_coor.csv",
         ],
         f"{tmp_path}",
         0.1,
@@ -106,7 +90,7 @@ def test_cmd_line_pairwise_csv(tmp_path):
     assert_frame_equal(
         pd.read_csv(tmp_path / "slice_1_2_pairwise.csv"),
         pd.read_csv(
-            output_dir / "slices_1_2_pairwise.csv",
+            test_dir / "slices_1_2_pairwise.csv",
         ),
     )
 
@@ -116,8 +100,8 @@ def test_process_files_csv():
     gene_fpath = []
     spatial_fpath = []
     for i in range(1, 5):
-        gene_fpath.append(Path(f"{input_dir}/slice{i}.csv"))
-        spatial_fpath.append(Path(f"{input_dir}/slice{i}_coor.csv"))
+        gene_fpath.append(Path(f"{test_dir}/slice{i}.csv"))
+        spatial_fpath.append(Path(f"{test_dir}/slice{i}_coor.csv"))
 
     ad_objs = process_files(
         gene_fpath,
@@ -131,7 +115,7 @@ def test_process_files_ann_data():
     """Ensure process files works with Ann Data inputs."""
     gene_fpath = []
     for i in range(3, 7):
-        gene_fpath.append(Path(f"{input_dir}/15167{i}.h5ad"))
+        gene_fpath.append(Path(f"{test_dir}/15167{i}.h5ad"))
 
     ad_objs = process_files(gene_fpath, s_fpath=None)
     for obj in ad_objs:
@@ -139,8 +123,8 @@ def test_process_files_ann_data():
 
 
 def test_get_shape():
-    s_fpath = Path(f"{input_dir}/slice1.csv")
-    c_fpath = Path(f"{input_dir}/slice1_coor.csv")
+    s_fpath = Path(f"{test_dir}/slice1.csv")
+    c_fpath = Path(f"{test_dir}/slice1_coor.csv")
 
     assert get_shape(s_fpath) == (254, 7999)
     assert get_shape(c_fpath) == (254, 2)

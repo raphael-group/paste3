@@ -18,10 +18,10 @@ classifiers = [
 ]
 
 dependencies = [
-    "anndata==0.10.9",
+    "anndata",
     "scanpy",
     "POT>=0.9.5",
-    "numpy<2",
+    "numpy",
     "scipy",
     "scikit-learn",
     "IPython",
@@ -50,7 +50,7 @@ dev = [
 ]
 
 docs = [
-    "sphinx==6.2.1",
+    "sphinx",
     "myst-parser",
     "sphinx-autodoc-typehints",
     "nbsphinx",

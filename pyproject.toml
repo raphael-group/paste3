@@ -20,7 +20,7 @@ classifiers = [
 dependencies = [
     "anndata",
     "scanpy",
-    "POT",
+    "POT>=0.9.5",
     "numpy",
     "scipy",
     "scikit-learn",

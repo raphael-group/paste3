@@ -1,9 +1,9 @@
 API
 ===
-    import paste3
+
 .. automodule:: paste3
 
-PASTE Alignment
+Alignment
 ~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
@@ -11,6 +11,10 @@ PASTE Alignment
 
     paste.pairwise_align
     paste.center_align
+    paste.center_ot
+    paste.center_NMF
+    paste.my_fused_gromov_wasserstein
+    paste.line_search_partial
 
 Visualization
 ~~~~~~~~~~~~~
@@ -21,6 +25,7 @@ Visualization
     visualization.stack_slices_pairwise
     visualization.stack_slices_center
     visualization.plot_slice
+    visualization.generalized_procrustes_analysis
 
 Model Selection
 ~~~~~~~~~~~~~~~~
@@ -28,24 +33,9 @@ Model Selection
 .. autosummary::
    :toctree: api
 
-    model_selection.create_graph
-    model_selection.generate_graph_from_labels
-    model_selection.edge_inconsistency_score
-    model_selection.calculate_convex_hull_edge_inconsistency
-    model_selection.plot_edge_curve
-    model_selection.select_overlap_fraction_plotting
-
-GLMPCA
-~~~~~~~
-
-.. autosummary::
-   :toctree: api
-
-    glmpca.ortho
-    glmpca.mat_binom_dev
-    glmpca.glmpca_init
-    glmpca.est_nb_theta
-    glmpca.glmpca
+    model_selection.generate_graph
+    model_selection.convex_hull_edge_inconsistency
+    model_selection.select_overlap_fraction
 
 
 Miscellaneous
@@ -54,5 +44,11 @@ Miscellaneous
 .. autosummary::
    :toctree: api
 
-   helper.filter_for_common_genes
+   helper.kl_divergence
+   helper.glmpca_distance
+   helper.pca_distance
+   helper.high_umi_gene_distance
+   helper.norm_and_center_coordinates
+   helper.get_common_genes
    helper.match_spots_using_spatial_heuristic
+   helper.dissimilarity_metric

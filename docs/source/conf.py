@@ -2,7 +2,8 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).parent
-sys.path.insert(0, Path.resolve(HERE.parent.parent))
+sys.path.insert(0, str(HERE.parent.parent / "src"))
+import paste3  # noqa: E402
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -13,11 +14,11 @@ sys.path.insert(0, Path.resolve(HERE.parent.parent))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "paste3"
-copyright = "2022, Raphael Lab"
+copyright = "2024, Raphael Lab"
 author = "Ron Zeira, Max Land, Alexander Strzalkowski, Benjamin J. Raphael"
 
 # The full version, including alpha/beta/rc tags
-release = "1.2.0"
+release = paste3.__version__
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

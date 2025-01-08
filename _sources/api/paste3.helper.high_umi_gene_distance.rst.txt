@@ -1,0 +1,6 @@
+﻿paste3.helper.high\_umi\_gene\_distance
+=======================================
+
+.. currentmodule:: paste3.helper
+
+.. autofunction:: high_umi_gene_distance

@@ -1,0 +1,6 @@
+﻿paste3.helper.dissimilarity\_metric
+===================================
+
+.. currentmodule:: paste3.helper
+
+.. autofunction:: dissimilarity_metric

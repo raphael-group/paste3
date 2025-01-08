@@ -1,0 +1,6 @@
+﻿paste3.helper.norm\_and\_center\_coordinates
+============================================
+
+.. currentmodule:: paste3.helper
+
+.. autofunction:: norm_and_center_coordinates

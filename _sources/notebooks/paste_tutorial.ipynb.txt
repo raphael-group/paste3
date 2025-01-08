@@ -1,24 +1,28 @@
 {
  "cells": [
   {
-   "cell_type": "markdown",
+   "cell_type": "code",
+   "execution_count": null,
    "metadata": {},
+   "outputs": [],
    "source": [
-    "# Getting Started"
+    "# This cell is to allow automatic notebook generation for docs\n",
+    "# You may want to comment this out if you have paste3 installed\n",
+    "import sys\n",
+    "from pathlib import Path\n",
+    "\n",
+    "sys.path.insert(0, str(Path.cwd().parent.parent.parent / \"src\"))"
    ]
   },
   {
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "## Install paste python package"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "You can install the package on pypi: https://pypi.org/project/paste-bio/"
+    "# Using the PASTE algorithm\n",
+    "\n",
+    "This noteook highlights the creation of slices (Anndata objects), usage of the `pairwise_align` and `center_align` functions of `paste3`, along with stacking and plotting functionalities.\n",
+    "\n",
+    "**This notebook primarily highlights how you would use the `paste3` package in `PASTE` (i.e. full alignment) mode, when the slices overlap over the full 2D assayed region, with a similar field of view and similar number and proportion of cell types.**"
    ]
   },
   {
@@ -45,7 +49,7 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "## Read data and create AnnData object"
+    "## Read data and create AnnData objects"
    ]
   },
   {
@@ -528,179 +532,6 @@
     "plot_slice(center, center_color, ax=axs[1, 1])\n",
     "plot_slice(new_slices[3], slice_colors[3], ax=axs[1, 1])\n",
     "plt.show()"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "## Gpu Implementation"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "POT allows us to write backend agnostic code, allowing us to use Numpy, Pytorch, etc to calculate our computations (https://pythonot.github.io/gen_modules/ot.backend.html).\n",
-    "\n",
-    "We have updated our code to include gpu support for Pytorch."
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "First, you want to make sure you have torch installed. One way to check is by running:"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "import ot\n",
-    "\n",
-    "ot.backend.get_backend_list()"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "We check to make sure you have access to gpu. PASTE automatically does this check for you, but it is still helpful to know if you want to debug why you can't seem to access your gpu."
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "import torch\n",
-    "\n",
-    "torch.cuda.is_available()"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "### Running PASTE with gpu"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "**Note: Since the breast dataset is small, cpu may actually be faster than gpu in this particular case. For larger datasets, you will see a greater improvement in gpu vs cpu.**"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "First, we read in our data."
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "data_dir = \"../../../tests/data/\"\n",
-    "\n",
-    "\n",
-    "# Assume that the coordinates of slices are named slice_name + \"_coor.csv\"\n",
-    "def load_slices(data_dir, slice_names):\n",
-    "    slices = []\n",
-    "    for slice_name in slice_names:\n",
-    "        slice_i = sc.read_csv(data_dir + slice_name + \".csv\")\n",
-    "        slice_i_coor = np.genfromtxt(data_dir + slice_name + \"_coor.csv\", delimiter=\",\")\n",
-    "        slice_i.obsm[\"spatial\"] = slice_i_coor\n",
-    "        # Preprocess slices\n",
-    "        sc.pp.filter_genes(slice_i, min_counts=15)\n",
-    "        sc.pp.filter_cells(slice_i, min_counts=100)\n",
-    "        slices.append(slice_i)\n",
-    "    return slices\n",
-    "\n",
-    "\n",
-    "slices = load_slices(data_dir, [\"slice1\", \"slice2\", \"slice3\", \"slice4\"])\n",
-    "slice1, slice2, slice3, slice4 = slices"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "Next, running with gpu is as easy as setting two parameters in our function."
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "start = time.time()\n",
-    "\n",
-    "pi12, _ = pairwise_align(slice1, slice2, use_gpu=True)\n",
-    "pi23, _ = pairwise_align(slice2, slice3, use_gpu=True)\n",
-    "pi34, _ = pairwise_align(slice3, slice4, use_gpu=True)\n",
-    "\n",
-    "print(\"Runtime: \" + str(time.time() - start))"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "pd.DataFrame(pi12.cpu().numpy())"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "We do the same with `center_align()`. \n",
-    "\n",
-    "Note: This time, we skip providing initial mappings `pi_init = b` as previously done above."
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "slices = load_slices(data_dir, [\"slice1\", \"slice2\", \"slice3\", \"slice4\"])\n",
-    "slice1, slice2, slice3, slice4 = slices\n",
-    "\n",
-    "slices = [slice1, slice2, slice3, slice4]\n",
-    "initial_slice = slice1.copy()\n",
-    "lmbda = len(slices) * [1 / len(slices)]"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "start = time.time()\n",
-    "\n",
-    "center_slice, pis = center_align(\n",
-    "    initial_slice,\n",
-    "    slices,\n",
-    "    lmbda,\n",
-    "    random_seed=5,\n",
-    "    use_gpu=True,\n",
-    ")\n",
-    "\n",
-    "print(\"Runtime: \" + str(time.time() - start))"
    ]
   }
  ],

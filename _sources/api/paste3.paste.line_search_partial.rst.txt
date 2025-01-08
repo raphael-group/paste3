@@ -1,0 +1,6 @@
+﻿paste3.paste.line\_search\_partial
+==================================
+
+.. currentmodule:: paste3.paste
+
+.. autofunction:: line_search_partial

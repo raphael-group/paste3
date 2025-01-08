@@ -6,8 +6,8 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tutorials &mdash; paste3 1.2.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+  <title>Tutorials &mdash; paste3 src documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="_static/nbsphinx-gallery.css?v=26227f6e" />
@@ -15,7 +15,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=60341314"></script>
+      <script src="_static/documentation_options.js?v=c8155056"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -24,8 +24,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Getting Started" href="notebooks/paste_tutorial.html" />
-    <link rel="prev" title="paste3.helper.match_spots_using_spatial_heuristic" href="api/paste3.helper.match_spots_using_spatial_heuristic.html" /> 
+    <link rel="next" title="Using the PASTE algorithm" href="notebooks/paste_tutorial.html" />
+    <link rel="prev" title="paste3.helper.dissimilarity_metric" href="api/paste3.helper.dissimilarity_metric.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -49,13 +49,15 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorials</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="notebooks/paste_tutorial.html">Getting Started</a></li>
-<li class="toctree-l2"><a class="reference internal" href="notebooks/paste2_tutorial.html">Install PASTE2 python package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="notebooks/paste_tutorial.html">Using the PASTE algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="notebooks/paste2_tutorial.html">Using the PASTE2 algorithm</a></li>
 <li class="toctree-l2"><a class="reference internal" href="notebooks/paste2_tutorial.html#Read-in-Spatial-Transcriptomics-slices-as-AnnData-objects">Read in Spatial Transcriptomics slices as AnnData objects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="notebooks/paste2_tutorial.html#Compute-partial-pairwise-alignment-using-PASTE2">Compute partial pairwise alignment using PASTE2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="notebooks/paste2_tutorial.html#Project-all-slices-onto-the-same-coordiante-system-according-to-the-alignment">Project all slices onto the same coordiante system according to the alignment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="notebooks/paste3_tutorial.html">Using the PASTE/PASTE2 algorithm through a unifying API</a></li>
 </ul>
 </li>
 </ul>
@@ -86,16 +88,22 @@
              
   <section id="tutorials">
 <h1>Tutorials<a class="headerlink" href="#tutorials" title="Link to this heading"></a></h1>
-<p>These notebook(s) should serve examples of how to use PASTE/ PASTE2 for your data analysis.</p>
+<p>These notebook(s) provide sample code on how to use PASTE (full alignment),
+PASTE2 (partial alignment), or PASTE3 (full or partial alignment) for your
+data analysis.</p>
 <div class="toctree-wrapper compound">
 <div class="nbsphinx-gallery">
 <a class="reference internal" href="notebooks/paste_tutorial.html">
-  <div><img alt="" src="./_images/notebooks_paste_tutorial_48_0.png"></div>
-  <div>Getting Started</div>
+  <div><img alt="" src="./_images/notebooks_paste_tutorial_47_0.png"></div>
+  <div>Using the PASTE algorithm</div>
 </a>
 <a class="reference internal" href="notebooks/paste2_tutorial.html">
   <div><img alt="" src="./_images/notebooks_paste2_tutorial_26_0.png"></div>
-  <div>Install PASTE2 python package</div>
+  <div>Using the PASTE2 algorithm</div>
+</a>
+<a class="reference internal" href="notebooks/paste3_tutorial.html">
+  <div><img alt="" src="./_images/notebooks_paste3_tutorial_19_2.png"></div>
+  <div>Using the PASTE/PASTE2 algorithm through a unifying API</div>
 </a>
 </div>
 </div>
@@ -105,14 +113,14 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="api/paste3.helper.match_spots_using_spatial_heuristic.html" class="btn btn-neutral float-left" title="paste3.helper.match_spots_using_spatial_heuristic" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="notebooks/paste_tutorial.html" class="btn btn-neutral float-right" title="Getting Started" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="api/paste3.helper.dissimilarity_metric.html" class="btn btn-neutral float-left" title="paste3.helper.dissimilarity_metric" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="notebooks/paste_tutorial.html" class="btn btn-neutral float-right" title="Using the PASTE algorithm" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022, Raphael Lab.</p>
+    <p>&#169; Copyright 2024, Raphael Lab.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

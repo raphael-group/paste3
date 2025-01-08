@@ -3,6 +3,33 @@
   {
    "cell_type": "code",
    "execution_count": null,
+   "id": "30d3de80-424b-48e8-abd6-ef22da03611d",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# This cell is to allow automatic notebook generation for docs\n",
+    "# You may want to comment this out if you have paste3 installed\n",
+    "import sys\n",
+    "from pathlib import Path\n",
+    "\n",
+    "sys.path.insert(0, str(Path.cwd().parent.parent.parent / \"src\"))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0f721a16-a25c-4c32-b562-d0e454e8f4e8",
+   "metadata": {},
+   "source": [
+    "# Using the PASTE2 algorithm\n",
+    "\n",
+    "This noteook highlights the creation of slices (Anndata objects), usage of the `pairwise_align` and `center_align` functions of `paste3`, along with stacking and plotting functionalities.\n",
+    "\n",
+    "**This notebook primarily highlights how you would use the `paste3` package in `PASTE2` (i.e. partial alignment) mode, when adjacent slices do not fully overlap in space or have different cell type compositions.**"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
    "id": "56e5cd44",
    "metadata": {},
    "outputs": [],
@@ -11,26 +38,8 @@
     "import matplotlib.pyplot as plt\n",
     "import numpy as np\n",
     "import scanpy as sc\n",
-    "import seaborn as sns"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "id": "79453c4b",
-   "metadata": {},
-   "source": [
-    "# Install PASTE2 python package\n",
+    "import seaborn as sns\n",
     "\n",
-    "You can install the paste2 package at https://pypi.org/project/paste2/. We import paste2 as follows:"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "603868f2",
-   "metadata": {},
-   "outputs": [],
-   "source": [
     "from paste3 import paste, visualization"
    ]
   },
@@ -145,11 +154,11 @@
    "source": [
     "# Compute partial pairwise alignment using PASTE2\n",
     "\n",
-    "Give a pair of partially overlapping slices, we can use PASTE2.partial_pairwise_align( ) to find an alignment matrix. To call the function, you need to input the AnnData objects of the two slices, as well as a parameter s, which indicates the overlap percentage of the two slices. In this tutorial, each pair of cropped subslices overlap at 70% of the areas, so we set overlap_fraction=0.7. For your own datasets you should visualize the slices and manually determine the approxiamte overlap percentage (this parameter does not have to be very accurate).\n",
+    "Give a pair of partially overlapping slices, we can use `partial_pairwise_align()` to find an alignment matrix. To call the function, you need to input the AnnData objects of the two slices, as well as a parameter s, which indicates the overlap percentage of the two slices. In this tutorial, each pair of cropped subslices overlap at 70% of the areas, so we set `overlap_fraction=0.7`. For your own datasets you should visualize the slices and manually determine the approximate overlap percentage (this parameter does not have to be very accurate).\n",
     "\n",
     "Now we compute an alignment matrix between each pair of slices in our example dataset.\n",
     "\n",
-    "**In the calls to `paste3.pairwise_align` below, we're using maxIter=20 here to specify a maximum of 20 iterations for pairwise_align. This is only to allow this demo to run in a resonable amount of time. In a real alignment scenario, you should not include this argument**."
+    "**In the calls to `pairwise_align` below, we're using maxIter=20 here to specify a maximum of 20 iterations for pairwise_align. This is only to allow this demo to run in a resonable amount of time. In a real alignment scenario, you should not include this argument**."
    ]
   },
   {

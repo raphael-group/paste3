@@ -1,0 +1,6 @@
+﻿paste3.paste.my\_fused\_gromov\_wasserstein
+===========================================
+
+.. currentmodule:: paste3.paste
+
+.. autofunction:: my_fused_gromov_wasserstein

@@ -6,15 +6,15 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>API &mdash; paste3 1.2.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+  <title>API &mdash; paste3 src documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=d2d258e8" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=60341314"></script>
+      <script src="_static/documentation_options.js?v=c8155056"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -24,7 +24,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="paste3.paste.pairwise_align" href="api/paste3.paste.pairwise_align.html" />
-    <link rel="prev" title="Welcome to PASTE3 documentation!" href="index.html" /> 
+    <link rel="prev" title="Installation" href="installation.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -48,32 +48,39 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#paste-alignment">PASTE Alignment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#alignment">Alignment</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="api/paste3.paste.pairwise_align.html">paste3.paste.pairwise_align</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/paste3.paste.center_align.html">paste3.paste.center_align</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/paste3.paste.center_ot.html">paste3.paste.center_ot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/paste3.paste.center_NMF.html">paste3.paste.center_NMF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/paste3.paste.my_fused_gromov_wasserstein.html">paste3.paste.my_fused_gromov_wasserstein</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/paste3.paste.line_search_partial.html">paste3.paste.line_search_partial</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#visualization">Visualization</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="api/paste3.visualization.stack_slices_pairwise.html">paste3.visualization.stack_slices_pairwise</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/paste3.visualization.stack_slices_center.html">paste3.visualization.stack_slices_center</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/paste3.visualization.plot_slice.html">paste3.visualization.plot_slice</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/paste3.visualization.generalized_procrustes_analysis.html">paste3.visualization.generalized_procrustes_analysis</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#model-selection">Model Selection</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/paste3.model_selection.plot_edge_curve.html">paste3.model_selection.plot_edge_curve</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#glmpca">GLMPCA</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/paste3.glmpca.ortho.html">paste3.glmpca.ortho</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/paste3.glmpca.mat_binom_dev.html">paste3.glmpca.mat_binom_dev</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/paste3.glmpca.glmpca_init.html">paste3.glmpca.glmpca_init</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/paste3.glmpca.est_nb_theta.html">paste3.glmpca.est_nb_theta</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/paste3.glmpca.glmpca.html">paste3.glmpca.glmpca</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/paste3.model_selection.generate_graph.html">paste3.model_selection.generate_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/paste3.model_selection.convex_hull_edge_inconsistency.html">paste3.model_selection.convex_hull_edge_inconsistency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/paste3.model_selection.select_overlap_fraction.html">paste3.model_selection.select_overlap_fraction</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#miscellaneous">Miscellaneous</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/paste3.helper.kl_divergence.html">paste3.helper.kl_divergence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/paste3.helper.glmpca_distance.html">paste3.helper.glmpca_distance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/paste3.helper.pca_distance.html">paste3.helper.pca_distance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/paste3.helper.high_umi_gene_distance.html">paste3.helper.high_umi_gene_distance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/paste3.helper.norm_and_center_coordinates.html">paste3.helper.norm_and_center_coordinates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/paste3.helper.get_common_genes.html">paste3.helper.get_common_genes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/paste3.helper.match_spots_using_spatial_heuristic.html">paste3.helper.match_spots_using_spatial_heuristic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/paste3.helper.dissimilarity_metric.html">paste3.helper.dissimilarity_metric</a></li>
 </ul>
 </li>
 </ul>
@@ -105,13 +112,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="api">
-<h1>API<a class="headerlink" href="#api" title="Link to this heading"></a></h1>
-<blockquote>
-<div><p>import paste3</p>
-</div></blockquote>
-<section id="paste-alignment">
-<span id="module-paste3"></span><h2>PASTE Alignment<a class="headerlink" href="#paste-alignment" title="Link to this heading"></a></h2>
+  <section id="module-paste3">
+<span id="api"></span><h1>API<a class="headerlink" href="#module-paste3" title="Link to this heading"></a></h1>
+<section id="alignment">
+<h2>Alignment<a class="headerlink" href="#alignment" title="Link to this heading"></a></h2>
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/paste3.paste.pairwise_align.html#paste3.paste.pairwise_align" title="paste3.paste.pairwise_align"><code class="xref py py-obj docutils literal notranslate"><span class="pre">paste.pairwise_align</span></code></a>(a_slice, b_slice[, ...])</p></td>
@@ -119,6 +123,18 @@
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api/paste3.paste.center_align.html#paste3.paste.center_align" title="paste3.paste.center_align"><code class="xref py py-obj docutils literal notranslate"><span class="pre">paste.center_align</span></code></a>(initial_slice, slices[, ...])</p></td>
 <td><p>Infers a &quot;center&quot; slice consisting of a low rank expression matrix <span class="math notranslate nohighlight">\(X = WH\)</span> and a collection of <span class="math notranslate nohighlight">\(\pi\)</span> of mappings from the spots of the center slice to the spots of each input slice.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/paste3.paste.center_ot.html#paste3.paste.center_ot" title="paste3.paste.center_ot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">paste.center_ot</span></code></a>(feature_matrix, ...[, ...])</p></td>
+<td><p>Computes the optimal mappings <span class="math notranslate nohighlight">\(\Pi^{(1)}, \ldots, \Pi^{(t)}\)</span> given W (specified features) and H (coefficient matrix) by solving the pairwise slice alignment problem between the center slice and each slices separately</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/paste3.paste.center_NMF.html#paste3.paste.center_NMF" title="paste3.paste.center_NMF"><code class="xref py py-obj docutils literal notranslate"><span class="pre">paste.center_NMF</span></code></a>(feature_matrix, slices, ...)</p></td>
+<td><p>Finds two low-rank matrices ( W ) (feature matrix) and ( H ) (coefficient matrix) that approximate expression matrices of all slices by minimizing the following objective function:</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/paste3.paste.my_fused_gromov_wasserstein.html#paste3.paste.my_fused_gromov_wasserstein" title="paste3.paste.my_fused_gromov_wasserstein"><code class="xref py py-obj docutils literal notranslate"><span class="pre">paste.my_fused_gromov_wasserstein</span></code></a>(...[, ...])</p></td>
+<td><p>Computes a transport plan to align two weighted spatial distributions based on expression dissimilarity matrix and spatial distances, using the Gromov-Wasserstein framework.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/paste3.paste.line_search_partial.html#paste3.paste.line_search_partial" title="paste3.paste.line_search_partial"><code class="xref py py-obj docutils literal notranslate"><span class="pre">paste.line_search_partial</span></code></a>(alpha, ...)</p></td>
+<td><p>Solve the linesearch in the fused wasserstein iterations for partially overlapping slices</p></td>
 </tr>
 </tbody>
 </table>
@@ -136,6 +152,9 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="api/paste3.visualization.plot_slice.html#paste3.visualization.plot_slice" title="paste3.visualization.plot_slice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualization.plot_slice</span></code></a>(slice, color[, ax, s])</p></td>
 <td><p>Plots slice spatial coordinates.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/paste3.visualization.generalized_procrustes_analysis.html#paste3.visualization.generalized_procrustes_analysis" title="paste3.visualization.generalized_procrustes_analysis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualization.generalized_procrustes_analysis</span></code></a>(...)</p></td>
+<td><p>Finds and applies optimal rotation between spatial coordinates of two layers (may also do a reflection).</p></td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -143,30 +162,14 @@
 <h2>Model Selection<a class="headerlink" href="#model-selection" title="Link to this heading"></a></h2>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/paste3.model_selection.plot_edge_curve.html#paste3.model_selection.plot_edge_curve" title="paste3.model_selection.plot_edge_curve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_selection.plot_edge_curve</span></code></a>(...)</p></td>
-<td><p>Plots inconsistency_scores in relation to overlap fractions in a given axis</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/paste3.model_selection.generate_graph.html#paste3.model_selection.generate_graph" title="paste3.model_selection.generate_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_selection.generate_graph</span></code></a>(slice[, ...])</p></td>
+<td><p>Generates a graph using the networkx library where each node represents a spot from the given <cite>slice</cite> object, and edges are formed between each node and its closest neighbors based on spatial distance.</p></td>
 </tr>
-</tbody>
-</table>
-</section>
-<section id="glmpca">
-<h2>GLMPCA<a class="headerlink" href="#glmpca" title="Link to this heading"></a></h2>
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/paste3.glmpca.ortho.html#paste3.glmpca.ortho" title="paste3.glmpca.ortho"><code class="xref py py-obj docutils literal notranslate"><span class="pre">glmpca.ortho</span></code></a>(U, V, A[, X, G, Z])</p></td>
-<td><p>U is NxL array of cell factors V is JxL array of loadings onto genes X is NxKo array of cell specific covariates A is JxKo array of coefficients of X Z is JxKf array of gene specific covariates G is NxKf array of coefficients of Z assume the data Y is of dimension JxN imputed expression: E[Y] = g^{-1}(R) where R = VU'+AX'+ZG'</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/paste3.model_selection.convex_hull_edge_inconsistency.html#paste3.model_selection.convex_hull_edge_inconsistency" title="paste3.model_selection.convex_hull_edge_inconsistency"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_selection.convex_hull_edge_inconsistency</span></code></a>(...)</p></td>
+<td><p>Computes the edge inconsistency score for a convex hull formed by the aligned spots</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/paste3.glmpca.mat_binom_dev.html#paste3.glmpca.mat_binom_dev" title="paste3.glmpca.mat_binom_dev"><code class="xref py py-obj docutils literal notranslate"><span class="pre">glmpca.mat_binom_dev</span></code></a>(X, P, n)</p></td>
-<td><p>binomial deviance for two arrays X,P are JxN arrays n is vector of length N (same as cols of X,P)</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/paste3.glmpca.glmpca_init.html#paste3.glmpca.glmpca_init" title="paste3.glmpca.glmpca_init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">glmpca.glmpca_init</span></code></a>(Y, fam[, sz, nb_theta])</p></td>
-<td><p>create the glmpca_family object and initialize the A array (regression coefficients of X) Y is the data (JxN array) fam is the likelihood sz optional vector of size factors, default: sz=colMeans(Y) or colSums(Y) sz is ignored unless fam is 'poi' or 'nb'</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/paste3.glmpca.est_nb_theta.html#paste3.glmpca.est_nb_theta" title="paste3.glmpca.est_nb_theta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">glmpca.est_nb_theta</span></code></a>(y, mu, th)</p></td>
-<td><p>given count data y and predicted means mu&gt;0, and a neg binom theta &quot;th&quot; use Newton's Method to update theta based on the negative binomial likelihood note this uses observed rather than expected information regularization: let u=log(theta).</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/paste3.glmpca.glmpca.html#paste3.glmpca.glmpca" title="paste3.glmpca.glmpca"><code class="xref py py-obj docutils literal notranslate"><span class="pre">glmpca.glmpca</span></code></a>(Y, L[, fam, ctl, penalty, ...])</p></td>
-<td><p>GLM-PCA This function implements the GLM-PCA dimensionality reduction method for high-dimensional count data. The basic model is R = AX'+ZG'+VU', where E[Y]=M=linkinv(R). Regression coefficients are A and G, latent factors are U, and loadings are V. The objective function being optimized is the deviance between Y and M, plus an L2 (ridge) penalty on U and V. Note that glmpca uses a random initialization, so for fully reproducible results one should set the random seed. :type Y:  :param Y: columns. :type Y: array_like of count data with features as rows and observations as :type L:  :param L: :type L: the desired number of latent dimensions (integer). :type fam:  :param fam: :type fam: string describing the likelihood to use for the data. Possible values include: :param - poi: :type - poi: Poisson :param - nb: :type - nb: negative binomial :param - mult: :type - mult: binomial approximation to multinomial :param - bern: :type - bern: Bernoulli :type ctl: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span> :param ctl: :type ctl: a dictionary of control parameters for optimization. Valid keys: :param - maxIter: :type - maxIter: an integer, maximum number of iterations :param - eps: :type - eps: a float, maximum relative change in deviance tolerated for convergence :param - optimizeTheta: distribution is optimized (default), or fixed to the value provided in nb_theta. :type - optimizeTheta: a bool, indicating if the overdispersion parameter of the NB :type penalty:  :param penalty: Regression coefficients are not penalized. :type penalty: the L2 penalty for the latent factors (default = 1). :type init: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span> :param init: loadings (V) matrices. :type init: a dictionary containing initial estimates for the factors (U) and :type nb_theta:  :param nb_theta: if nb_theta goes to infinity, this is equivalent to Poisson                  Note that the alpha in the statsmodels package is 1/nb_theta. If ctl[&quot;optimizeTheta&quot;] is True, this is used as initial value for optimization :type nb_theta: negative binomial dispersion parameter. Smaller values mean more dispersion :type X:  :param X: same values (eg. 1 for intercept) will be removed. This is because we force           the intercept and want to avoid collinearity. :type X: array_like of column (observations) covariates. Any column with all :type Z:  :param Z: :type Z: array_like of row (feature) covariates, usually not needed. :type sz:  :param sz: :type sz: numeric vector of size factors to use in place of total counts.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/paste3.model_selection.select_overlap_fraction.html#paste3.model_selection.select_overlap_fraction" title="paste3.model_selection.select_overlap_fraction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_selection.select_overlap_fraction</span></code></a>(...)</p></td>
+<td><p>Selects the optimal overlap fraction between two slices, <cite>a_slice</cite> and <cite>b_slice</cite>, using a pairwise alignment approach.</p></td>
 </tr>
 </tbody>
 </table>
@@ -175,8 +178,29 @@
 <h2>Miscellaneous<a class="headerlink" href="#miscellaneous" title="Link to this heading"></a></h2>
 <table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/paste3.helper.kl_divergence.html#paste3.helper.kl_divergence" title="paste3.helper.kl_divergence"><code class="xref py py-obj docutils literal notranslate"><span class="pre">helper.kl_divergence</span></code></a>(a_exp_dissim, b_exp_dissim)</p></td>
+<td><p>Calculates the Kullback-Leibler divergence (KL) or generalized KL divergence between two distributions.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/paste3.helper.glmpca_distance.html#paste3.helper.glmpca_distance" title="paste3.helper.glmpca_distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">helper.glmpca_distance</span></code></a>(a_exp_dissim, ...[, ...])</p></td>
+<td><p>Computes the distance between two distributions after reducing dimensionality using GLM-PCA.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/paste3.helper.pca_distance.html#paste3.helper.pca_distance" title="paste3.helper.pca_distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">helper.pca_distance</span></code></a>(a_slice, b_slice, ...)</p></td>
+<td><p>Computes pairwise distances between two distributions slices after dimensionality reduction using PCA.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/paste3.helper.high_umi_gene_distance.html#paste3.helper.high_umi_gene_distance" title="paste3.helper.high_umi_gene_distance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">helper.high_umi_gene_distance</span></code></a>(a_exp_dissim, ...)</p></td>
+<td><p>Computes the Kullback-Leibler (KL) divergence between two distribution using genes with highest UMI counts.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/paste3.helper.norm_and_center_coordinates.html#paste3.helper.norm_and_center_coordinates" title="paste3.helper.norm_and_center_coordinates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">helper.norm_and_center_coordinates</span></code></a>(spatial_dist)</p></td>
+<td><p>Normalizes and centers spatial coordinates by subtracting the mean and scaling by the minimum pairwise distance</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/paste3.helper.get_common_genes.html#paste3.helper.get_common_genes" title="paste3.helper.get_common_genes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">helper.get_common_genes</span></code></a>(slices)</p></td>
+<td><p>Returns common genes from multiple slices</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/paste3.helper.match_spots_using_spatial_heuristic.html#paste3.helper.match_spots_using_spatial_heuristic" title="paste3.helper.match_spots_using_spatial_heuristic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">helper.match_spots_using_spatial_heuristic</span></code></a>(...)</p></td>
 <td><p>Matches spatial coordinates between two datasets using either optimal transport or bipartite matching based on spatial proximity.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/paste3.helper.dissimilarity_metric.html#paste3.helper.dissimilarity_metric" title="paste3.helper.dissimilarity_metric"><code class="xref py py-obj docutils literal notranslate"><span class="pre">helper.dissimilarity_metric</span></code></a>(which, a_slice, ...)</p></td>
+<td><p>Computes a dissimilarity matrix between two distribution using a specified metric.</p></td>
 </tr>
 </tbody>
 </table>
@@ -187,14 +211,14 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to PASTE3 documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="api/paste3.paste.pairwise_align.html" class="btn btn-neutral float-right" title="paste3.paste.pairwise_align" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022, Raphael Lab.</p>
+    <p>&#169; Copyright 2024, Raphael Lab.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -5,15 +5,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>paste3.paste &mdash; paste3 1.2.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+  <title>paste3.paste &mdash; paste3 src documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=60341314"></script>
+      <script src="../../_static/documentation_options.js?v=c8155056"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -43,6 +43,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorial.html">Tutorials</a></li>
 </ul>
@@ -78,19 +79,19 @@
 <span class="sd">matrix of the spots</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Callable</span>
-<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">sleep</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">time</span><span class="w"> </span><span class="kn">import</span> <span class="n">sleep</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">ot</span>
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">anndata</span> <span class="kn">import</span> <span class="n">AnnData</span>
-<span class="kn">from</span> <span class="nn">ot.lp</span> <span class="kn">import</span> <span class="n">emd</span>
-<span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">NMF</span>
-<span class="kn">from</span> <span class="nn">torchnmf.nmf</span> <span class="kn">import</span> <span class="n">NMF</span> <span class="k">as</span> <span class="n">TorchNMF</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ot</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">anndata</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnnData</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ot.lp</span><span class="w"> </span><span class="kn">import</span> <span class="n">emd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.decomposition</span><span class="w"> </span><span class="kn">import</span> <span class="n">NMF</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchnmf.nmf</span><span class="w"> </span><span class="kn">import</span> <span class="n">NMF</span> <span class="k">as</span> <span class="n">TorchNMF</span>
 
-<span class="kn">from</span> <span class="nn">paste3.helper</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">paste3.helper</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">compute_slice_weights</span><span class="p">,</span>
     <span class="n">dissimilarity_metric</span><span class="p">,</span>
     <span class="n">get_common_genes</span><span class="p">,</span>
@@ -103,7 +104,7 @@
 
 <div class="viewcode-block" id="pairwise_align">
 <a class="viewcode-back" href="../../api/paste3.paste.pairwise_align.html#paste3.paste.pairwise_align">[docs]</a>
-<span class="k">def</span> <span class="nf">pairwise_align</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">pairwise_align</span><span class="p">(</span>
     <span class="n">a_slice</span><span class="p">:</span> <span class="n">AnnData</span><span class="p">,</span>
     <span class="n">b_slice</span><span class="p">:</span> <span class="n">AnnData</span><span class="p">,</span>
     <span class="n">overlap_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -297,7 +298,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">center_align_gen</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">center_align_gen</span><span class="p">(</span>
     <span class="n">initial_slice</span><span class="p">:</span> <span class="n">AnnData</span><span class="p">,</span>
     <span class="n">slices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AnnData</span><span class="p">],</span>
     <span class="n">slice_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -400,7 +401,7 @@
 
 <div class="viewcode-block" id="center_align">
 <a class="viewcode-back" href="../../api/paste3.paste.center_align.html#paste3.paste.center_align">[docs]</a>
-<span class="k">def</span> <span class="nf">center_align</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">center_align</span><span class="p">(</span>
     <span class="n">initial_slice</span><span class="p">:</span> <span class="n">AnnData</span><span class="p">,</span>
     <span class="n">slices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AnnData</span><span class="p">],</span>
     <span class="n">slice_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -509,7 +510,9 @@
 <span class="c1"># --------------------------- HELPER METHODS -----------------------------------</span>
 
 
-<span class="k">def</span> <span class="nf">center_ot</span><span class="p">(</span>
+<div class="viewcode-block" id="center_ot">
+<a class="viewcode-back" href="../../api/paste3.paste.center_ot.html#paste3.paste.center_ot">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">center_ot</span><span class="p">(</span>
     <span class="n">feature_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">coeff_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">slices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AnnData</span><span class="p">],</span>
@@ -523,7 +526,7 @@
     <span class="n">spot_weights</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">numItermax</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Computes the optimal mappings \Pi^{(1)}, \ldots, \Pi^{(t)} given W (specified features)</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Computes the optimal mappings :math:`\Pi^{(1)}, \ldots, \Pi^{(t)}` given W (specified features)</span>
 <span class="sd">    and H (coefficient matrix) by solving the pairwise slice alignment problem between the</span>
 <span class="sd">    center slice and each slices separately</span>
 
@@ -590,10 +593,13 @@
         <span class="p">)</span>
         <span class="n">pis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
         <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="p">[</span><span class="s2">&quot;loss&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
-    <span class="k">return</span> <span class="n">pis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">center_NMF</span><span class="p">(</span>
+
+<div class="viewcode-block" id="center_NMF">
+<a class="viewcode-back" href="../../api/paste3.paste.center_NMF.html#paste3.paste.center_NMF">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">center_NMF</span><span class="p">(</span>
     <span class="n">feature_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">slices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AnnData</span><span class="p">],</span>
     <span class="n">pis</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
@@ -669,10 +675,13 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">new_feature_matrix</span> <span class="o">=</span> <span class="n">nmf_model</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">feature_matrix</span><span class="o">.</span><span class="n">cpu</span><span class="p">())</span>
         <span class="n">new_coeff_matrix</span> <span class="o">=</span> <span class="n">nmf_model</span><span class="o">.</span><span class="n">components_</span>
-    <span class="k">return</span> <span class="n">new_feature_matrix</span><span class="p">,</span> <span class="n">new_coeff_matrix</span>
+    <span class="k">return</span> <span class="n">new_feature_matrix</span><span class="p">,</span> <span class="n">new_coeff_matrix</span></div>
 
 
-<span class="k">def</span> <span class="nf">my_fused_gromov_wasserstein</span><span class="p">(</span>
+
+<div class="viewcode-block" id="my_fused_gromov_wasserstein">
+<a class="viewcode-back" href="../../api/paste3.paste.my_fused_gromov_wasserstein.html#paste3.paste.my_fused_gromov_wasserstein">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">my_fused_gromov_wasserstein</span><span class="p">(</span>
     <span class="n">exp_dissim_matrix</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
     <span class="n">a_spatial_dist</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
     <span class="n">b_spatial_dist</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
@@ -771,7 +780,7 @@
             <span class="p">]</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">transform_matrix</span><span class="p">(</span><span class="n">pi</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform_matrix</span><span class="p">(</span><span class="n">pi</span><span class="p">):</span>
         <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pi</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">init_matrix</span><span class="p">(</span>
             <span class="n">a_spatial_dist</span><span class="p">,</span>
@@ -781,17 +790,17 @@
             <span class="n">loss_fun</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">f_loss</span><span class="p">(</span><span class="n">pi</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">f_loss</span><span class="p">(</span><span class="n">pi</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the Gromov-Wasserstein loss for a given transport plan.&quot;&quot;&quot;</span>
         <span class="n">combined_spatial_cost</span><span class="p">,</span> <span class="n">a_gradient</span><span class="p">,</span> <span class="n">b_gradient</span> <span class="o">=</span> <span class="n">transform_matrix</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">gwloss</span><span class="p">(</span><span class="n">combined_spatial_cost</span><span class="p">,</span> <span class="n">a_gradient</span><span class="p">,</span> <span class="n">b_gradient</span><span class="p">,</span> <span class="n">pi</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">f_gradient</span><span class="p">(</span><span class="n">pi</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">f_gradient</span><span class="p">(</span><span class="n">pi</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the gradient of the Gromov-Wasserstein loss for a given transport plan.&quot;&quot;&quot;</span>
         <span class="n">combined_spatial_cost</span><span class="p">,</span> <span class="n">a_gradient</span><span class="p">,</span> <span class="n">b_gradient</span> <span class="o">=</span> <span class="n">transform_matrix</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ot</span><span class="o">.</span><span class="n">gromov</span><span class="o">.</span><span class="n">gwggrad</span><span class="p">(</span><span class="n">combined_spatial_cost</span><span class="p">,</span> <span class="n">a_gradient</span><span class="p">,</span> <span class="n">b_gradient</span><span class="p">,</span> <span class="n">pi</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">line_search</span><span class="p">(</span><span class="n">f_cost</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">pi_diff</span><span class="p">,</span> <span class="n">linearized_matrix</span><span class="p">,</span> <span class="n">cost_pi</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">line_search</span><span class="p">(</span><span class="n">f_cost</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">pi_diff</span><span class="p">,</span> <span class="n">linearized_matrix</span><span class="p">,</span> <span class="n">cost_pi</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve the linesearch in the fused wasserstein iterations&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">overlap_fraction</span><span class="p">:</span>
             <span class="k">nonlocal</span> <span class="n">count</span>
@@ -826,7 +835,7 @@
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">lp_solver</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">lp_solver</span><span class="p">(</span>
         <span class="n">a_spots_weight</span><span class="p">,</span>
         <span class="n">b_spots_weight</span><span class="p">,</span>
         <span class="n">exp_dissim_matrix</span><span class="p">,</span>
@@ -873,10 +882,13 @@
     <span class="p">)</span>
     <span class="k">if</span> <span class="n">overlap_fraction</span><span class="p">:</span>
         <span class="n">info</span><span class="p">[</span><span class="s2">&quot;err&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_info</span><span class="p">[</span><span class="s2">&quot;err&quot;</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">pi</span><span class="p">,</span> <span class="n">info</span>
+    <span class="k">return</span> <span class="n">pi</span><span class="p">,</span> <span class="n">info</span></div>
 
 
-<span class="k">def</span> <span class="nf">line_search_partial</span><span class="p">(</span>
+
+<div class="viewcode-block" id="line_search_partial">
+<a class="viewcode-back" href="../../api/paste3.paste.line_search_partial.html#paste3.paste.line_search_partial">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">line_search_partial</span><span class="p">(</span>
     <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">exp_dissim_matrix</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
     <span class="n">pi</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
@@ -893,7 +905,7 @@
 <span class="sd">    ----------</span>
 <span class="sd">    alpha : float</span>
 <span class="sd">        Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.</span>
-<span class="sd">        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.</span>
+<span class="sd">        Setting :math:`\\alpha = 0` uses only transcriptional information, while :math:`\\alpha = 1` uses only spatial coordinates.</span>
 <span class="sd">    exp_dissim_matrix : torch.Tensor</span>
 <span class="sd">        Expression dissimilarity matrix between two slices.</span>
 <span class="sd">    pi : torch.Tensor</span>
@@ -924,7 +936,8 @@
     <span class="p">)</span>
     <span class="n">minimal_cost</span> <span class="o">=</span> <span class="n">ot</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">solve_1d_linesearch_quad</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
     <span class="n">cost_G</span> <span class="o">=</span> <span class="n">f_cost</span><span class="p">(</span><span class="n">pi</span> <span class="o">+</span> <span class="n">minimal_cost</span> <span class="o">*</span> <span class="n">pi_diff</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">minimal_cost</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">cost_G</span>
+    <span class="k">return</span> <span class="n">minimal_cost</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">cost_G</span></div>
+
 </pre></div>
 
            </div>
@@ -934,7 +947,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022, Raphael Lab.</p>
+    <p>&#169; Copyright 2024, Raphael Lab.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

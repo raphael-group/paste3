@@ -5,15 +5,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>paste3.visualization &mdash; paste3 1.2.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+  <title>paste3.visualization &mdash; paste3 src documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=60341314"></script>
+      <script src="../../_static/documentation_options.js?v=c8155056"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -43,6 +43,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../tutorial.html">Tutorials</a></li>
 </ul>
@@ -72,13 +73,13 @@
            <div itemprop="articleBody">
              
   <h1>Source code for paste3.visualization</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">anndata</span> <span class="kn">import</span> <span class="n">AnnData</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">anndata</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnnData</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -90,7 +91,7 @@
 
 <div class="viewcode-block" id="stack_slices_pairwise">
 <a class="viewcode-back" href="../../api/paste3.visualization.stack_slices_pairwise.html#paste3.visualization.stack_slices_pairwise">[docs]</a>
-<span class="k">def</span> <span class="nf">stack_slices_pairwise</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">stack_slices_pairwise</span><span class="p">(</span>
     <span class="n">slices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AnnData</span><span class="p">],</span> <span class="n">pis</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">is_partial</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">AnnData</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -173,7 +174,7 @@
 
 <div class="viewcode-block" id="stack_slices_center">
 <a class="viewcode-back" href="../../api/paste3.visualization.stack_slices_center.html#paste3.visualization.stack_slices_center">[docs]</a>
-<span class="k">def</span> <span class="nf">stack_slices_center</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">stack_slices_center</span><span class="p">(</span>
     <span class="n">center_slice</span><span class="p">:</span> <span class="n">AnnData</span><span class="p">,</span> <span class="n">slices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">AnnData</span><span class="p">],</span> <span class="n">pis</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">AnnData</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">AnnData</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -245,7 +246,7 @@
 
 <div class="viewcode-block" id="plot_slice">
 <a class="viewcode-back" href="../../api/paste3.visualization.plot_slice.html#paste3.visualization.plot_slice">[docs]</a>
-<span class="k">def</span> <span class="nf">plot_slice</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_slice</span><span class="p">(</span>
     <span class="nb">slice</span><span class="p">:</span> <span class="n">AnnData</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">100</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -272,7 +273,9 @@
 
 
 
-<span class="k">def</span> <span class="nf">generalized_procrustes_analysis</span><span class="p">(</span>
+<div class="viewcode-block" id="generalized_procrustes_analysis">
+<a class="viewcode-back" href="../../api/paste3.visualization.generalized_procrustes_analysis.html#paste3.visualization.generalized_procrustes_analysis">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generalized_procrustes_analysis</span><span class="p">(</span>
     <span class="n">source_coordinates</span><span class="p">,</span> <span class="n">target_coordinates</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">is_partial</span><span class="o">=</span><span class="kc">False</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -318,7 +321,8 @@
         <span class="n">rotation_angle</span><span class="p">,</span>
         <span class="n">weighted_source</span><span class="p">,</span>
         <span class="n">weighted_target</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="p">)</span></div>
+
 </pre></div>
 
            </div>
@@ -328,7 +332,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022, Raphael Lab.</p>
+    <p>&#169; Copyright 2024, Raphael Lab.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

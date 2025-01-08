@@ -1,0 +1,6 @@
+﻿paste3.helper.glmpca\_distance
+==============================
+
+.. currentmodule:: paste3.helper
+
+.. autofunction:: glmpca_distance

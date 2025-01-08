@@ -1,0 +1,6 @@
+﻿paste3.helper.kl\_divergence
+============================
+
+.. currentmodule:: paste3.helper
+
+.. autofunction:: kl_divergence

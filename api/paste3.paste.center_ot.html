@@ -1,0 +1,178 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>paste3.paste.center_ot &mdash; paste3 src documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c8155056"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="paste3.paste.center_NMF" href="paste3.paste.center_NMF.html" />
+    <link rel="prev" title="paste3.paste.center_align" href="paste3.paste.center_align.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            paste3
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#alignment">Alignment</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="paste3.paste.pairwise_align.html">paste3.paste.pairwise_align</a></li>
+<li class="toctree-l3"><a class="reference internal" href="paste3.paste.center_align.html">paste3.paste.center_align</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">paste3.paste.center_ot</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#paste3.paste.center_ot"><code class="docutils literal notranslate"><span class="pre">center_ot()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="paste3.paste.center_NMF.html">paste3.paste.center_NMF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="paste3.paste.my_fused_gromov_wasserstein.html">paste3.paste.my_fused_gromov_wasserstein</a></li>
+<li class="toctree-l3"><a class="reference internal" href="paste3.paste.line_search_partial.html">paste3.paste.line_search_partial</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#model-selection">Model Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorials</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">paste3</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API</a></li>
+      <li class="breadcrumb-item active">paste3.paste.center_ot</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/paste3.paste.center_ot.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="paste3-paste-center-ot">
+<h1>paste3.paste.center_ot<a class="headerlink" href="#paste3-paste-center-ot" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="paste3.paste.center_ot">
+<span class="sig-prename descclassname"><span class="pre">paste3.paste.</span></span><span class="sig-name descname"><span class="pre">center_ot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coeff_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center_coordinates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">common_genes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_gpu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp_dissim_metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'kl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pi_inits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spot_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numItermax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/paste3/paste.html#center_ot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#paste3.paste.center_ot" title="Link to this definition"></a></dt>
+<dd><p>Computes the optimal mappings <span class="math notranslate nohighlight">\(\Pi^{(1)}, \ldots, \Pi^{(t)}\)</span> given W (specified features)
+and H (coefficient matrix) by solving the pairwise slice alignment problem between the
+center slice and each slices separately</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>feature_matrix</strong> (<em>np.ndarray</em>) -- The matrix representing features extracted from the initial slice.</p></li>
+<li><p><strong>coeff_matrix</strong> (<em>np.ndarray</em>) -- The matrix representing the coefficients corresponding to the features.</p></li>
+<li><p><strong>slices</strong> (<em>List</em><em>[</em><em>AnnData</em><em>]</em>) -- A list of AnnData objects representing the slices to be aligned with the center slice.</p></li>
+<li><p><strong>center_coordinates</strong> (<em>np.ndarray</em>) -- Spatial coordinates of the center slice.</p></li>
+<li><p><strong>common_genes</strong> (<em>Index</em>) -- Index of common genes shared among all slices for alignment.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) -- Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
+Setting alpha = 0 uses only transcriptional information, while alpha = 1 uses only spatial coordinates.</p></li>
+<li><p><strong>use_gpu</strong> (<em>bool</em>) -- Whether to use GPU for computations. If True but no GPU is available, will default to CPU.</p></li>
+<li><p><strong>exp_dissim_metric</strong> (<em>str</em><em>, </em><em>default=&quot;kl&quot;</em>) -- Metric used to compute the expression dissimilarity between slices. Options include &quot;euclidean&quot; and &quot;kl&quot;.</p></li>
+<li><p><strong>norm</strong> (<em>bool</em><em>, </em><em>default=False</em>) -- If True, normalizes spatial distances.</p></li>
+<li><p><strong>pi_inits</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>np.ndarray</em><em>]</em><em>]</em><em>, </em><em>default=None</em>) -- Initial transport plans for each slice. If None, it will be computed.</p></li>
+<li><p><strong>spot_weights</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>float</em><em>]</em><em>]</em><em>, </em><em>default=None</em>) -- Weights for individual spots in each slice. If None, uniform distribution is used.</p></li>
+<li><p><strong>numItermax</strong> (<em>int</em><em>, </em><em>default=200</em>) -- Maximum number of iterations allowed for the optimization process.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>A tuple containing:
+- pis : List[np.ndarray]</p>
+<blockquote>
+<div><p>List of optimal transport plans for aligning each slice to the center slice.</p>
+</div></blockquote>
+<ul class="simple">
+<li><dl class="simple">
+<dt>losses<span class="classifier">np.ndarray</span></dt><dd><p>Array of loss values corresponding to each slice alignment.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[List[np.ndarray], np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="paste3.paste.center_align.html" class="btn btn-neutral float-left" title="paste3.paste.center_align" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="paste3.paste.center_NMF.html" class="btn btn-neutral float-right" title="paste3.paste.center_NMF" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Raphael Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

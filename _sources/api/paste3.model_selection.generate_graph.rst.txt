@@ -1,0 +1,6 @@
+﻿paste3.model\_selection.generate\_graph
+=======================================
+
+.. currentmodule:: paste3.model_selection
+
+.. autofunction:: generate_graph

@@ -1,0 +1,168 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="python" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>paste3.model_selection.convex_hull_edge_inconsistency &mdash; paste3 src documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c8155056"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="paste3.model_selection.select_overlap_fraction" href="paste3.model_selection.select_overlap_fraction.html" />
+    <link rel="prev" title="paste3.model_selection.generate_graph" href="paste3.model_selection.generate_graph.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            paste3
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html#alignment">Alignment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#visualization">Visualization</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#model-selection">Model Selection</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="paste3.model_selection.generate_graph.html">paste3.model_selection.generate_graph</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">paste3.model_selection.convex_hull_edge_inconsistency</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#paste3.model_selection.convex_hull_edge_inconsistency"><code class="docutils literal notranslate"><span class="pre">convex_hull_edge_inconsistency()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="paste3.model_selection.select_overlap_fraction.html">paste3.model_selection.select_overlap_fraction</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#miscellaneous">Miscellaneous</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorials</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">paste3</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../api.html">API</a></li>
+      <li class="breadcrumb-item active">paste3.model_selection.convex_hull_edge_inconsistency</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/paste3.model_selection.convex_hull_edge_inconsistency.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="paste3-model-selection-convex-hull-edge-inconsistency">
+<h1>paste3.model_selection.convex_hull_edge_inconsistency<a class="headerlink" href="#paste3-model-selection-convex-hull-edge-inconsistency" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="paste3.model_selection.convex_hull_edge_inconsistency">
+<span class="sig-prename descclassname"><span class="pre">paste3.model_selection.</span></span><span class="sig-name descname"><span class="pre">convex_hull_edge_inconsistency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">slice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/paste3/model_selection.html#convex_hull_edge_inconsistency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#paste3.model_selection.convex_hull_edge_inconsistency" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Computes the edge inconsistency score for a convex hull formed by the aligned spots
+in a slice, based on their probability masses (<span class="math notranslate nohighlight">\(\pi\)</span>). This score reflects
+the inconsistency in edges within a subgraph of aligned spots.</p>
+<p>Specifically, let <span class="math notranslate nohighlight">\(G = (V, E)\)</span> be a graph and let <span class="math notranslate nohighlight">\(L = [l(i)]\)</span> be a labeling
+of nodes where <span class="math notranslate nohighlight">\(l(i) \in {1, 2}\)</span> is the cluster label of node <span class="math notranslate nohighlight">\(i\)</span>. Let
+<span class="math notranslate nohighlight">\(E'\)</span> be the subset of the edges where the labelling of the nodes at the two
+ends are different, i.e. <span class="math notranslate nohighlight">\(E'\)</span> is the cut of the graph. The edge inconsistency
+score is defined as :math:<a href="#id1"><span class="problematic" id="id2">`</span></a>H (G, L) = H(G, L) =</p>
+</div></blockquote>
+<dl>
+<dt>rac{<a href="#id3"><span class="problematic" id="id4">|E'|</span></a>}{<a href="#id5"><span class="problematic" id="id6">|E|</span></a>}`, which is the percentage</dt><dd><p>of edges that are in the cut.</p>
+<p>A high inconsistency score means most of the edges are in the cut, indicating the labeling
+of the nodes has low spatial coherence, while a low inconsistency score means that the two
+classes are nodes are mostly contiguous in graph.</p>
+<dl class="simple">
+<dt>slice<span class="classifier">AnnData</span></dt><dd><p>AnnData object containing data for a slice.</p>
+</dd>
+<dt>pi<span class="classifier">torch.Tensor</span></dt><dd><p>Optimal transport plan for aligning two slices.</p>
+</dd>
+<dt>axis<span class="classifier">int</span></dt><dd><p>The axis along which the probability mass (<cite>pi</cite>) is summed to determine the
+alignment status of each spot. Axis = 1 determines mass distribution for spots in
+the first slice, while axis = 0 determines mass distribution for spots in the second
+slice.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>float</dt><dd><p>The edge inconsistency score of the graph formed by the aligned spots. This score
+quantifies the irregularity or inconsistency of edges between aligned regions.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="paste3.model_selection.generate_graph.html" class="btn btn-neutral float-left" title="paste3.model_selection.generate_graph" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="paste3.model_selection.select_overlap_fraction.html" class="btn btn-neutral float-right" title="paste3.model_selection.select_overlap_fraction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Raphael Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

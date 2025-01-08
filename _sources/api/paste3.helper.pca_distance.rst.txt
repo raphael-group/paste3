@@ -1,0 +1,6 @@
+﻿paste3.helper.pca\_distance
+===========================
+
+.. currentmodule:: paste3.helper
+
+.. autofunction:: pca_distance

@@ -1,0 +1,6 @@
+﻿paste3.visualization.generalized\_procrustes\_analysis
+======================================================
+
+.. currentmodule:: paste3.visualization
+
+.. autofunction:: generalized_procrustes_analysis

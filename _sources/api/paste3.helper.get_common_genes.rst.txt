@@ -1,0 +1,6 @@
+﻿paste3.helper.get\_common\_genes
+================================
+
+.. currentmodule:: paste3.helper
+
+.. autofunction:: get_common_genes

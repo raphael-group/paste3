@@ -2,6 +2,9 @@
 [![Coverage Status](https://coveralls.io/repos/github/raphael-group/paste3/badge.svg?branch=main)](https://coveralls.io/github/raphael-group/paste3?branch=main)
 [![Docs](https://github.com/raphael-group/paste3/actions/workflows/docs.yml/badge.svg)](https://raphael-group.github.io/paste3/)
 
+<video src="https://github.com/user-attachments/assets/977c05c0-4c45-4d21-9302-dfe23800937e"/>
+
+
 # Paste 3
 
 **Paste 3** (Paste + Paste 2) is a Python package and NAPARI plugin that
@@ -13,7 +16,7 @@ as detailed in the following publications:
 *Alignment and integration of spatial transcriptomics data.*
 **Nat Methods**, 19, 567–575 (2022).
 
-[Read the publication](https://doi.org/10.1038/s41592-022-01459-6)
+[Read the publication](https://doi.org/10.1038/s41592-022-01459-6)  
 [Original PASTE code](https://github.com/raphael-group/paste)
 
 ---
@@ -22,7 +25,7 @@ as detailed in the following publications:
 **Liu X, Zeira R, Raphael BJ.**
 *Partial alignment of multislice spatially resolved transcriptomics data.*
 **Genome Res.** 2023 Jul; 33(7):1124-1132.
-[Read the publication](https://doi.org/10.1101/gr.277670.123)
+[Read the publication](https://doi.org/10.1101/gr.277670.123)  
 [Original PASTE2 code](https://github.com/raphael-group/paste2)
 
 The motivation behind PASTE3 is to provide a NAPARI plugin
@@ -74,8 +77,11 @@ Open one of the sample datasets we provide (`File->Open Sample->Paste3->SCC Pati
 and then select one of the two modes of PASTE3 operations
 (`Plugins->Paste3->Center Align` or `Plugins->Paste3->Pairwise Align`).
 
-With the default parameters, alignment should take a couple of minutes, though
+Your own datasets can be used if they're in the .h5ad format, with each file denoting a single
+slice. With the default parameters, alignment should take a couple of minutes, though
 you have the option of changing these to suit your needs.
+
+<video src="https://github.com/user-attachments/assets/a527aa12-190e-46ed-a843-4cc10f8146ce"/>
 
 If you intend to use PASTE3 programmatically in your Python code, follow along
 the [Getting Started](https://raphael-group.github.io/paste3/notebooks/paste_tutorial.html)

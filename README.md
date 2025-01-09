@@ -2,8 +2,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/raphael-group/paste3/badge.svg?branch=main)](https://coveralls.io/github/raphael-group/paste3?branch=main)
 [![Docs](https://github.com/raphael-group/paste3/actions/workflows/docs.yml/badge.svg)](https://raphael-group.github.io/paste3/)
 
-<video src="https://github.com/user-attachments/assets/977c05c0-4c45-4d21-9302-dfe23800937e"/>
-
+https://github.com/user-attachments/assets/977c05c0-4c45-4d21-9302-dfe23800937e
 
 # Paste 3
 
@@ -81,7 +80,7 @@ Your own datasets can be used if they're in the .h5ad format, with each file den
 slice. With the default parameters, alignment should take a couple of minutes, though
 you have the option of changing these to suit your needs.
 
-<video src="https://github.com/user-attachments/assets/a527aa12-190e-46ed-a843-4cc10f8146ce"/>
+![paste3_napari](https://github.com/user-attachments/assets/41281c31-fe11-443e-ab13-1dec4e01b3b6)
 
 If you intend to use PASTE3 programmatically in your Python code, follow along
 the [Getting Started](https://raphael-group.github.io/paste3/notebooks/paste_tutorial.html)

@@ -443,7 +443,7 @@ def center_ot(
     spot_weights: list[float] | None = None,
     numItermax: int = 200,
 ) -> tuple[list[np.ndarray], np.ndarray]:
-    r"""Computes the optimal mappings \Pi^{(1)}, \ldots, \Pi^{(t)} given W (specified features)
+    r"""Computes the optimal mappings :math:`\Pi^{(1)}, \ldots, \Pi^{(t)}` given W (specified features)
     and H (coefficient matrix) by solving the pairwise slice alignment problem between the
     center slice and each slices separately
 
@@ -813,7 +813,7 @@ def line_search_partial(
     ----------
     alpha : float
         Regularization parameter balancing transcriptional dissimilarity and spatial distance among aligned spots.
-        Setting \alpha = 0 uses only transcriptional information, while \alpha = 1 uses only spatial coordinates.
+        Setting :math:`\\alpha = 0` uses only transcriptional information, while :math:`\\alpha = 1` uses only spatial coordinates.
     exp_dissim_matrix : torch.Tensor
         Expression dissimilarity matrix between two slices.
     pi : torch.Tensor

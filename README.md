@@ -2,170 +2,86 @@
 [![Coverage Status](https://coveralls.io/repos/github/raphael-group/paste3/badge.svg?branch=main)](https://coveralls.io/github/raphael-group/paste3?branch=main)
 [![Docs](https://github.com/raphael-group/paste3/actions/workflows/docs.yml/badge.svg)](https://raphael-group.github.io/paste3/)
 
-(Note: This repository integrates Paste and Paste 2, and is a work in progress)
-# PASTE
+https://github.com/user-attachments/assets/977c05c0-4c45-4d21-9302-dfe23800937e
+
+# Paste 3
+
+**Paste 3** (Paste + Paste 2) is a Python package and NAPARI plugin that
+provides advanced alignment methods of Spatial Transcriptonomics (ST) data
+as detailed in the following publications:
+
+### 1. *PASTE*
+**Zeira, R., Land, M., Strzalkowski, A., et al.**
+*Alignment and integration of spatial transcriptomics data.*
+**Nat Methods**, 19, 567–575 (2022).
+
+[Read the publication](https://doi.org/10.1038/s41592-022-01459-6)  
+[Original PASTE code](https://github.com/raphael-group/paste)
+
+---
+
+### 2. *PASTE2*
+**Liu X, Zeira R, Raphael BJ.**
+*Partial alignment of multislice spatially resolved transcriptomics data.*
+**Genome Res.** 2023 Jul; 33(7):1124-1132.
+[Read the publication](https://doi.org/10.1101/gr.277670.123)  
+[Original PASTE2 code](https://github.com/raphael-group/paste2)
+
+The motivation behind PASTE3 is to provide a NAPARI plugin
+for practitioners to experiment with both PASTE and PASTE2 at an operational
+level, as well as provide a common codebase for future development of ST
+alignment algorithms. (`Paste-N`..)
+
+PASTE3 is built on `pytorch` and can leverage a GPU for performance if
+available, though it is able to run just fine in the absence of a GPU, on all
+major platforms.
+
+Auto-generated documentation for the PASTE3 package is available [here](https://raphael-group.github.io/paste3/).
+
+Additional examples and the code to reproduce the original PASTE paper's analyses are available [here](https://github.com/raphael-group/paste_reproducibility). Preprocessed datasets used in the paper can be found on [zenodo](https://doi.org/10.5281/zenodo.6334774).
+
+## Overview
 
 ![PASTE Overview](https://github.com/raphael-group/paste/blob/main/docs/source/_static/images/paste_overview.png)
 
-PASTE is a computational method that leverages both gene expression similarity and spatial distances between spots to align and integrate spatial transcriptomics data. In particular, there are two methods:
-1. `pairwise_align`: align spots across pairwise slices.
-2. `center_align`: integrate multiple slices into one center slice.
+The PASTE series of algorithms provide computational methods that leverage both
+gene expression  similarity and spatial distances between spots to align and
+integrate spatial transcriptomics data. In particular, there are two modes of
+operation:
+1. `Pairwise-Alignment`: align spots between successive pairs of slices.
+2. `Center-Alignment`: infer a `center slice` (low sparsity, low variance) and
+align all slices with respect to this center slice.
 
-You can read full paper [here](https://www.nature.com/articles/s41592-022-01459-6).
-
-Auto-generated documentation for this package is available [here](https://raphael-group.github.io/paste3/).
-
-Additional examples and the code to reproduce the paper's analyses can be found [here](https://github.com/raphael-group/paste_reproducibility). Preprocessed datasets used in the paper can be found on [zenodo](https://doi.org/10.5281/zenodo.6334774).
-
-### Recent News
-
-* PASTE is now published in [Nature Methods](https://www.nature.com/articles/s41592-022-01459-6)!
-
-* The code to reproduce the analisys can be found [here](https://github.com/raphael-group/paste_reproducibility).
-
-* As of version 1.2.0, PASTE now supports GPU implementation via Pytorch. For more details, see the GPU section of the [Tutorial notebook](docs/source/notebooks/getting-started.ipynb).
 
 ### Installation
 
-The easiest way is to install PASTE on pypi: https://pypi.org/project/paste-bio/.
+The easiest way is to install PASTE3 is using `pip`:
 
-`pip install paste-bio`
+`pip install git+https://github.com/raphael-group/paste3.git`
 
-Or you can install PASTE on bioconda: https://anaconda.org/bioconda/paste-bio.
-
-`conda install -c bioconda paste-bio`
-
-Check out Tutorial.ipynb for an example of how to use PASTE.
-
-Alternatively, you can clone the respository and try the following example in a
-notebook or the command line.
-
-### Quick Start
-
-To use PASTE we require at least two slices of spatial-omics data (both
-expression and coordinates) that are in
-anndata format (i.e. read in by scanpy/squidpy). We have included a breast
-cancer dataset from [1] in the [sample_data folder](tests/data/input/) of this repo
-that we will use as an example below to show how to use PASTE.
-
-```python
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-import numpy as np
-import scanpy as sc
-import paste as pst
-
-# Load Slices
-data_dir = 'tests/data/input/'  # change this path to the data you wish to analyze
+Developers who wish to work with `paste3` in Python will likely want to review
+the detailed [installation](https://raphael-group.github.io/paste3/installation)
+page.
 
 
-# Assume that the coordinates of slices are named slice_name + "_coor.csv"
-def load_slices(data_dir, slice_names=["slice1", "slice2"]):
-    slices = []
-    for slice_name in slice_names:
-        slice_i = sc.read_csv(data_dir + slice_name + ".csv")
-        slice_i_coor = np.genfromtxt(data_dir + slice_name + "_coor.csv", delimiter=',')
-        slice_i.obsm['spatial'] = slice_i_coor
-        # Preprocess slices
-        sc.pp.filter_genes(slice_i, min_counts=15)
-        sc.pp.filter_cells(slice_i, min_counts=100)
-        slices.append(slice_i)
-    return slices
+### Getting Started
 
+If you intend to use PASTE3 as a `napari` plugin, install `paste3` in a python
+environment that has `napari` installed, or install `napari` after having
+installed `paste3` as above.
 
-slices = load_slices(data_dir)
-slice1, slice2 = slices
+`pip install napari`
 
-# Pairwise align the slices
-pi12 = pst.pairwise_align(slice1, slice2)
+Open one of the sample datasets we provide (`File->Open Sample->Paste3->SCC Patient..`)
+and then select one of the two modes of PASTE3 operations
+(`Plugins->Paste3->Center Align` or `Plugins->Paste3->Pairwise Align`).
 
-# To visualize the alignment you can stack the slices
-# according to the alignment pi
-slices, pis = [slice1, slice2], [pi12]
-new_slices = pst.stack_slices_pairwise(slices, pis)
+Your own datasets can be used if they're in the .h5ad format, with each file denoting a single
+slice. With the default parameters, alignment should take a couple of minutes, though
+you have the option of changing these to suit your needs.
 
-slice_colors = ['#e41a1c', '#377eb8']
-plt.figure(figsize=(7, 7))
-for i in range(len(new_slices)):
-    pst.plot_slice(new_slices[i], slice_colors[i], s=400)
-plt.legend(handles=[mpatches.Patch(color=slice_colors[0], label='1'), mpatches.Patch(color=slice_colors[1], label='2')])
-plt.gca().invert_yaxis()
-plt.axis('off')
-plt.show()
+![paste3_napari](https://github.com/user-attachments/assets/41281c31-fe11-443e-ab13-1dec4e01b3b6)
 
-# Center align slices
-## We have to reload the slices as pairwise_alignment modifies the slices.
-slices = load_slices(data_dir)
-slice1, slice2 = slices
-
-# Construct a center slice
-## choose one of the slices as the coordinate reference for the center slice,
-## i.e. the center slice will have the same number of spots as this slice and
-## the same coordinates.
-initial_slice = slice1.copy()
-slices = [slice1, slice2]
-lmbda = len(slices) * [1 / len(slices)]  # set hyperparameter to be uniform
-
-## Possible to pass in an initial pi (as keyword argument pis_init)
-## to improve performance, see Tutorial.ipynb notebook for more details.
-center_slice, pis = pst.center_align(initial_slice, slices, lmbda)
-
-## The low dimensional representation of our center slice is held
-## in the matrices W and H, which can be used for downstream analyses
-W = center_slice.uns['paste_W']
-H = center_slice.uns['paste_H']
-```
-
-### GPU implementation
-PASTE now is compatible with gpu via Pytorch. All we need to do is add the following two parameters to our main functions:
-```
-pi12 = pst.pairwise_align(slice1, slice2, backend = ot.backend.TorchBackend(), use_gpu = True)
-
-center_slice, pis = pst.center_align(initial_slice, slices, lmbda, backend = ot.backend.TorchBackend(), use_gpu = True)
-```
-For more details, see the GPU section of the [Tutorial notebook](docs/source/notebooks/getting-started.ipynb).
-
-### Command Line
-
-We provide the option of running PASTE from the command line.
-
-First, clone the repository:
-
-`git clone https://github.com/raphael-group/paste.git`
-
-Next, when providing files, you will need to provide two separate files: the gene expression data followed by spatial data (both as .csv) for the code to initialize one slice object.
-
-Sample execution (based on this repo): `python paste-cmd-line.py -m center -f ./sample_data/slice1.csv ./sample_data/slice1_coor.csv ./sample_data/slice2.csv ./sample_data/slice2_coor.csv ./sample_data/slice3.csv ./sample_data/slice3_coor.csv`
-
-Note: `pairwise` will return pairwise alignment between each consecutive pair of slices (e.g. \[slice1,slice2\], \[slice2,slice3\]).
-
-| Flag | Name | Description | Default Value |
-| --- | --- | --- | --- |
-| -m | mode | Select either `pairwise` or `center` | (str) `pairwise` |
-| -f | files | Path to data files (.csv) | None |
-| -d | direc | Directory to store output files | Current Directory |
-| -a | alpha | Alpha parameter for PASTE | (float) `0.1` |
-| -c | cost | Expression dissimilarity cost (`kl` or `Euclidean`) | (str) `kl` |
-| -p | n_components | n_components for NMF step in `center_align` | (int) `15` |
-| -l | lmbda | Lambda parameter in `center_align` | (floats) probability vector of length `n`  |
-| -i | intial_slice | Specify which file is also the intial slice in `center_align` | (int) `1` |
-| -t | threshold | Convergence threshold for `center_align` | (float) `0.001` |
-| -x | coordinates | Output new coordinates (toggle to turn on) | `False` |
-| -w | weights | Weights files of spots in each slice (.csv) | None |
-| -s | start | Initial alignments for OT. If not given uses uniform (.csv structure similar to alignment output) | None |
-
-`pairwise_align` outputs a (.csv) file containing mapping of spots between each consecutive pair of slices. The rows correspond to spots of the first slice, and cols the second.
-
-`center_align` outputs two files containing the low dimensional representation (NMF decomposition) of the center slice gene expression, and files containing a mapping of spots between the center slice (rows) to each input slice (cols).
-
-### Sample Dataset
-
-Added sample spatial transcriptomics dataset consisting of four breast cancer slice courtesy of:
-
-[1] Ståhl, Patrik & Salmén, Fredrik & Vickovic, Sanja & Lundmark, Anna & Fernandez Navarro, Jose & Magnusson, Jens & Giacomello, Stefania & Asp, Michaela & Westholm, Jakub & Huss, Mikael & Mollbrink, Annelie & Linnarsson, Sten & Codeluppi, Simone & Borg, Åke & Pontén, Fredrik & Costea, Paul & Sahlén, Pelin Akan & Mulder, Jan & Bergmann, Olaf & Frisén, Jonas. (2016). Visualization and analysis of gene expression in tissue sections by spatial transcriptomics. Science. 353. 78-82. 10.1126/science.aaf2403.
-
-Note: Original data is (.tsv), but we converted it to (.csv).
-
-### References
-
-Ron Zeira, Max Land, Alexander Strzalkowski and Benjamin J. Raphael. "Alignment and integration of spatial transcriptomics data". Nature Methods (2022). https://doi.org/10.1038/s41592-022-01459-6
+If you intend to use PASTE3 programmatically in your Python code, follow along
+the [Getting Started](https://raphael-group.github.io/paste3/notebooks/paste_tutorial.html)
+tutorial.
